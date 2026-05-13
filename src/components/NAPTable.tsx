@@ -2,10 +2,11 @@
 
 import { useEffect, useState, useCallback, useMemo } from "react";
 import type { NAP } from "@/lib/types";
-import { getClientesByNAP, deleteCliente, getNAPColor, updateNAP, deleteNAP } from "@/lib/firestore";
+import { deleteCliente, getNAPColor, updateNAP, deleteNAP } from "@/lib/firestore";
 
 interface Props {
   naps: NAP[];
+  allClientes: import("@/lib/types").Cliente[];
   onRefresh: () => void;
 }
 
@@ -34,7 +35,7 @@ const SEMAFORO_LABELS: Record<SemaforoFilter, string> = {
   morado: "Morado (error)",
 };
 
-export default function NAPTable({ naps, onRefresh }: Props) {
+export default function NAPTable({ naps, allClientes, onRefresh }: Props) {
   // ── Filters ──
   const [search, setSearch] = useState("");
   const [municipio, setMunicipio] = useState("");
@@ -52,9 +53,10 @@ export default function NAPTable({ naps, onRefresh }: Props) {
 
   // Expand
   const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [clientes, setClientes] = useState<
-    Record<string, { id: string; nombre: string; id_wisp: string }[]>
-  >({});
+
+  const getClientesForNap = (napId: string) => {
+    return allClientes.filter((c) => c.id_nap === napId);
+  };
 
   // Derived lists
   const municipios = useMemo(() => {
@@ -125,21 +127,17 @@ export default function NAPTable({ naps, onRefresh }: Props) {
     });
   }, [naps, search, municipio, localidad, activosSemaforo, disponibilidad]);
 
-  // ── Expand logic ──
-  const loadClients = useCallback(async (napId: string) => {
-    const c = await getClientesByNAP(napId);
-    setClientes((prev) => ({ ...prev, [napId]: c }));
-  }, []);
-
-  useEffect(() => {
-    if (expandedId) loadClients(expandedId);
-  }, [expandedId, loadClients]);
-
   const handleDelete = async (clienteId: string, napId: string) => {
     const ok = confirm("¿Eliminar este cliente? Se liberará el puerto en la NAP.");
     if (!ok) return;
-    await deleteCliente(clienteId);
-    loadClients(napId);
+    try {
+      const result = await deleteCliente(clienteId);
+      if (!result.success) {
+        alert(result.error || "Error al eliminar cliente.");
+      }
+    } catch (e: any) {
+      alert("Excepción: " + e.message);
+    }
     onRefresh();
   };
 
@@ -522,16 +520,16 @@ export default function NAPTable({ naps, onRefresh }: Props) {
           </table>
 
           {/* ── Expanded client panel ── */}
-          {expandedId && clientes[expandedId] && (
+          {expandedId && (
             <div className="bg-slate-900 border-t border-slate-700 p-4">
               <h3 className="text-sm font-semibold mb-2">
                 Clientes en NAP: {naps.find((n) => n.id === expandedId)?.nombre}
               </h3>
-              {clientes[expandedId].length === 0 ? (
+              {getClientesForNap(expandedId).length === 0 ? (
                 <p className="text-slate-500 text-sm">Sin clientes registrados.</p>
               ) : (
                 <div className="flex flex-wrap gap-2">
-                  {clientes[expandedId].map((c) => (
+                  {getClientesForNap(expandedId).map((c) => (
                     <div
                       key={c.id}
                       className="flex items-center gap-2 bg-slate-800 rounded-lg px-3 py-1.5 text-sm"

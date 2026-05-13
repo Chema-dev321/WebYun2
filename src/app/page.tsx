@@ -36,27 +36,24 @@ function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<Tab>("dashboard");
 
-  const loadData = useCallback(async () => {
-    setLoading(true);
-    try {
-      const [napsData, clientesData, usuariosData] = await Promise.all([
-        getNAPs(),
-        getClientes(),
-        getUsuarios(),
-      ]);
-      setNaps(napsData);
-      setClientes(clientesData);
-      setUsuarios(usuariosData);
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Error al cargar datos.";
-      console.error("Error al cargar datos:", message);
-    }
-    setLoading(false);
+  useEffect(() => {
+    import("@/lib/firestore").then(({ subscribeToNAPs, subscribeToClientes, subscribeToUsuarios }) => {
+      const unsubNaps = subscribeToNAPs((data) => {
+        setNaps(data);
+        setLoading(false);
+      });
+      const unsubClientes = subscribeToClientes(setClientes);
+      const unsubUsuarios = subscribeToUsuarios(setUsuarios);
+
+      return () => {
+        unsubNaps();
+        unsubClientes();
+        unsubUsuarios();
+      };
+    });
   }, []);
 
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
+  const emptyRefresh = useCallback(() => {}, []);
 
   // Stats
   const stats = useMemo(() => {
@@ -134,17 +131,17 @@ function Dashboard() {
 
         {/* Tab content */}
         {tab === "dashboard" && (
-          <NAPTable naps={naps} onRefresh={loadData} />
+          <NAPTable naps={naps} allClientes={clientes} onRefresh={emptyRefresh} />
         )}
 
         {tab === "registro" && (
           <div className="max-w-2xl mx-auto">
-            <ClientForm onSuccess={loadData} />
+            <ClientForm onSuccess={emptyRefresh} />
           </div>
         )}
 
         {tab === "clientes" && (
-          <ClientesTab clientes={clientes} naps={naps} onRefresh={loadData} />
+          <ClientesTab clientes={clientes} naps={naps} onRefresh={emptyRefresh} />
         )}
 
         {tab === "buscar" && (
@@ -152,7 +149,7 @@ function Dashboard() {
         )}
 
         {tab === "agregarNap" && (
-          <AgregarNapTab onSuccess={loadData} />
+          <AgregarNapTab onSuccess={emptyRefresh} />
         )}
 
         {tab === "usuarios" && (

@@ -10,6 +10,7 @@ import {
   query,
   where,
   runTransaction,
+  onSnapshot
 } from "firebase/firestore";
 import { db } from "./firebase";
 import type { NAP, Cliente, LocalidadEntry } from "./types";
@@ -49,12 +50,11 @@ export async function updateNAP(id: string, data: Partial<NAP>): Promise<void> {
 
 export async function deleteNAP(napId: string): Promise<{ success: boolean; error?: string }> {
   try {
+    const clientesQuery = query(collection(db, CLIENTES_COL), where("id_nap", "==", napId));
+    const clientesSnap = await getDocs(clientesQuery);
+
     await runTransaction(db, async (tx) => {
-      const clientesQuery = query(collection(db, CLIENTES_COL), where("id_nap", "==", napId));
-      const clientesSnap = await tx.get(clientesQuery);
-
       clientesSnap.docs.forEach((d) => tx.delete(d.ref));
-
       tx.delete(doc(db, NAPS_COL, napId));
     });
     return { success: true };
@@ -177,11 +177,18 @@ export async function deleteCliente(clienteId: string): Promise<{ success: boole
     const result = await runTransaction(db, async (tx) => {
       const clienteSnap = await tx.get(clienteRef);
       if (!clienteSnap.exists()) {
-        return { success: false, error: "Cliente no encontrado." };
+        return { success: false, error: "Cliente no encontrado en la base de datos." };
       }
 
       const clienteData = clienteSnap.data() as Omit<Cliente, "id">;
-      const napRef = doc(db, NAPS_COL, clienteData.id_nap);
+      
+      // Manejar el caso donde el cliente no tiene id_nap por alguna razón
+      if (!clienteData.id_nap) {
+        tx.delete(clienteRef);
+        return { success: true, napData: null };
+      }
+
+      const napRef = doc(db, NAPS_COL, String(clienteData.id_nap));
       const napSnap = await tx.get(napRef);
 
       if (napSnap.exists()) {
@@ -198,6 +205,7 @@ export async function deleteCliente(clienteId: string): Promise<{ success: boole
     return result;
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Error al eliminar cliente.";
+    console.error("Error en deleteCliente:", err);
     return { success: false, error: message };
   }
 }
@@ -262,5 +270,28 @@ export async function addUsuario(uid: string, email: string): Promise<void> {
     uid,
     email,
     creado: new Date().toISOString().split("T")[0],
+  });
+}
+
+// ── Optimizaciones (Suscripciones en tiempo real) ──
+
+export function subscribeToNAPs(callback: (naps: NAP[]) => void) {
+  return onSnapshot(collection(db, NAPS_COL), (snap) => {
+    const napsData = snap.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<NAP, "id">) }));
+    callback(napsData.sort((a, b) => a.nombre.localeCompare(b.nombre)));
+  });
+}
+
+export function subscribeToClientes(callback: (clientes: Cliente[]) => void) {
+  return onSnapshot(collection(db, CLIENTES_COL), (snap) => {
+    const clientes = snap.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<Cliente, "id">) }));
+    callback(clientes.sort((a, b) => b.fecha_alta.localeCompare(a.fecha_alta)));
+  });
+}
+
+export function subscribeToUsuarios(callback: (usuarios: Usuario[]) => void) {
+  return onSnapshot(collection(db, USUARIOS_COL), (snap) => {
+    const usuarios = snap.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<Usuario, "id">) }));
+    callback(usuarios);
   });
 }
