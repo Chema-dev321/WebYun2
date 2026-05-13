@@ -1,0 +1,1164 @@
+{
+  "directed": false,
+  "multigraph": false,
+  "graph": {},
+  "nodes": [
+    {
+      "label": "postcss.config.mjs",
+      "file_type": "code",
+      "source_file": "postcss.config.mjs",
+      "source_location": "L1",
+      "id": "postcss_config_mjs",
+      "community": 7,
+      "norm_label": "postcss.config.mjs"
+    },
+    {
+      "label": "postcssConfig",
+      "file_type": "code",
+      "source_file": "postcss.config.mjs",
+      "source_location": "L1",
+      "id": "webyun_postcss_config_postcssconfig",
+      "community": 7,
+      "norm_label": "postcssconfig"
+    },
+    {
+      "label": "next-env.d.ts",
+      "file_type": "code",
+      "source_file": "next-env.d.ts",
+      "source_location": "L1",
+      "id": "next_env_d_ts",
+      "community": 9,
+      "norm_label": "next-env.d.ts"
+    },
+    {
+      "label": "next.config.ts",
+      "file_type": "code",
+      "source_file": "next.config.ts",
+      "source_location": "L1",
+      "id": "next_config_ts",
+      "community": 8,
+      "norm_label": "next.config.ts"
+    },
+    {
+      "label": "nextConfig",
+      "file_type": "code",
+      "source_file": "next.config.ts",
+      "source_location": "L3",
+      "id": "webyun_next_config_nextconfig",
+      "community": 8,
+      "norm_label": "nextconfig"
+    },
+    {
+      "label": "seed.ts",
+      "file_type": "code",
+      "source_file": "scripts/seed.ts",
+      "source_location": "L1",
+      "id": "scripts_seed_ts",
+      "community": 4,
+      "norm_label": "seed.ts"
+    },
+    {
+      "label": "firebaseConfig",
+      "file_type": "code",
+      "source_file": "scripts/seed.ts",
+      "source_location": "L15",
+      "id": "scripts_seed_firebaseconfig",
+      "community": 4,
+      "norm_label": "firebaseconfig"
+    },
+    {
+      "label": "db",
+      "file_type": "code",
+      "source_file": "scripts/seed.ts",
+      "source_location": "L25",
+      "id": "scripts_seed_db",
+      "community": 4,
+      "norm_label": "db"
+    },
+    {
+      "label": "CONFIG_GEOGRAFICA",
+      "file_type": "code",
+      "source_file": "scripts/seed.ts",
+      "source_location": "L27",
+      "id": "scripts_seed_config_geografica",
+      "community": 4,
+      "norm_label": "config_geografica"
+    },
+    {
+      "label": "NAPS",
+      "file_type": "code",
+      "source_file": "scripts/seed.ts",
+      "source_location": "L39",
+      "id": "scripts_seed_naps",
+      "community": 4,
+      "norm_label": "naps"
+    },
+    {
+      "label": "seed()",
+      "file_type": "code",
+      "source_file": "scripts/seed.ts",
+      "source_location": "L114",
+      "id": "scripts_seed_seed",
+      "community": 4,
+      "norm_label": "seed()"
+    },
+    {
+      "label": "index.ts",
+      "file_type": "code",
+      "source_file": "functions/src/index.ts",
+      "source_location": "L1",
+      "id": "functions_src_index_ts",
+      "community": 2,
+      "norm_label": "index.ts"
+    },
+    {
+      "label": "NAPData",
+      "file_type": "code",
+      "source_file": "functions/src/index.ts",
+      "source_location": "L9",
+      "id": "src_index_napdata",
+      "community": 2,
+      "norm_label": "napdata"
+    },
+    {
+      "label": "ClienteData",
+      "file_type": "code",
+      "source_file": "functions/src/index.ts",
+      "source_location": "L17",
+      "id": "src_index_clientedata",
+      "community": 2,
+      "norm_label": "clientedata"
+    },
+    {
+      "label": "createTransporter()",
+      "file_type": "code",
+      "source_file": "functions/src/index.ts",
+      "source_location": "L23",
+      "id": "src_index_createtransporter",
+      "community": 2,
+      "norm_label": "createtransporter()"
+    },
+    {
+      "label": "sendEmail()",
+      "file_type": "code",
+      "source_file": "functions/src/index.ts",
+      "source_location": "L35",
+      "id": "src_index_sendemail",
+      "community": 2,
+      "norm_label": "sendemail()"
+    },
+    {
+      "label": "onNAPUpdated",
+      "file_type": "code",
+      "source_file": "functions/src/index.ts",
+      "source_location": "L49",
+      "id": "src_index_onnapupdated",
+      "community": 2,
+      "norm_label": "onnapupdated"
+    },
+    {
+      "label": "onClienteDeleted",
+      "file_type": "code",
+      "source_file": "functions/src/index.ts",
+      "source_location": "L91",
+      "id": "src_index_onclientedeleted",
+      "community": 2,
+      "norm_label": "onclientedeleted"
+    },
+    {
+      "label": "layout.tsx",
+      "file_type": "code",
+      "source_file": "src/app/layout.tsx",
+      "source_location": "L1",
+      "id": "src_app_layout_tsx",
+      "community": 6,
+      "norm_label": "layout.tsx"
+    },
+    {
+      "label": "metadata",
+      "file_type": "code",
+      "source_file": "src/app/layout.tsx",
+      "source_location": "L4",
+      "id": "app_layout_metadata",
+      "community": 6,
+      "norm_label": "metadata"
+    },
+    {
+      "label": "RootLayout()",
+      "file_type": "code",
+      "source_file": "src/app/layout.tsx",
+      "source_location": "L9",
+      "id": "app_layout_rootlayout",
+      "community": 6,
+      "norm_label": "rootlayout()"
+    },
+    {
+      "label": "page.tsx",
+      "file_type": "code",
+      "source_file": "src/app/page.tsx",
+      "source_location": "L1",
+      "id": "src_app_page_tsx",
+      "community": 1,
+      "norm_label": "page.tsx"
+    },
+    {
+      "label": "Home()",
+      "file_type": "code",
+      "source_file": "src/app/page.tsx",
+      "source_location": "L9",
+      "id": "app_page_home",
+      "community": 1,
+      "norm_label": "home()"
+    },
+    {
+      "label": "NAPTable.tsx",
+      "file_type": "code",
+      "source_file": "src/components/NAPTable.tsx",
+      "source_location": "L1",
+      "id": "src_components_naptable_tsx",
+      "community": 5,
+      "norm_label": "naptable.tsx"
+    },
+    {
+      "label": "Props",
+      "file_type": "code",
+      "source_file": "src/components/NAPTable.tsx",
+      "source_location": "L7",
+      "id": "components_naptable_props",
+      "community": 5,
+      "norm_label": "props"
+    },
+    {
+      "label": "NAPTable()",
+      "file_type": "code",
+      "source_file": "src/components/NAPTable.tsx",
+      "source_location": "L12",
+      "id": "components_naptable_naptable",
+      "community": 5,
+      "norm_label": "naptable()"
+    },
+    {
+      "label": "ClientForm.tsx",
+      "file_type": "code",
+      "source_file": "src/components/ClientForm.tsx",
+      "source_location": "L1",
+      "id": "src_components_clientform_tsx",
+      "community": 3,
+      "norm_label": "clientform.tsx"
+    },
+    {
+      "label": "Props",
+      "file_type": "code",
+      "source_file": "src/components/ClientForm.tsx",
+      "source_location": "L12",
+      "id": "components_clientform_props",
+      "community": 3,
+      "norm_label": "props"
+    },
+    {
+      "label": "ClientForm()",
+      "file_type": "code",
+      "source_file": "src/components/ClientForm.tsx",
+      "source_location": "L16",
+      "id": "components_clientform_clientform",
+      "community": 3,
+      "norm_label": "clientform()"
+    },
+    {
+      "label": "firestore.ts",
+      "file_type": "code",
+      "source_file": "src/lib/firestore.ts",
+      "source_location": "L1",
+      "id": "src_lib_firestore_ts",
+      "community": 0,
+      "norm_label": "firestore.ts"
+    },
+    {
+      "label": "getNAPs()",
+      "file_type": "code",
+      "source_file": "src/lib/firestore.ts",
+      "source_location": "L23",
+      "id": "lib_firestore_getnaps",
+      "community": 1,
+      "norm_label": "getnaps()"
+    },
+    {
+      "label": "getNAPById()",
+      "file_type": "code",
+      "source_file": "src/lib/firestore.ts",
+      "source_location": "L29",
+      "id": "lib_firestore_getnapbyid",
+      "community": 0,
+      "norm_label": "getnapbyid()"
+    },
+    {
+      "label": "addNAP()",
+      "file_type": "code",
+      "source_file": "src/lib/firestore.ts",
+      "source_location": "L35",
+      "id": "lib_firestore_addnap",
+      "community": 0,
+      "norm_label": "addnap()"
+    },
+    {
+      "label": "updateNAP()",
+      "file_type": "code",
+      "source_file": "src/lib/firestore.ts",
+      "source_location": "L40",
+      "id": "lib_firestore_updatenap",
+      "community": 0,
+      "norm_label": "updatenap()"
+    },
+    {
+      "label": "getClientes()",
+      "file_type": "code",
+      "source_file": "src/lib/firestore.ts",
+      "source_location": "L46",
+      "id": "lib_firestore_getclientes",
+      "community": 0,
+      "norm_label": "getclientes()"
+    },
+    {
+      "label": "getClientesByNAP()",
+      "file_type": "code",
+      "source_file": "src/lib/firestore.ts",
+      "source_location": "L52",
+      "id": "lib_firestore_getclientesbynap",
+      "community": 5,
+      "norm_label": "getclientesbynap()"
+    },
+    {
+      "label": "getClienteByWisp()",
+      "file_type": "code",
+      "source_file": "src/lib/firestore.ts",
+      "source_location": "L62",
+      "id": "lib_firestore_getclientebywisp",
+      "community": 0,
+      "norm_label": "getclientebywisp()"
+    },
+    {
+      "label": "RegisterResult",
+      "file_type": "code",
+      "source_file": "src/lib/firestore.ts",
+      "source_location": "L72",
+      "id": "lib_firestore_registerresult",
+      "community": 0,
+      "norm_label": "registerresult"
+    },
+    {
+      "label": "registerCliente()",
+      "file_type": "code",
+      "source_file": "src/lib/firestore.ts",
+      "source_location": "L78",
+      "id": "lib_firestore_registercliente",
+      "community": 3,
+      "norm_label": "registercliente()"
+    },
+    {
+      "label": "deleteCliente()",
+      "file_type": "code",
+      "source_file": "src/lib/firestore.ts",
+      "source_location": "L135",
+      "id": "lib_firestore_deletecliente",
+      "community": 5,
+      "norm_label": "deletecliente()"
+    },
+    {
+      "label": "getMunicipios()",
+      "file_type": "code",
+      "source_file": "src/lib/firestore.ts",
+      "source_location": "L169",
+      "id": "lib_firestore_getmunicipios",
+      "community": 3,
+      "norm_label": "getmunicipios()"
+    },
+    {
+      "label": "getLocalidadesByMunicipio()",
+      "file_type": "code",
+      "source_file": "src/lib/firestore.ts",
+      "source_location": "L179",
+      "id": "lib_firestore_getlocalidadesbymunicipio",
+      "community": 3,
+      "norm_label": "getlocalidadesbymunicipio()"
+    },
+    {
+      "label": "getNAPsByLocalidad()",
+      "file_type": "code",
+      "source_file": "src/lib/firestore.ts",
+      "source_location": "L187",
+      "id": "lib_firestore_getnapsbylocalidad",
+      "community": 3,
+      "norm_label": "getnapsbylocalidad()"
+    },
+    {
+      "label": "getNAPColor()",
+      "file_type": "code",
+      "source_file": "src/lib/firestore.ts",
+      "source_location": "L195",
+      "id": "lib_firestore_getnapcolor",
+      "community": 5,
+      "norm_label": "getnapcolor()"
+    },
+    {
+      "label": "firebase.ts",
+      "file_type": "code",
+      "source_file": "src/lib/firebase.ts",
+      "source_location": "L1",
+      "id": "src_lib_firebase_ts",
+      "community": 0,
+      "norm_label": "firebase.ts"
+    },
+    {
+      "label": "firebaseConfig",
+      "file_type": "code",
+      "source_file": "src/lib/firebase.ts",
+      "source_location": "L4",
+      "id": "lib_firebase_firebaseconfig",
+      "community": 0,
+      "norm_label": "firebaseconfig"
+    },
+    {
+      "label": "db",
+      "file_type": "code",
+      "source_file": "src/lib/firebase.ts",
+      "source_location": "L14",
+      "id": "lib_firebase_db",
+      "community": 0,
+      "norm_label": "db"
+    },
+    {
+      "label": "types.ts",
+      "file_type": "code",
+      "source_file": "src/lib/types.ts",
+      "source_location": "L1",
+      "id": "src_lib_types_ts",
+      "community": 1,
+      "norm_label": "types.ts"
+    },
+    {
+      "label": "NAP",
+      "file_type": "code",
+      "source_file": "src/lib/types.ts",
+      "source_location": "L1",
+      "id": "lib_types_nap",
+      "community": 1,
+      "norm_label": "nap"
+    },
+    {
+      "label": "Cliente",
+      "file_type": "code",
+      "source_file": "src/lib/types.ts",
+      "source_location": "L12",
+      "id": "lib_types_cliente",
+      "community": 1,
+      "norm_label": "cliente"
+    },
+    {
+      "label": "LocalidadEntry",
+      "file_type": "code",
+      "source_file": "src/lib/types.ts",
+      "source_location": "L22",
+      "id": "lib_types_localidadentry",
+      "community": 1,
+      "norm_label": "localidadentry"
+    },
+    {
+      "label": "SemaphoreColor",
+      "file_type": "code",
+      "source_file": "src/lib/types.ts",
+      "source_location": "L27",
+      "id": "lib_types_semaphorecolor",
+      "community": 1,
+      "norm_label": "semaphorecolor"
+    }
+  ],
+  "links": [
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "postcss.config.mjs",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "postcss_config_mjs",
+      "target": "webyun_postcss_config_postcssconfig",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "next.config.ts",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "next_config_ts",
+      "target": "webyun_next_config_nextconfig",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/seed.ts",
+      "source_location": "L15",
+      "weight": 1.0,
+      "source": "scripts_seed_ts",
+      "target": "scripts_seed_firebaseconfig",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/seed.ts",
+      "source_location": "L25",
+      "weight": 1.0,
+      "source": "scripts_seed_ts",
+      "target": "scripts_seed_db",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/seed.ts",
+      "source_location": "L27",
+      "weight": 1.0,
+      "source": "scripts_seed_ts",
+      "target": "scripts_seed_config_geografica",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/seed.ts",
+      "source_location": "L39",
+      "weight": 1.0,
+      "source": "scripts_seed_ts",
+      "target": "scripts_seed_naps",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/seed.ts",
+      "source_location": "L114",
+      "weight": 1.0,
+      "source": "scripts_seed_ts",
+      "target": "scripts_seed_seed",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "functions/src/index.ts",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "functions_src_index_ts",
+      "target": "src_index_napdata",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "functions/src/index.ts",
+      "source_location": "L17",
+      "weight": 1.0,
+      "source": "functions_src_index_ts",
+      "target": "src_index_clientedata",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "functions/src/index.ts",
+      "source_location": "L23",
+      "weight": 1.0,
+      "source": "functions_src_index_ts",
+      "target": "src_index_createtransporter",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "functions/src/index.ts",
+      "source_location": "L35",
+      "weight": 1.0,
+      "source": "functions_src_index_ts",
+      "target": "src_index_sendemail",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "functions/src/index.ts",
+      "source_location": "L49",
+      "weight": 1.0,
+      "source": "functions_src_index_ts",
+      "target": "src_index_onnapupdated",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "functions/src/index.ts",
+      "source_location": "L91",
+      "weight": 1.0,
+      "source": "functions_src_index_ts",
+      "target": "src_index_onclientedeleted",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "functions/src/index.ts",
+      "source_location": "L36",
+      "weight": 1.0,
+      "source": "src_index_sendemail",
+      "target": "src_index_createtransporter",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/layout.tsx",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "src_app_layout_tsx",
+      "target": "app_layout_metadata",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/layout.tsx",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "src_app_layout_tsx",
+      "target": "app_layout_rootlayout",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/page.tsx",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "src_app_page_tsx",
+      "target": "src_lib_types_ts",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/page.tsx",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "src_app_page_tsx",
+      "target": "lib_types_nap",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/page.tsx",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "src_app_page_tsx",
+      "target": "src_lib_firestore_ts",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/page.tsx",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "src_app_page_tsx",
+      "target": "lib_firestore_getnaps",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/page.tsx",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "src_app_page_tsx",
+      "target": "src_components_naptable_tsx",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/page.tsx",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "src_app_page_tsx",
+      "target": "src_components_clientform_tsx",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/page.tsx",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "src_app_page_tsx",
+      "target": "app_page_home",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/NAPTable.tsx",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "src_components_naptable_tsx",
+      "target": "src_lib_types_ts",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/NAPTable.tsx",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "src_components_naptable_tsx",
+      "target": "lib_types_nap",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/NAPTable.tsx",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "src_components_naptable_tsx",
+      "target": "src_lib_firestore_ts",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/NAPTable.tsx",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "src_components_naptable_tsx",
+      "target": "lib_firestore_getclientesbynap",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/NAPTable.tsx",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "src_components_naptable_tsx",
+      "target": "lib_firestore_deletecliente",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/NAPTable.tsx",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "src_components_naptable_tsx",
+      "target": "lib_firestore_getnapcolor",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/NAPTable.tsx",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "src_components_naptable_tsx",
+      "target": "components_naptable_props",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/NAPTable.tsx",
+      "source_location": "L12",
+      "weight": 1.0,
+      "source": "src_components_naptable_tsx",
+      "target": "components_naptable_naptable",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/ClientForm.tsx",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "src_components_clientform_tsx",
+      "target": "src_lib_types_ts",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/ClientForm.tsx",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "src_components_clientform_tsx",
+      "target": "lib_types_nap",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/ClientForm.tsx",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "src_components_clientform_tsx",
+      "target": "src_lib_firestore_ts",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/ClientForm.tsx",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "src_components_clientform_tsx",
+      "target": "lib_firestore_getmunicipios",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/ClientForm.tsx",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "src_components_clientform_tsx",
+      "target": "lib_firestore_getlocalidadesbymunicipio",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/ClientForm.tsx",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "src_components_clientform_tsx",
+      "target": "lib_firestore_getnapsbylocalidad",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/ClientForm.tsx",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "src_components_clientform_tsx",
+      "target": "lib_firestore_registercliente",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/ClientForm.tsx",
+      "source_location": "L12",
+      "weight": 1.0,
+      "source": "src_components_clientform_tsx",
+      "target": "components_clientform_props",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/ClientForm.tsx",
+      "source_location": "L16",
+      "weight": 1.0,
+      "source": "src_components_clientform_tsx",
+      "target": "components_clientform_clientform",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/lib/firestore.ts",
+      "source_location": "L14",
+      "weight": 1.0,
+      "source": "src_lib_firestore_ts",
+      "target": "src_lib_firebase_ts",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/lib/firestore.ts",
+      "source_location": "L14",
+      "weight": 1.0,
+      "source": "src_lib_firestore_ts",
+      "target": "lib_firebase_db",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/lib/firestore.ts",
+      "source_location": "L15",
+      "weight": 1.0,
+      "source": "src_lib_firestore_ts",
+      "target": "src_lib_types_ts",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/lib/firestore.ts",
+      "source_location": "L15",
+      "weight": 1.0,
+      "source": "src_lib_firestore_ts",
+      "target": "lib_types_nap",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/lib/firestore.ts",
+      "source_location": "L15",
+      "weight": 1.0,
+      "source": "src_lib_firestore_ts",
+      "target": "lib_types_cliente",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/lib/firestore.ts",
+      "source_location": "L15",
+      "weight": 1.0,
+      "source": "src_lib_firestore_ts",
+      "target": "lib_types_localidadentry",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/lib/firestore.ts",
+      "source_location": "L23",
+      "weight": 1.0,
+      "source": "src_lib_firestore_ts",
+      "target": "lib_firestore_getnaps",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/lib/firestore.ts",
+      "source_location": "L29",
+      "weight": 1.0,
+      "source": "src_lib_firestore_ts",
+      "target": "lib_firestore_getnapbyid",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/lib/firestore.ts",
+      "source_location": "L35",
+      "weight": 1.0,
+      "source": "src_lib_firestore_ts",
+      "target": "lib_firestore_addnap",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/lib/firestore.ts",
+      "source_location": "L40",
+      "weight": 1.0,
+      "source": "src_lib_firestore_ts",
+      "target": "lib_firestore_updatenap",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/lib/firestore.ts",
+      "source_location": "L46",
+      "weight": 1.0,
+      "source": "src_lib_firestore_ts",
+      "target": "lib_firestore_getclientes",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/lib/firestore.ts",
+      "source_location": "L52",
+      "weight": 1.0,
+      "source": "src_lib_firestore_ts",
+      "target": "lib_firestore_getclientesbynap",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/lib/firestore.ts",
+      "source_location": "L62",
+      "weight": 1.0,
+      "source": "src_lib_firestore_ts",
+      "target": "lib_firestore_getclientebywisp",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/lib/firestore.ts",
+      "source_location": "L72",
+      "weight": 1.0,
+      "source": "src_lib_firestore_ts",
+      "target": "lib_firestore_registerresult",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/lib/firestore.ts",
+      "source_location": "L78",
+      "weight": 1.0,
+      "source": "src_lib_firestore_ts",
+      "target": "lib_firestore_registercliente",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/lib/firestore.ts",
+      "source_location": "L135",
+      "weight": 1.0,
+      "source": "src_lib_firestore_ts",
+      "target": "lib_firestore_deletecliente",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/lib/firestore.ts",
+      "source_location": "L169",
+      "weight": 1.0,
+      "source": "src_lib_firestore_ts",
+      "target": "lib_firestore_getmunicipios",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/lib/firestore.ts",
+      "source_location": "L179",
+      "weight": 1.0,
+      "source": "src_lib_firestore_ts",
+      "target": "lib_firestore_getlocalidadesbymunicipio",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/lib/firestore.ts",
+      "source_location": "L187",
+      "weight": 1.0,
+      "source": "src_lib_firestore_ts",
+      "target": "lib_firestore_getnapsbylocalidad",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/lib/firestore.ts",
+      "source_location": "L195",
+      "weight": 1.0,
+      "source": "src_lib_firestore_ts",
+      "target": "lib_firestore_getnapcolor",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/lib/firebase.ts",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "src_lib_firebase_ts",
+      "target": "lib_firebase_firebaseconfig",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/lib/firebase.ts",
+      "source_location": "L14",
+      "weight": 1.0,
+      "source": "src_lib_firebase_ts",
+      "target": "lib_firebase_db",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/lib/types.ts",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "src_lib_types_ts",
+      "target": "lib_types_nap",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/lib/types.ts",
+      "source_location": "L12",
+      "weight": 1.0,
+      "source": "src_lib_types_ts",
+      "target": "lib_types_cliente",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/lib/types.ts",
+      "source_location": "L22",
+      "weight": 1.0,
+      "source": "src_lib_types_ts",
+      "target": "lib_types_localidadentry",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/lib/types.ts",
+      "source_location": "L27",
+      "weight": 1.0,
+      "source": "src_lib_types_ts",
+      "target": "lib_types_semaphorecolor",
+      "confidence_score": 1.0
+    }
+  ],
+  "hyperedges": []
+}

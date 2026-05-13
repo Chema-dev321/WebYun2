@@ -1,0 +1,153 @@
+{
+  "communities": {
+    "0": [
+      "lib_firebase_db",
+      "lib_firebase_firebaseconfig",
+      "lib_firestore_addnap",
+      "lib_firestore_getclientebywisp",
+      "lib_firestore_getclientes",
+      "lib_firestore_getnapbyid",
+      "lib_firestore_registerresult",
+      "lib_firestore_updatenap",
+      "src_lib_firebase_ts",
+      "src_lib_firestore_ts"
+    ],
+    "1": [
+      "app_page_home",
+      "lib_firestore_getnaps",
+      "lib_types_cliente",
+      "lib_types_localidadentry",
+      "lib_types_nap",
+      "lib_types_semaphorecolor",
+      "src_app_page_tsx",
+      "src_lib_types_ts"
+    ],
+    "2": [
+      "functions_src_index_ts",
+      "src_index_clientedata",
+      "src_index_createtransporter",
+      "src_index_napdata",
+      "src_index_onclientedeleted",
+      "src_index_onnapupdated",
+      "src_index_sendemail"
+    ],
+    "3": [
+      "components_clientform_clientform",
+      "components_clientform_props",
+      "lib_firestore_getlocalidadesbymunicipio",
+      "lib_firestore_getmunicipios",
+      "lib_firestore_getnapsbylocalidad",
+      "lib_firestore_registercliente",
+      "src_components_clientform_tsx"
+    ],
+    "4": [
+      "scripts_seed_config_geografica",
+      "scripts_seed_db",
+      "scripts_seed_firebaseconfig",
+      "scripts_seed_naps",
+      "scripts_seed_seed",
+      "scripts_seed_ts"
+    ],
+    "5": [
+      "components_naptable_naptable",
+      "components_naptable_props",
+      "lib_firestore_deletecliente",
+      "lib_firestore_getclientesbynap",
+      "lib_firestore_getnapcolor",
+      "src_components_naptable_tsx"
+    ],
+    "6": [
+      "app_layout_metadata",
+      "app_layout_rootlayout",
+      "src_app_layout_tsx"
+    ],
+    "7": [
+      "postcss_config_mjs",
+      "webyun_postcss_config_postcssconfig"
+    ],
+    "8": [
+      "next_config_ts",
+      "webyun_next_config_nextconfig"
+    ],
+    "9": [
+      "next_env_d_ts"
+    ]
+  },
+  "cohesion": {
+    "0": 0.22,
+    "1": 0.29,
+    "2": 0.33,
+    "3": 0.29,
+    "4": 0.33,
+    "5": 0.33,
+    "6": 0.67,
+    "7": 1.0,
+    "8": 1.0,
+    "9": 1.0
+  },
+  "gods": [
+    {
+      "id": "lib_types_nap",
+      "label": "NAP",
+      "degree": 5
+    },
+    {
+      "id": "src_index_createtransporter",
+      "label": "createTransporter()",
+      "degree": 2
+    },
+    {
+      "id": "src_index_sendemail",
+      "label": "sendEmail()",
+      "degree": 2
+    },
+    {
+      "id": "lib_firestore_getnaps",
+      "label": "getNAPs()",
+      "degree": 2
+    },
+    {
+      "id": "lib_firestore_getclientesbynap",
+      "label": "getClientesByNAP()",
+      "degree": 2
+    },
+    {
+      "id": "lib_firestore_registercliente",
+      "label": "registerCliente()",
+      "degree": 2
+    },
+    {
+      "id": "lib_firestore_deletecliente",
+      "label": "deleteCliente()",
+      "degree": 2
+    },
+    {
+      "id": "lib_firestore_getmunicipios",
+      "label": "getMunicipios()",
+      "degree": 2
+    },
+    {
+      "id": "lib_firestore_getlocalidadesbymunicipio",
+      "label": "getLocalidadesByMunicipio()",
+      "degree": 2
+    },
+    {
+      "id": "lib_firestore_getnapsbylocalidad",
+      "label": "getNAPsByLocalidad()",
+      "degree": 2
+    }
+  ],
+  "surprises": [],
+  "questions": [
+    {
+      "type": "bridge_node",
+      "question": "Why does `NAP` connect `Community 1` to `Community 0`, `Community 3`, `Community 5`?",
+      "why": "High betweenness centrality (0.002) - this node is a cross-community bridge."
+    },
+    {
+      "type": "isolated_nodes",
+      "question": "What connects `postcssConfig`, `nextConfig`, `firebaseConfig` to the rest of the system?",
+      "why": "16 weakly-connected nodes found - possible documentation gaps or missing edges."
+    }
+  ]
+}

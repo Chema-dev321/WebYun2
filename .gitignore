@@ -1,0 +1,8 @@
+node_modules/
+.next/
+out/
+.env.local
+.env
+.npm-cache/
+functions/lib/
+functions/node_modules/
