@@ -565,6 +565,7 @@ function AgregarNapTab({ onSuccess }: { onSuccess: () => void }) {
   const [municipios, setMunicipios] = useState<string[]>([]);
   const [localidades, setLocalidades] = useState<string[]>([]);
   const [modoMunicipio, setModoMunicipio] = useState<"select" | "custom">("select");
+  const [modoLocalidad, setModoLocalidad] = useState<"select" | "custom">("select");
 
   // Duplicate check
   const [napExiste, setNapExiste] = useState(false);
@@ -739,8 +740,22 @@ function AgregarNapTab({ onSuccess }: { onSuccess: () => void }) {
             )}
           </div>
           <div>
-            <label className="block text-xs text-slate-400 mb-1">Localidad</label>
-            {localidades.length > 0 && modoMunicipio === "select" ? (
+            <label className="block text-xs text-slate-400 mb-1">
+              Localidad
+              {municipio && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setModoLocalidad(modoLocalidad === "select" ? "custom" : "select");
+                    setLocalidad("");
+                  }}
+                  className="ml-2 text-blue-400 hover:text-blue-300"
+                >
+                  {modoLocalidad === "select" ? "+ nueva" : "▾ existente"}
+                </button>
+              )}
+            </label>
+            {localidades.length > 0 && modoLocalidad === "select" ? (
               <select
                 value={localidad}
                 onChange={(e) => setLocalidad(e.target.value)}

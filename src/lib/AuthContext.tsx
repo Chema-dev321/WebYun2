@@ -5,17 +5,22 @@ import {
   onAuthStateChanged,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
+  signInWithPopup,
+  GoogleAuthProvider,
   signOut,
   User,
 } from "firebase/auth";
 import { auth } from "./firebase";
 import { addUsuario } from "./firestore";
 
+const googleProvider = new GoogleAuthProvider();
+
 interface AuthContextType {
   user: User | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string) => Promise<void>;
+  loginWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -42,12 +47,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await addUsuario(cred.user.uid, email);
   };
 
+  const loginWithGoogle = async () => {
+    const result = await signInWithPopup(auth, googleProvider);
+    try {
+      await addUsuario(result.user.uid, result.user.email || "");
+    } catch {
+      // Firestore write can fail silently — user is already signed in
+    }
+  };
+
   const logout = async () => {
     await signOut(auth);
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, register, loginWithGoogle, logout }}>
       {children}
     </AuthContext.Provider>
   );

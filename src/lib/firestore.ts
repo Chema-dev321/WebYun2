@@ -270,7 +270,7 @@ export async function addUsuario(uid: string, email: string): Promise<void> {
     uid,
     email,
     creado: new Date().toISOString().split("T")[0],
-  });
+  }, { merge: true });
 }
 
 // ── Optimizaciones (Suscripciones en tiempo real) ──
