@@ -10,7 +10,8 @@ import {
   query,
   where,
   runTransaction,
-  onSnapshot
+  onSnapshot,
+  getCountFromServer
 } from "firebase/firestore";
 import { db } from "./firebase";
 import type { NAP, Cliente, LocalidadEntry } from "./types";
@@ -70,6 +71,11 @@ export async function getClientes(): Promise<Cliente[]> {
   const snap = await getDocs(collection(db, CLIENTES_COL));
   const clientes = snap.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<Cliente, "id">) }));
   return clientes.sort((a, b) => b.fecha_alta.localeCompare(a.fecha_alta));
+}
+
+export async function getClientesCount(): Promise<number> {
+  const snap = await getCountFromServer(collection(db, CLIENTES_COL));
+  return snap.data().count;
 }
 
 export async function getClientesByNAP(napId: string): Promise<Cliente[]> {

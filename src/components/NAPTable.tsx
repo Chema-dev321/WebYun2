@@ -6,7 +6,6 @@ import { deleteCliente, getNAPColor, updateNAP, deleteNAP } from "@/lib/firestor
 
 interface Props {
   naps: NAP[];
-  allClientes: import("@/lib/types").Cliente[];
   onRefresh: () => void;
 }
 
@@ -35,7 +34,7 @@ const SEMAFORO_LABELS: Record<SemaforoFilter, string> = {
   morado: "Morado (error)",
 };
 
-export default function NAPTable({ naps, allClientes, onRefresh }: Props) {
+export default function NAPTable({ naps, onRefresh }: Props) {
   // ── Filters ──
   const [search, setSearch] = useState("");
   const [municipio, setMunicipio] = useState("");
@@ -53,10 +52,8 @@ export default function NAPTable({ naps, allClientes, onRefresh }: Props) {
 
   // Expand
   const [expandedId, setExpandedId] = useState<string | null>(null);
-
-  const getClientesForNap = (napId: string) => {
-    return allClientes.filter((c) => c.id_nap === napId);
-  };
+  const [expandedClientes, setExpandedClientes] = useState<import("@/lib/types").Cliente[]>([]);
+  const [loadingClientes, setLoadingClientes] = useState(false);
 
   // Derived lists
   const municipios = useMemo(() => {
@@ -141,8 +138,22 @@ export default function NAPTable({ naps, allClientes, onRefresh }: Props) {
     onRefresh();
   };
 
-  const toggleExpand = (napId: string) => {
-    setExpandedId((prev) => (prev === napId ? null : napId));
+  const toggleExpand = async (napId: string) => {
+    if (expandedId === napId) {
+      setExpandedId(null);
+      setExpandedClientes([]);
+    } else {
+      setExpandedId(napId);
+      setLoadingClientes(true);
+      try {
+        const { getClientesByNAP } = await import("@/lib/firestore");
+        const data = await getClientesByNAP(napId);
+        setExpandedClientes(data);
+      } catch (err) {
+        console.error("Error cargando clientes de NAP", err);
+      }
+      setLoadingClientes(false);
+    }
   };
 
   const startEdit = (nap: NAP) => {
@@ -525,11 +536,13 @@ export default function NAPTable({ naps, allClientes, onRefresh }: Props) {
               <h3 className="text-sm font-semibold mb-2">
                 Clientes en NAP: {naps.find((n) => n.id === expandedId)?.nombre}
               </h3>
-              {getClientesForNap(expandedId).length === 0 ? (
+              {loadingClientes ? (
+                <p className="text-slate-500 text-sm">Cargando clientes...</p>
+              ) : expandedClientes.length === 0 ? (
                 <p className="text-slate-500 text-sm">Sin clientes registrados.</p>
               ) : (
                 <div className="flex flex-wrap gap-2">
-                  {getClientesForNap(expandedId).map((c) => (
+                  {expandedClientes.map((c) => (
                     <div
                       key={c.id}
                       className="flex items-center gap-2 bg-slate-800 rounded-lg px-3 py-1.5 text-sm"

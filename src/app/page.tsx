@@ -31,7 +31,7 @@ export default function Home() {
 function Dashboard() {
   const { user, logout } = useAuth();
   const [naps, setNaps] = useState<NAP[]>([]);
-  const [clientes, setClientes] = useState<Cliente[]>([]);
+  const [totalClientesCount, setTotalClientesCount] = useState(0);
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<Tab>("dashboard");
@@ -39,15 +39,18 @@ function Dashboard() {
   useEffect(() => {
     let unsubs: Array<() => void> = [];
     import("@/lib/firestore")
-      .then(({ subscribeToNAPs, subscribeToClientes, subscribeToUsuarios }) => {
+      .then(({ subscribeToNAPs, subscribeToUsuarios, getClientesCount }) => {
         if (unsubs.length === -1) return; // unmounted
+
+        // Get count without reading all documents
+        getClientesCount().then(setTotalClientesCount).catch(console.error);
+
         unsubs.push(
           subscribeToNAPs((data) => {
             setNaps(data);
             setLoading(false);
           })
         );
-        unsubs.push(subscribeToClientes(setClientes));
         unsubs.push(subscribeToUsuarios(setUsuarios));
       })
       .catch((err) => {
@@ -69,9 +72,9 @@ function Dashboard() {
     const totalOcupados = naps.reduce((s, n) => s + n.puertos_ocupados, 0);
     const pctOcupacion =
       totalPuertos > 0 ? Math.round((totalOcupados / totalPuertos) * 100) : 0;
-    const totalClientes = clientes.length;
+    const totalClientes = totalClientesCount;
     return { totalNaps, totalPuertos, totalOcupados, pctOcupacion, totalClientes };
-  }, [naps, clientes]);
+  }, [naps, totalClientesCount]);
 
   if (loading) {
     return (
@@ -138,7 +141,7 @@ function Dashboard() {
 
         {/* Tab content */}
         {tab === "dashboard" && (
-          <NAPTable naps={naps} allClientes={clientes} onRefresh={emptyRefresh} />
+          <NAPTable naps={naps} onRefresh={emptyRefresh} />
         )}
 
         {tab === "registro" && (
@@ -148,7 +151,7 @@ function Dashboard() {
         )}
 
         {tab === "clientes" && (
-          <ClientesTab clientes={clientes} naps={naps} onRefresh={emptyRefresh} />
+          <ClientesTab naps={naps} />
         )}
 
         {tab === "buscar" && (
@@ -186,10 +189,23 @@ function StatCard({ label, value, color }: { label: string; value: string | numb
 }
 
 // ── Tab Clientes ──
-function ClientesTab({ clientes, naps, onRefresh }: { clientes: Cliente[]; naps: NAP[]; onRefresh: () => void }) {
+function ClientesTab({ naps }: { naps: NAP[] }) {
+  const [clientes, setClientes] = useState<Cliente[]>([]);
+  const [loadingClientes, setLoadingClientes] = useState(true);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(0);
   const pageSize = 25;
+
+  useEffect(() => {
+    let unsubs = () => {};
+    import("@/lib/firestore").then(({ subscribeToClientes }) => {
+      unsubs = subscribeToClientes((data) => {
+        setClientes(data);
+        setLoadingClientes(false);
+      });
+    });
+    return () => unsubs();
+  }, []);
 
   const filtered = useMemo(() => {
     if (!search.trim()) return clientes;
@@ -236,7 +252,9 @@ function ClientesTab({ clientes, naps, onRefresh }: { clientes: Cliente[]; naps:
         </span>
       </div>
 
-      {paged.length === 0 ? (
+      {loadingClientes ? (
+        <div className="text-center py-12 text-slate-500">Cargando lista de clientes...</div>
+      ) : paged.length === 0 ? (
         <div className="text-center py-12 text-slate-500">
           {search ? "Sin resultados." : "No hay clientes registrados."}
         </div>
