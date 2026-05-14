@@ -146,14 +146,6 @@ async function uploadNAPs() {
         const msg = err instanceof Error ? err.message : String(err);
         console.error(`  ⚠️  Error al subir NAP ${nap.id_nap}: ${msg}`);
       }
-    }
-  }
-    } catch (err: unknown) {
-      errors++;
-      if (errors <= 3) {
-        const msg = err instanceof Error ? err.message : String(err);
-        console.error(`  ⚠️  Error al subir NAP ${nap.id_nap}: ${msg}`);
-      }
       if (errors > 3 && errors % 100 === 0) {
         console.error(`  ⚠️  ${errors} errores acumulados...`);
       }
