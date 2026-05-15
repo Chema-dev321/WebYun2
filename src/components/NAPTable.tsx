@@ -7,6 +7,7 @@ import { deleteCliente, getNAPColor, updateNAP, deleteNAP } from "@/lib/firestor
 interface Props {
   naps: NAP[];
   onRefresh: () => void;
+  onFilterChange?: (filtered: NAP[]) => void;
 }
 
 type SemaforoFilter = "verde" | "amarillo" | "rojo" | "morado";
@@ -16,7 +17,7 @@ function getSemaforo(nap: NAP): SemaforoFilter {
   const c = nap.capacidad_total;
   if (o > c) return "morado";
   if (o === c) return "rojo";
-  if (o >= c * 0.75) return "amarillo";
+  if (o >= c * 0.7) return "amarillo";
   return "verde";
 }
 
@@ -29,12 +30,12 @@ const SEMAFORO_COLORS: Record<SemaforoFilter, string> = {
 
 const SEMAFORO_LABELS: Record<SemaforoFilter, string> = {
   verde: "Verde (disponible)",
-  amarillo: "Amarillo (≥75%)",
+  amarillo: "Amarillo (≥70%)",
   rojo: "Rojo (lleno)",
   morado: "Morado (error)",
 };
 
-export default function NAPTable({ naps, onRefresh }: Props) {
+export default function NAPTable({ naps, onRefresh, onFilterChange }: Props) {
   // ── Filters ──
   const [search, setSearch] = useState("");
   const [municipio, setMunicipio] = useState("");
@@ -123,6 +124,11 @@ export default function NAPTable({ naps, onRefresh }: Props) {
       return true;
     });
   }, [naps, search, municipio, localidad, activosSemaforo, disponibilidad]);
+
+  // Report filtered NAPs to parent for dashboard stats
+  useEffect(() => {
+    onFilterChange?.(filteredNaps);
+  }, [filteredNaps, onFilterChange]);
 
   const handleDelete = async (clienteId: string, napId: string) => {
     const ok = confirm("¿Eliminar este cliente? Se liberará el puerto en la NAP.");
@@ -373,7 +379,7 @@ export default function NAPTable({ naps, onRefresh }: Props) {
                             ? "ERROR: sobre-ocupación"
                             : nap.puertos_ocupados === nap.capacidad_total
                             ? "LLENO"
-                            : nap.puertos_ocupados >= nap.capacidad_total * 0.75
+                            : nap.puertos_ocupados >= nap.capacidad_total * 0.7
                             ? "Alta ocupación"
                             : "Disponible"
                         }
@@ -569,7 +575,7 @@ export default function NAPTable({ naps, onRefresh }: Props) {
               <span className="w-3 h-3 rounded-full bg-green-500" /> Disponible
             </span>
             <span className="flex items-center gap-1">
-              <span className="w-3 h-3 rounded-full bg-yellow-500" /> ≥75%
+              <span className="w-3 h-3 rounded-full bg-yellow-500" /> ≥70%
             </span>
             <span className="flex items-center gap-1">
               <span className="w-3 h-3 rounded-full bg-red-500" /> Lleno

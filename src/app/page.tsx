@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback, useMemo } from "react";
 import type { NAP, Cliente } from "@/lib/types";
-import { getNAPs, getClientes, getClienteByWisp, getNAPById, addNAP, getUsuarios, updateCliente, deleteCliente } from "@/lib/firestore";
+import { getNAPs, getClientes, getClienteByWisp, getNAPById, addNAP, getUsuarios, updateCliente, deleteCliente, updateClienteNAP } from "@/lib/firestore";
 import type { Usuario } from "@/lib/firestore";
 import NAPTable from "@/components/NAPTable";
 import ClientForm from "@/components/ClientForm";
@@ -35,6 +35,7 @@ function Dashboard() {
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<Tab>("dashboard");
+  const [filteredNaps, setFilteredNaps] = useState<NAP[] | null>(null);
 
   useEffect(() => {
     let unsubs: Array<() => void> = [];
@@ -65,16 +66,18 @@ function Dashboard() {
 
   const emptyRefresh = useCallback(() => {}, []);
 
-  // Stats
+  // Stats — use filtered NAPs when filters are active, otherwise all NAPs
   const stats = useMemo(() => {
-    const totalNaps = naps.length;
-    const totalPuertos = naps.reduce((s, n) => s + n.capacidad_total, 0);
-    const totalOcupados = naps.reduce((s, n) => s + n.puertos_ocupados, 0);
+    const hasFilter = filteredNaps && filteredNaps.length < naps.length;
+    const sourceNaps = hasFilter ? filteredNaps : naps;
+    const totalNaps = sourceNaps.length;
+    const totalPuertos = sourceNaps.reduce((s, n) => s + n.capacidad_total, 0);
+    const totalOcupados = sourceNaps.reduce((s, n) => s + n.puertos_ocupados, 0);
     const pctOcupacion =
       totalPuertos > 0 ? Math.round((totalOcupados / totalPuertos) * 100) : 0;
-    const totalClientes = totalClientesCount;
+    const totalClientes = hasFilter ? totalOcupados : totalClientesCount;
     return { totalNaps, totalPuertos, totalOcupados, pctOcupacion, totalClientes };
-  }, [naps, totalClientesCount]);
+  }, [naps, filteredNaps, totalClientesCount]);
 
   if (loading) {
     return (
@@ -141,7 +144,7 @@ function Dashboard() {
 
         {/* Tab content */}
         {tab === "dashboard" && (
-          <NAPTable naps={naps} onRefresh={emptyRefresh} />
+          <NAPTable naps={naps} onRefresh={emptyRefresh} onFilterChange={setFilteredNaps} />
         )}
 
         {tab === "registro" && (
@@ -215,7 +218,8 @@ function ClientesTab({ naps }: { naps: NAP[] }) {
         c.nombre.toLowerCase().includes(q) ||
         c.id_wisp.toLowerCase().includes(q) ||
         c.municipio.toLowerCase().includes(q) ||
-        c.localidad.toLowerCase().includes(q)
+        c.localidad.toLowerCase().includes(q) ||
+        c.id_nap.toLowerCase().includes(q)
     );
   }, [clientes, search]);
 
@@ -243,7 +247,7 @@ function ClientesTab({ naps }: { naps: NAP[] }) {
             type="text"
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(0); }}
-            placeholder="Buscar por nombre, ID WISP, municipio..."
+            placeholder="Buscar por nombre, ID WISP, NAP, municipio..."
             className="w-full pl-10 pr-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
@@ -267,8 +271,8 @@ function ClientesTab({ naps }: { naps: NAP[] }) {
                   <th className="p-3">ID WISP</th>
                   <th className="p-3">Nombre</th>
                   <th className="p-3">Municipio</th>
-                  <th className="p-3">Localidad</th>
                   <th className="p-3">NAP</th>
+                  <th className="p-3">Localidad</th>
                   <th className="p-3">Fecha Alta</th>
                 </tr>
               </thead>
@@ -283,10 +287,10 @@ function ClientesTab({ naps }: { naps: NAP[] }) {
                       <td className="p-3 font-mono text-xs text-blue-400">{c.id_wisp}</td>
                       <td className="p-3 font-medium">{c.nombre}</td>
                       <td className="p-3 text-slate-300">{c.municipio}</td>
-                      <td className="p-3 text-slate-300">{c.localidad}</td>
                       <td className="p-3 text-slate-400 text-xs">
-                        {nap ? nap.nombre : c.id_nap}
+                        {nap ? nap.id_nap : c.id_nap}
                       </td>
+                      <td className="p-3 text-slate-300">{c.localidad}</td>
                       <td className="p-3 text-slate-500 text-xs">{c.fecha_alta}</td>
                     </tr>
                   );
@@ -337,8 +341,23 @@ function BuscarClienteTab({ naps }: { naps: NAP[] }) {
   const [editNombre, setEditNombre] = useState("");
   const [editMunicipio, setEditMunicipio] = useState("");
   const [editLocalidad, setEditLocalidad] = useState("");
+  const [editIdNap, setEditIdNap] = useState("");
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
+
+  // Derived dropdown options for edit mode
+  const municipiosUnicos = useMemo(() => {
+    const set = new Set(naps.map((n) => n.municipio));
+    return Array.from(set).sort();
+  }, [naps]);
+
+  const localidadesFiltradas = useMemo(() => {
+    if (!editMunicipio) return [];
+    const set = new Set(
+      naps.filter((n) => n.municipio === editMunicipio).map((n) => n.localidad)
+    );
+    return Array.from(set).sort();
+  }, [naps, editMunicipio]);
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -375,6 +394,7 @@ function BuscarClienteTab({ naps }: { naps: NAP[] }) {
     setEditNombre(cliente.nombre);
     setEditMunicipio(cliente.municipio);
     setEditLocalidad(cliente.localidad);
+    setEditIdNap(cliente.id_nap);
     setEditando(true);
   };
 
@@ -386,16 +406,31 @@ function BuscarClienteTab({ naps }: { naps: NAP[] }) {
     if (!cliente) return;
     setSaving(true);
     try {
+      // Update basic fields
       await updateCliente(cliente.id, {
         nombre: editNombre.trim(),
         municipio: editMunicipio.trim(),
         localidad: editLocalidad.trim(),
       });
+
+      // Reassign NAP if changed
+      if (editIdNap !== cliente.id_nap) {
+        const result = await updateClienteNAP(cliente.id, editIdNap);
+        if (!result.success) {
+          setError(result.error || "Error al reasignar NAP.");
+          setSaving(false);
+          return;
+        }
+        const nap = await getNAPById(editIdNap);
+        setNapInfo(nap);
+      }
+
       setCliente({
         ...cliente,
         nombre: editNombre.trim(),
         municipio: editMunicipio.trim(),
         localidad: editLocalidad.trim(),
+        id_nap: editIdNap,
       });
       setEditando(false);
     } catch {
@@ -430,6 +465,7 @@ function BuscarClienteTab({ naps }: { naps: NAP[] }) {
 
   return (
     <div className="max-w-2xl mx-auto">
+
       <form onSubmit={handleSearch} className="mb-6">
         <label className="block text-sm text-slate-300 mb-2">
           Buscar cliente por ID WISP
@@ -506,21 +542,79 @@ function BuscarClienteTab({ naps }: { naps: NAP[] }) {
             )}
 
             {editando ? (
-              <EditableRow label="Municipio" value={editMunicipio} onChange={setEditMunicipio} />
+              <>
+                <div className="flex items-center gap-3">
+                  <span className="text-xs text-slate-500 w-28 shrink-0">Municipio</span>
+                  <select
+                    value={editMunicipio}
+                    onChange={(e) => {
+                      setEditMunicipio(e.target.value);
+                      setEditLocalidad("");
+                      setEditIdNap("");
+                    }}
+                    className="flex-1 px-3 py-1.5 bg-slate-800 border border-slate-600 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">Seleccionar</option>
+                    {municipiosUnicos.map((m) => (
+                      <option key={m} value={m}>{m}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="text-xs text-slate-500 w-28 shrink-0">Localidad</span>
+                  <select
+                    value={editLocalidad}
+                    onChange={(e) => {
+                      setEditLocalidad(e.target.value);
+                      setEditIdNap("");
+                    }}
+                    disabled={!editMunicipio}
+                    className="flex-1 px-3 py-1.5 bg-slate-800 border border-slate-600 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-40"
+                  >
+                    <option value="">Seleccionar</option>
+                    {localidadesFiltradas.map((l) => (
+                      <option key={l} value={l}>{l}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="text-xs text-slate-500 w-28 shrink-0">NAP</span>
+                  <select
+                    value={editIdNap}
+                    onChange={(e) => setEditIdNap(e.target.value)}
+                    disabled={!editLocalidad}
+                    className="flex-1 px-3 py-1.5 bg-slate-800 border border-slate-600 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-40"
+                  >
+                    <option value="">Seleccionar NAP</option>
+                    {naps
+                      .filter((n) => {
+                        if (editMunicipio && n.municipio !== editMunicipio) return false;
+                        if (editLocalidad && n.localidad !== editLocalidad) return false;
+                        return true;
+                      })
+                      .sort((a, b) => a.nombre.localeCompare(b.nombre))
+                      .map((n) => (
+                        <option key={n.id} value={n.id}>
+                          {n.id_nap} — {n.puertos_ocupados}/{n.capacidad_total}
+                          {n.puertos_ocupados >= n.capacidad_total ? " (LLENA)" : ""}
+                        </option>
+                      ))}
+                  </select>
+                </div>
+              </>
             ) : (
-              <InfoRow label="Municipio" value={cliente.municipio} />
+              <>
+                <InfoRow label="Municipio" value={cliente.municipio} />
+                <InfoRow label="Localidad" value={cliente.localidad} />
+              </>
             )}
 
-            {editando ? (
-              <EditableRow label="Localidad" value={editLocalidad} onChange={setEditLocalidad} />
-            ) : (
-              <InfoRow label="Localidad" value={cliente.localidad} />
+            {!editando && (
+              <InfoRow
+                label="NAP"
+                value={napInfo ? napInfo.id_nap : cliente.id_nap}
+              />
             )}
-
-            <InfoRow
-              label="NAP"
-              value={napInfo ? `${napInfo.nombre} (${napInfo.id_nap})` : cliente.id_nap}
-            />
             {napInfo && (
               <InfoRow
                 label="Ocupación NAP"

@@ -74,8 +74,13 @@ export async function getClientes(): Promise<Cliente[]> {
 }
 
 export async function getClientesCount(): Promise<number> {
-  const snap = await getCountFromServer(collection(db, CLIENTES_COL));
-  return snap.data().count;
+  try {
+    const snap = await getCountFromServer(collection(db, CLIENTES_COL));
+    return snap.data().count;
+  } catch {
+    const clientes = await getClientes();
+    return clientes.length;
+  }
 }
 
 export async function getClientesByNAP(napId: string): Promise<Cliente[]> {
@@ -101,6 +106,67 @@ export async function updateCliente(
   data: Partial<Pick<Cliente, "nombre" | "municipio" | "localidad">>
 ): Promise<void> {
   await updateDoc(doc(db, CLIENTES_COL, clienteId), data as Record<string, unknown>);
+}
+
+export async function updateClienteNAP(
+  clienteId: string,
+  newNapId: string
+): Promise<{ success: boolean; error?: string }> {
+  const clienteRef = doc(db, CLIENTES_COL, clienteId);
+
+  try {
+    await runTransaction(db, async (tx) => {
+      const clienteSnap = await tx.get(clienteRef);
+      if (!clienteSnap.exists()) {
+        return { success: false, error: "Cliente no encontrado." };
+      }
+      const clienteData = clienteSnap.data() as Omit<Cliente, "id">;
+      const oldNapId = clienteData.id_nap;
+
+      const newNapRef = doc(db, NAPS_COL, newNapId);
+      const newNapSnap = await tx.get(newNapRef);
+      if (!newNapSnap.exists()) {
+        return { success: false, error: "NAP destino no encontrada." };
+      }
+      const newNapData = newNapSnap.data() as Omit<NAP, "id">;
+
+      if (oldNapId !== newNapId) {
+        // Decrement old NAP
+        if (oldNapId) {
+          const oldNapRef = doc(db, NAPS_COL, oldNapId);
+          const oldNapSnap = await tx.get(oldNapRef);
+          if (oldNapSnap.exists()) {
+            const oldData = oldNapSnap.data() as Omit<NAP, "id">;
+            tx.update(oldNapRef, {
+              puertos_ocupados: Math.max(0, oldData.puertos_ocupados - 1),
+            });
+          }
+        }
+
+        // Increment new NAP
+        if (newNapData.puertos_ocupados >= newNapData.capacidad_total) {
+          return { success: false, error: "La NAP destino está llena." };
+        }
+        tx.update(newNapRef, {
+          puertos_ocupados: newNapData.puertos_ocupados + 1,
+        });
+
+        // Update cliente
+        tx.update(clienteRef, {
+          id_nap: newNapId,
+          municipio: newNapData.municipio,
+          localidad: newNapData.localidad,
+        } as Record<string, unknown>);
+      }
+
+      return { success: true };
+    });
+
+    return { success: true };
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Error al reasignar cliente.";
+    return { success: false, error: message };
+  }
 }
 
 // ── Registro con validación y atomicidad ──
@@ -248,11 +314,10 @@ export function getNAPColor(nap: NAP): string {
   const o = nap.puertos_ocupados;
   const c = nap.capacidad_total;
 
-  if (o > c) return "#a855f7"; // morado — error de sobre-ocupación
+  if (o > c) return "#a855f7"; // morado — sobre-ocupación
   if (o === c) return "#ef4444"; // rojo — lleno
-  if (o >= c * 0.75) return "#eab308"; // amarillo — alta ocupación
-  if (o <= 2) return "#22c55e"; // verde — disponible
-  return "#eab308"; // amarillo por defecto
+  if (o >= c * 0.7) return "#eab308"; // amarillo — ≥70%
+  return "#22c55e"; // verde — disponible
 }
 
 // ── Usuarios de plataforma ──
