@@ -13,7 +13,27 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="es">
+    <html lang="es" suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  var theme = localStorage.getItem('webyun-theme');
+                  if (theme === 'dark' || theme === 'light') {
+                    document.documentElement.dataset.theme = theme;
+                    return;
+                  }
+                } catch(_) {}
+                if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                  document.documentElement.dataset.theme = 'dark';
+                }
+              })();
+            `,
+          }}
+        />
+      </head>
       <body className="min-h-screen antialiased">
         <AuthProvider>{children}</AuthProvider>
       </body>

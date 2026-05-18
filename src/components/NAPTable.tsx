@@ -22,10 +22,11 @@ function getSemaforo(nap: NAP): SemaforoFilter {
 }
 
 const SEMAFORO_COLORS: Record<SemaforoFilter, string> = {
-  verde: "bg-green-500",
-  amarillo: "bg-yellow-500",
-  rojo: "bg-red-500",
-  morado: "bg-purple-500",
+  verde: "bg-[var(--hulux-lime)]",
+  amarillo: "bg-[var(--hulux-orange)]",
+  rojo: "bg-[var(--hulux-maroon)]",
+  // Use cyan but ensure it's visible on white by giving it a subtle outline.
+  morado: "bg-[var(--hulux-cyan)] ring-1 ring-[rgba(17,41,62,0.28)]",
 };
 
 const SEMAFORO_LABELS: Record<SemaforoFilter, string> = {
@@ -220,14 +221,14 @@ export default function NAPTable({ naps, onRefresh, onFilterChange }: Props) {
   return (
     <div className="space-y-4">
       {/* ── Filter bar ── */}
-      <div className="rounded-xl border border-slate-700 bg-slate-900/50 p-4 space-y-3">
+      <div className="rounded-xl border border-[var(--hulux-border)] bg-[var(--hulux-surface)] shadow-[var(--hulux-shadow)] p-4 space-y-3">
         {/* Row 1: Search + Municipio + Localidad + Disponibilidad */}
         <div className="flex flex-wrap gap-3 items-end">
           <div className="flex-1 min-w-[200px]">
-            <label className="block text-xs text-slate-500 mb-1">Buscar</label>
+            <label className="block text-xs text-[var(--hulux-text-muted)] mb-1">Buscar</label>
             <div className="relative">
               <svg
-                className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500"
+                className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--hulux-text-muted)]"
                 fill="none" viewBox="0 0 24 24" stroke="currentColor"
               >
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -238,17 +239,17 @@ export default function NAPTable({ naps, onRefresh, onFilterChange }: Props) {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Nombre o ID de NAP..."
-                className="w-full pl-10 pr-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full pl-10 pr-3 py-2 bg-[var(--hulux-surface-elevated)] border border-[var(--hulux-border)] rounded-lg text-sm text-[var(--hulux-text)] placeholder-[var(--hulux-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--hulux-blue)]"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs text-slate-500 mb-1">Municipio</label>
+            <label className="block text-xs text-[var(--hulux-text-muted)] mb-1">Municipio</label>
             <select
               value={municipio}
               onChange={(e) => setMunicipio(e.target.value)}
-              className="px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="px-3 py-2 bg-[var(--hulux-surface-elevated)] border border-[var(--hulux-border)] rounded-lg text-sm text-[var(--hulux-text)] focus:outline-none focus:ring-2 focus:ring-[var(--hulux-blue)]"
             >
               <option value="">Todos</option>
               {municipios.map((m) => (
@@ -258,12 +259,12 @@ export default function NAPTable({ naps, onRefresh, onFilterChange }: Props) {
           </div>
 
           <div>
-            <label className="block text-xs text-slate-500 mb-1">Localidad</label>
+            <label className="block text-xs text-[var(--hulux-text-muted)] mb-1">Localidad</label>
             <select
               value={localidad}
               onChange={(e) => setLocalidad(e.target.value)}
               disabled={!municipio}
-              className="px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-sm text-white disabled:opacity-40 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="px-3 py-2 bg-[var(--hulux-surface-elevated)] border border-[var(--hulux-border)] rounded-lg text-sm text-[var(--hulux-text)] disabled:opacity-40 focus:outline-none focus:ring-2 focus:ring-[var(--hulux-blue)]"
             >
               <option value="">Todas</option>
               {localidades.map((l) => (
@@ -280,8 +281,8 @@ export default function NAPTable({ naps, onRefresh, onFilterChange }: Props) {
                 onClick={() => setDisponibilidad(d)}
                 className={`px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
                   disponibilidad === d
-                    ? "bg-slate-600 text-white"
-                    : "bg-slate-800 text-slate-400 hover:text-white border border-slate-700"
+                    ? "bg-[var(--hulux-blue)] text-white"
+                    : "bg-[var(--hulux-surface-elevated)] text-[var(--hulux-text-muted)] hover:text-[var(--hulux-text)] border border-[var(--hulux-border)] hover:bg-[rgba(148,237,242,0.18)]"
                 }`}
               >
                 {d === "todas" ? "Todas" : d === "espacio" ? "Con espacio" : "Llenas"}
@@ -292,7 +293,7 @@ export default function NAPTable({ naps, onRefresh, onFilterChange }: Props) {
 
         {/* Row 2: Semaforo chips */}
         <div>
-          <label className="block text-xs text-slate-500 mb-1.5">Semáforo</label>
+          <label className="block text-xs text-[var(--hulux-text-muted)] mb-1.5">Semáforo</label>
           <div className="flex flex-wrap gap-1.5">
             {(Object.keys(SEMAFORO_LABELS) as SemaforoFilter[]).map((s) => {
               const active = activosSemaforo.has(s);
@@ -303,8 +304,8 @@ export default function NAPTable({ naps, onRefresh, onFilterChange }: Props) {
                   onClick={() => toggleSemaforo(s)}
                   className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs transition-colors ${
                     active
-                      ? "bg-slate-600 text-white"
-                      : "bg-slate-800 text-slate-400 hover:text-white border border-slate-700"
+                      ? "bg-[var(--hulux-blue)] text-white"
+                      : "bg-[var(--hulux-surface-elevated)] text-[var(--hulux-text-muted)] hover:text-[var(--hulux-text)] border border-[var(--hulux-border)] hover:bg-[rgba(148,237,242,0.18)]"
                   }`}
                 >
                   <span className={`w-2 h-2 rounded-full ${SEMAFORO_COLORS[s]}`} />
@@ -316,7 +317,7 @@ export default function NAPTable({ naps, onRefresh, onFilterChange }: Props) {
         </div>
 
         {/* Results count */}
-        <div className="flex items-center justify-between text-xs text-slate-500">
+        <div className="flex items-center justify-between text-xs text-[var(--hulux-text-muted)]">
           <span>
             Mostrando {filteredNaps.length} de {naps.length} NAPs
           </span>
@@ -329,7 +330,7 @@ export default function NAPTable({ naps, onRefresh, onFilterChange }: Props) {
                 setActivosSemaforo(new Set());
                 setDisponibilidad("todas");
               }}
-              className="text-blue-400 hover:text-blue-300"
+              className="text-[var(--hulux-maroon-light)] hover:underline"
             >
               Limpiar filtros
             </button>
@@ -339,13 +340,13 @@ export default function NAPTable({ naps, onRefresh, onFilterChange }: Props) {
 
       {/* ── Table ── */}
       {pagedNaps.length === 0 ? (
-        <div className="text-center py-12 text-slate-500 text-sm rounded-xl border border-slate-800 bg-slate-900/30">
+        <div className="text-center py-12 text-[var(--hulux-text-muted)] text-sm rounded-xl border border-[var(--hulux-border)] bg-[var(--hulux-surface)] shadow-[var(--hulux-shadow)]">
           Sin resultados con los filtros actuales.
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-slate-700">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-slate-800 text-slate-300">
+        <div className="overflow-x-auto rounded-xl border border-[var(--hulux-border)] bg-[var(--hulux-surface)] shadow-[var(--hulux-shadow)]">
+          <table className="w-full text-left text-sm table-zebra">
+            <thead className="bg-[var(--hulux-subtle)] text-[var(--hulux-text)]">
               <tr>
                 <th className="p-3 w-10">Semáforo</th>
                 <th className="p-3">Nombre NAP</th>
@@ -369,7 +370,7 @@ export default function NAPTable({ naps, onRefresh, onFilterChange }: Props) {
                 const isExpanded = expandedId === nap.id;
 
                 return (
-                  <tr key={nap.id} className="border-t border-slate-700">
+                  <tr key={nap.id} className="border-t border-[var(--hulux-border)] hover:bg-[rgba(148,237,242,0.12)]">
                     <td className="p-3">
                       <span
                         className="inline-block w-3 h-3 rounded-full"
@@ -391,20 +392,20 @@ export default function NAPTable({ naps, onRefresh, onFilterChange }: Props) {
                           type="text"
                           value={editFields.nombre || ""}
                           onChange={(e) => setEditFields((f) => ({ ...f, nombre: e.target.value }))}
-                          className="w-full rounded bg-slate-700 border border-slate-600 p-1 text-sm text-white"
+                          className="w-full rounded bg-[var(--hulux-surface)] border border-[var(--hulux-border)] p-1 text-sm text-[var(--hulux-text)] focus:outline-none focus:ring-2 focus:ring-[var(--hulux-blue)]"
                         />
                       ) : (
                         nap.nombre
                       )}
                     </td>
-                    <td className="p-3 text-slate-400">{nap.id_nap}</td>
+                    <td className="p-3 text-[var(--hulux-text-muted)]">{nap.id_nap}</td>
                     <td className="p-3">
                       {editingId === nap.id ? (
                         <input
                           type="text"
                           value={editFields.municipio || ""}
                           onChange={(e) => setEditFields((f) => ({ ...f, municipio: e.target.value }))}
-                          className="w-full rounded bg-slate-700 border border-slate-600 p-1 text-sm text-white"
+                          className="w-full rounded bg-[var(--hulux-surface)] border border-[var(--hulux-border)] p-1 text-sm text-[var(--hulux-text)] focus:outline-none focus:ring-2 focus:ring-[var(--hulux-blue)]"
                         />
                       ) : (
                         nap.municipio
@@ -416,7 +417,7 @@ export default function NAPTable({ naps, onRefresh, onFilterChange }: Props) {
                           type="text"
                           value={editFields.localidad || ""}
                           onChange={(e) => setEditFields((f) => ({ ...f, localidad: e.target.value }))}
-                          className="w-full rounded bg-slate-700 border border-slate-600 p-1 text-sm text-white"
+                          className="w-full rounded bg-[var(--hulux-surface)] border border-[var(--hulux-border)] p-1 text-sm text-[var(--hulux-text)] focus:outline-none focus:ring-2 focus:ring-[var(--hulux-blue)]"
                         />
                       ) : (
                         nap.localidad
@@ -427,7 +428,7 @@ export default function NAPTable({ naps, onRefresh, onFilterChange }: Props) {
                         <select
                           value={editFields.capacidad_total || 8}
                           onChange={(e) => setEditFields((f) => ({ ...f, capacidad_total: parseInt(e.target.value) }))}
-                          className="rounded bg-slate-700 border border-slate-600 p-1 text-sm text-white"
+                          className="rounded bg-[var(--hulux-surface)] border border-[var(--hulux-border)] p-1 text-sm text-[var(--hulux-text)] focus:outline-none focus:ring-2 focus:ring-[var(--hulux-blue)]"
                         >
                           <option value={8}>8</option>
                           <option value={16}>16</option>
@@ -440,7 +441,7 @@ export default function NAPTable({ naps, onRefresh, onFilterChange }: Props) {
                     </td>
                     <td className="p-3">
                       <div className="flex items-center gap-2">
-                        <div className="w-14 h-2 bg-slate-700 rounded-full overflow-hidden">
+                        <div className="w-14 h-2 bg-[var(--hulux-progress-track)] rounded-full overflow-hidden">
                           <div
                             className="h-full rounded-full transition-all duration-300"
                             style={{
@@ -449,17 +450,17 @@ export default function NAPTable({ naps, onRefresh, onFilterChange }: Props) {
                             }}
                           />
                         </div>
-                        <span className="text-xs text-slate-400">{pct}%</span>
+                        <span className="text-xs text-[var(--hulux-text)] font-bold">{pct}%</span>
                       </div>
                     </td>
-                    <td className="p-3 text-slate-400 text-center">
+                    <td className="p-3 text-[var(--hulux-text-muted)] text-center">
                       {editingId === nap.id ? (
                         <input
                           type="number"
                           value={editFields.verificacion ?? 0}
                           onChange={(e) => setEditFields((f) => ({ ...f, verificacion: parseInt(e.target.value) || 0 }))}
                           min="0"
-                          className="w-16 rounded bg-slate-700 border border-slate-600 p-1 text-sm text-white text-center"
+                          className="w-16 rounded bg-[var(--hulux-surface)] border border-[var(--hulux-border)] p-1 text-sm text-[var(--hulux-text)] text-center focus:outline-none focus:ring-2 focus:ring-[var(--hulux-blue)]"
                         />
                       ) : (
                         nap.verificacion || "—"
@@ -470,17 +471,17 @@ export default function NAPTable({ naps, onRefresh, onFilterChange }: Props) {
                         <select
                           value={editFields.estado_tomodat || "Activo"}
                           onChange={(e) => setEditFields((f) => ({ ...f, estado_tomodat: e.target.value }))}
-                          className="rounded bg-slate-700 border border-slate-600 p-1 text-xs text-white"
+                          className="rounded bg-[var(--hulux-surface)] border border-[var(--hulux-border)] p-1 text-xs text-[var(--hulux-text)] focus:outline-none focus:ring-2 focus:ring-[var(--hulux-blue)]"
                         >
                           <option value="Activo">Activo</option>
                           <option value="Rojo">Rojo</option>
                         </select>
                       ) : (
                         <span
-                          className={`px-2 py-0.5 rounded text-xs ${
+                          className={`px-2 py-0.5 rounded text-xs font-bold ${
                             nap.estado_tomodat === "Activo"
-                              ? "bg-green-900/70 text-green-300"
-                              : "bg-red-900/70 text-red-300"
+                              ? "bg-[rgba(205,219,0,0.20)] text-[var(--hulux-text)]"
+                              : "bg-[rgba(112,0,63,0.10)] text-[var(--hulux-text)]"
                           }`}
                         >
                           {nap.estado_tomodat}
@@ -493,13 +494,13 @@ export default function NAPTable({ naps, onRefresh, onFilterChange }: Props) {
                           <button
                             onClick={saveEdit}
                             disabled={saving}
-                            className="px-2 py-1 text-xs bg-green-600 hover:bg-green-500 disabled:opacity-50 text-white rounded transition-colors"
+                            className="px-2 py-1 text-xs bg-[var(--hulux-orange)] hover:brightness-95 disabled:opacity-50 text-[var(--hulux-blue)] rounded transition-colors"
                           >
                             {saving ? "..." : "Guardar"}
                           </button>
                           <button
                             onClick={cancelEdit}
-                            className="px-2 py-1 text-xs bg-slate-600 hover:bg-slate-500 text-white rounded transition-colors"
+                            className="px-2 py-1 text-xs bg-[var(--hulux-surface)] hover:bg-[rgba(148,237,242,0.18)] text-[var(--hulux-text)] border border-[var(--hulux-border)] rounded transition-colors"
                           >
                             Cancelar
                           </button>
@@ -508,14 +509,14 @@ export default function NAPTable({ naps, onRefresh, onFilterChange }: Props) {
                         <div className="flex gap-1">
                           <button
                             onClick={() => startEdit(nap)}
-                            className="px-2 py-1 text-xs bg-blue-600/20 hover:bg-blue-600/40 text-blue-400 border border-blue-500/20 rounded transition-colors"
+                            className="px-2 py-1 text-xs bg-[rgba(148,237,242,0.22)] hover:bg-[rgba(148,237,242,0.32)] text-[var(--hulux-text)] border border-[rgba(148,237,242,0.45)] rounded transition-colors font-bold"
                           >
                             Editar
                           </button>
                           <button
                             onClick={() => handleDeleteNAP(nap.id)}
                             disabled={deleting === nap.id}
-                            className="px-2 py-1 text-xs bg-red-600/20 hover:bg-red-600/40 text-red-400 border border-red-500/20 rounded transition-colors disabled:opacity-50"
+                            className="px-2 py-1 text-xs bg-transparent hover:bg-[rgba(112,0,63,0.12)] text-[var(--hulux-text)] border border-[rgba(112,0,63,0.35)] rounded transition-colors disabled:opacity-50 font-bold"
                           >
                             {deleting === nap.id ? "..." : "Eliminar"}
                           </button>
@@ -525,7 +526,7 @@ export default function NAPTable({ naps, onRefresh, onFilterChange }: Props) {
                     <td className="p-3">
                       <button
                         onClick={() => toggleExpand(nap.id)}
-                        className="text-blue-400 hover:text-blue-300 text-xs whitespace-nowrap"
+                        className="text-[var(--hulux-maroon-light)] hover:underline text-xs whitespace-nowrap"
                       >
                         {isExpanded ? "▼" : "▶"}
                       </button>
@@ -538,26 +539,26 @@ export default function NAPTable({ naps, onRefresh, onFilterChange }: Props) {
 
           {/* ── Expanded client panel ── */}
           {expandedId && (
-            <div className="bg-slate-900 border-t border-slate-700 p-4">
+            <div className="bg-[var(--hulux-surface)] border-t border-[var(--hulux-border)] p-4">
               <h3 className="text-sm font-semibold mb-2">
                 Clientes en NAP: {naps.find((n) => n.id === expandedId)?.nombre}
               </h3>
               {loadingClientes ? (
-                <p className="text-slate-500 text-sm">Cargando clientes...</p>
+                <p className="text-[var(--hulux-text-muted)] text-sm">Cargando clientes...</p>
               ) : expandedClientes.length === 0 ? (
-                <p className="text-slate-500 text-sm">Sin clientes registrados.</p>
+                <p className="text-[var(--hulux-text-muted)] text-sm">Sin clientes registrados.</p>
               ) : (
                 <div className="flex flex-wrap gap-2">
                   {expandedClientes.map((c) => (
                     <div
                       key={c.id}
-                      className="flex items-center gap-2 bg-slate-800 rounded-lg px-3 py-1.5 text-sm"
+                      className="flex items-center gap-2 bg-[var(--hulux-subtle)] border border-[var(--hulux-border)] rounded-lg px-3 py-1.5 text-sm"
                     >
-                      <span className="text-slate-300">{c.nombre}</span>
-                      <span className="text-slate-500 text-xs">({c.id_wisp})</span>
+                      <span className="text-[var(--hulux-text)]">{c.nombre}</span>
+                      <span className="text-[var(--hulux-text-muted)] text-xs">({c.id_wisp})</span>
                       <button
                         onClick={() => handleDelete(c.id, expandedId)}
-                        className="text-red-400 hover:text-red-300 ml-1 text-xs"
+                        className="text-[var(--hulux-maroon-light)] hover:underline ml-1 text-xs"
                         title="Eliminar cliente"
                       >
                         ✕
@@ -570,18 +571,18 @@ export default function NAPTable({ naps, onRefresh, onFilterChange }: Props) {
           )}
 
           {/* ── Legend ── */}
-          <div className="flex flex-wrap gap-4 p-3 bg-slate-800/50 rounded-b-xl border-t border-slate-700 text-xs text-slate-400">
+          <div className="flex flex-wrap gap-4 p-3 bg-[var(--hulux-subtle)] rounded-b-xl border-t border-[var(--hulux-border)] text-xs text-[var(--hulux-text-muted)]">
             <span className="flex items-center gap-1">
-              <span className="w-3 h-3 rounded-full bg-green-500" /> Disponible
+              <span className="w-3 h-3 rounded-full bg-[var(--hulux-lime)]" /> Disponible
             </span>
             <span className="flex items-center gap-1">
-              <span className="w-3 h-3 rounded-full bg-yellow-500" /> ≥70%
+              <span className="w-3 h-3 rounded-full bg-[var(--hulux-orange)]" /> ≥70%
             </span>
             <span className="flex items-center gap-1">
-              <span className="w-3 h-3 rounded-full bg-red-500" /> Lleno
+              <span className="w-3 h-3 rounded-full bg-[var(--hulux-maroon)]" /> Lleno
             </span>
             <span className="flex items-center gap-1">
-              <span className="w-3 h-3 rounded-full bg-purple-500" /> Sobre-ocupación
+              <span className="w-3 h-3 rounded-full bg-[var(--hulux-cyan)]" /> Sobre-ocupación
             </span>
           </div>
         </div>
@@ -590,21 +591,21 @@ export default function NAPTable({ naps, onRefresh, onFilterChange }: Props) {
       {/* ── Pagination ── */}
       {totalPages > 1 && (
         <div className="flex items-center justify-between">
-          <span className="text-xs text-slate-500">
+          <span className="text-xs text-[var(--hulux-text-muted)]">
             Página {page + 1} de {totalPages}
           </span>
           <div className="flex gap-1">
             <button
               onClick={() => setPage(0)}
               disabled={page === 0}
-              className="px-2.5 py-1.5 text-xs bg-slate-800 hover:bg-slate-700 disabled:opacity-30 rounded-lg text-slate-300 transition-colors"
+              className="px-2.5 py-1.5 text-xs bg-[var(--hulux-surface)] hover:bg-[rgba(148,237,242,0.18)] disabled:opacity-30 rounded-lg text-[var(--hulux-text)] border border-[var(--hulux-border)] transition-colors"
             >
               ««
             </button>
             <button
               onClick={() => setPage((p) => Math.max(0, p - 1))}
               disabled={page === 0}
-              className="px-3 py-1.5 text-xs bg-slate-800 hover:bg-slate-700 disabled:opacity-30 rounded-lg text-slate-300 transition-colors"
+              className="px-3 py-1.5 text-xs bg-[var(--hulux-surface)] hover:bg-[rgba(148,237,242,0.18)] disabled:opacity-30 rounded-lg text-[var(--hulux-text)] border border-[var(--hulux-border)] transition-colors"
             >
               « Anterior
             </button>
@@ -625,8 +626,8 @@ export default function NAPTable({ naps, onRefresh, onFilterChange }: Props) {
                   onClick={() => setPage(pageNum)}
                   className={`w-8 h-8 text-xs rounded-lg transition-colors ${
                     pageNum === page
-                      ? "bg-blue-600 text-white"
-                      : "bg-slate-800 hover:bg-slate-700 text-slate-400"
+                      ? "bg-[var(--hulux-blue)] text-white"
+                      : "bg-[var(--hulux-surface)] hover:bg-[rgba(148,237,242,0.18)] text-[var(--hulux-text-muted)] border border-[var(--hulux-border)]"
                   }`}
                 >
                   {pageNum + 1}
@@ -636,14 +637,14 @@ export default function NAPTable({ naps, onRefresh, onFilterChange }: Props) {
             <button
               onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
               disabled={page >= totalPages - 1}
-              className="px-3 py-1.5 text-xs bg-slate-800 hover:bg-slate-700 disabled:opacity-30 rounded-lg text-slate-300 transition-colors"
+              className="px-3 py-1.5 text-xs bg-[var(--hulux-surface)] hover:bg-[rgba(148,237,242,0.18)] disabled:opacity-30 rounded-lg text-[var(--hulux-text)] border border-[var(--hulux-border)] transition-colors"
             >
               Siguiente »
             </button>
             <button
               onClick={() => setPage(totalPages - 1)}
               disabled={page >= totalPages - 1}
-              className="px-2.5 py-1.5 text-xs bg-slate-800 hover:bg-slate-700 disabled:opacity-30 rounded-lg text-slate-300 transition-colors"
+              className="px-2.5 py-1.5 text-xs bg-[var(--hulux-surface)] hover:bg-[rgba(148,237,242,0.18)] disabled:opacity-30 rounded-lg text-[var(--hulux-text)] border border-[var(--hulux-border)] transition-colors"
             >
               »»
             </button>

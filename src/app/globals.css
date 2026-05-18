@@ -1,14 +1,72 @@
 @import "tailwindcss";
 
 :root {
-  --color-verde: #22c55e;
-  --color-amarillo: #eab308;
-  --color-rojo: #ef4444;
-  --color-morado: #a855f7;
+  /* Hulux corporate palette */
+  --hulux-blue: #11293e;
+  --hulux-orange: #ff5e00;
+  --hulux-lime: #cddb00;
+  --hulux-maroon: #70003f;
+  --hulux-cyan: #94edf2;
+  --hulux-gray: #f2f2f2;
+
+  /* Semantic tokens (light) */
+  --hulux-bg: var(--hulux-gray);
+  --hulux-surface: #ffffff;
+  --hulux-border: rgba(17, 41, 62, 0.16);
+  --hulux-subtle: rgba(17, 41, 62, 0.06);
+
+  --hulux-text: var(--hulux-blue);
+  --hulux-text-muted: rgba(17, 41, 62, 0.72);
+
+  --hulux-shadow: 0 10px 30px rgba(17, 41, 62, 0.12);
+  --hulux-radius: 16px;
+  --hulux-radius-sm: 12px;
+
+  /* Elevated surfaces & dark-mode overrides (light defaults) */
+  --hulux-surface-elevated: #f8fafc;
+  --hulux-maroon-light: #70003f;
+  --hulux-progress-track: rgba(17, 41, 62, 0.10);
+}
+
+/* ── Dark theme ── */
+[data-theme="dark"] {
+  --hulux-bg: #0F172A;
+  --hulux-surface: #1E293B;
+  --hulux-border: rgba(148, 237, 242, 0.12);
+  --hulux-subtle: rgba(148, 237, 242, 0.06);
+
+  --hulux-text: #FFFFFF;
+  --hulux-text-muted: #E2E8F0;
+
+  --hulux-shadow: 0 10px 30px rgba(0, 0, 0, 0.50);
+
+  /* Dark-mode elevated & contrast overrides */
+  --hulux-surface-elevated: #334155;
+  --hulux-maroon-light: #E890A8;
+  --hulux-progress-track: rgba(255, 255, 255, 0.08);
 }
 
 body {
-  background: #0f172a;
-  color: #f1f5f9;
-  font-family: system-ui, -apple-system, sans-serif;
+  background: var(--hulux-bg);
+  color: var(--hulux-text);
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial,
+    "Noto Sans", "Helvetica Neue", sans-serif;
+}
+
+a {
+  color: var(--hulux-maroon);
+  text-underline-offset: 3px;
+}
+
+a:hover {
+  background: rgba(148, 237, 242, 0.18);
+}
+
+[data-theme="dark"] a {
+  color: var(--hulux-cyan);
+}
+
+/* ── Dark table zebra striping ── */
+[data-theme="dark"] .table-zebra tbody tr:nth-child(even) {
+  background-color: rgba(255, 255, 255, 0.03);
 }

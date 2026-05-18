@@ -46,7 +46,10 @@ export async function addNAP(data: Omit<NAP, "id">): Promise<string> {
 }
 
 export async function updateNAP(id: string, data: Partial<NAP>): Promise<void> {
-  await updateDoc(doc(db, NAPS_COL, id), data as Record<string, unknown>);
+  const cleaned = Object.fromEntries(
+    Object.entries(data).filter(([, v]) => v !== undefined)
+  );
+  await updateDoc(doc(db, NAPS_COL, id), cleaned as Record<string, unknown>);
 }
 
 export async function deleteNAP(napId: string): Promise<{ success: boolean; error?: string }> {
@@ -105,7 +108,10 @@ export async function updateCliente(
   clienteId: string,
   data: Partial<Pick<Cliente, "nombre" | "municipio" | "localidad">>
 ): Promise<void> {
-  await updateDoc(doc(db, CLIENTES_COL, clienteId), data as Record<string, unknown>);
+  const cleaned = Object.fromEntries(
+    Object.entries(data).filter(([, v]) => v !== undefined)
+  );
+  await updateDoc(doc(db, CLIENTES_COL, clienteId), cleaned as Record<string, unknown>);
 }
 
 export async function updateClienteNAP(
@@ -314,10 +320,11 @@ export function getNAPColor(nap: NAP): string {
   const o = nap.puertos_ocupados;
   const c = nap.capacidad_total;
 
-  if (o > c) return "#a855f7"; // morado — sobre-ocupación
-  if (o === c) return "#ef4444"; // rojo — lleno
-  if (o >= c * 0.7) return "#eab308"; // amarillo — ≥70%
-  return "#22c55e"; // verde — disponible
+  // Use Hulux palette tokens; these resolve at runtime in the browser.
+  if (o > c) return "var(--hulux-cyan)"; // sobre-ocupación
+  if (o === c) return "var(--hulux-maroon)"; // lleno
+  if (o >= c * 0.7) return "var(--hulux-orange)"; // ≥70%
+  return "var(--hulux-lime)"; // disponible
 }
 
 // ── Usuarios de plataforma ──
