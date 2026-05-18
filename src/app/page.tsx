@@ -88,8 +88,8 @@ function Dashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[var(--hulux-bg)]">
-        <div className="flex items-center gap-3 text-[var(--hulux-text-muted)]">
+      <div className="min-h-screen flex items-center justify-center bg-(--hulux-bg)">
+        <div className="flex items-center gap-3 text-(--hulux-text-muted)">
           <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none">
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
@@ -101,20 +101,20 @@ function Dashboard() {
   }
 
   return (
-    <main className="min-h-screen bg-[var(--hulux-bg)]">
+    <main className="min-h-screen bg-(--hulux-bg)">
       {/* Header */}
-      <header className="border-b border-[var(--hulux-border)] bg-[var(--hulux-bg)]/95 backdrop-blur sticky top-0 z-10">
+      <header className="border-b border-(--hulux-border) bg-(--hulux-bg)/95 backdrop-blur sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-bold tracking-tight text-white">WebYun</h1>
-            <p className="text-[var(--hulux-text-muted)] text-xs">Gestión de fibra óptica</p>
+            <h1 className="text-xl font-bold tracking-tight text-(--hulux-text)">WebYun</h1>
+            <p className="text-(--hulux-text-muted) text-xs">Gestión de fibra óptica</p>
           </div>
           <div className="flex items-center gap-4">
-            <span className="text-[var(--hulux-text-muted)] text-xs hidden sm:inline">{user?.email}</span>
+            <span className="text-(--hulux-text-muted) text-xs hidden sm:inline">{user?.email}</span>
             <ThemeToggle />
             <button
               onClick={logout}
-              className="px-3 py-1.5 text-xs bg-[var(--hulux-orange)] hover:brightness-110 text-white rounded-lg transition-colors font-semibold"
+              className="px-3 py-1.5 text-xs bg-(--hulux-orange) hover:brightness-110 text-white rounded-lg transition-colors font-semibold"
             >
               Cerrar sesión
             </button>
@@ -133,15 +133,15 @@ function Dashboard() {
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-1 mb-6 bg-[var(--hulux-surface)] rounded-xl p-1 border border-[var(--hulux-border)] shadow-[var(--hulux-shadow)] overflow-x-auto">
+        <div className="flex gap-1 mb-6 bg-(--hulux-surface) rounded-xl p-1 border border-(--hulux-border) shadow-(--hulux-shadow) overflow-x-auto">
           {TABS.map((t) => (
             <button
               key={t.key}
               onClick={() => setTab(t.key)}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
                 tab === t.key
-                  ? "bg-[var(--hulux-blue)] text-white shadow"
-                  : "text-[var(--hulux-text-muted)] hover:text-[var(--hulux-text)] hover:bg-[rgba(148,237,242,0.18)]"
+                  ? "bg-(--hulux-blue) text-white shadow"
+                  : "text-(--hulux-text-muted) hover:text-(--hulux-text) hover:bg-[rgba(148,237,242,0.18)]"
               }`}
             >
               <span className="mr-1.5">{t.icon}</span>

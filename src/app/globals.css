@@ -1,6 +1,8 @@
 @import "tailwindcss";
 
 :root {
+  color-scheme: light;
+
   /* Hulux corporate palette */
   --hulux-blue: #11293e;
   --hulux-orange: #ff5e00;
@@ -30,6 +32,8 @@
 
 /* ── Dark theme ── */
 [data-theme="dark"] {
+  color-scheme: dark;
+
   --hulux-bg: #0F172A;
   --hulux-surface: #1E293B;
   --hulux-border: rgba(148, 237, 242, 0.12);
@@ -51,6 +55,7 @@ body {
   color: var(--hulux-text);
   font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial,
     "Noto Sans", "Helvetica Neue", sans-serif;
+  transition: background-color 180ms ease, color 180ms ease;
 }
 
 a {
