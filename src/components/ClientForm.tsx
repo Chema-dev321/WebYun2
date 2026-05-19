@@ -126,7 +126,7 @@ export default function ClientForm({ onSuccess }: Props) {
             className="w-full rounded-lg bg-[var(--hulux-surface)] border border-[var(--hulux-border)] p-2 text-sm text-[var(--hulux-text)] disabled:opacity-40"
           >
             <option value="">Todas las localidades</option>
-            {localidades.map((l) => (
+            {[...new Set(localidades)].map((l) => (
               <option key={l} value={l}>
                 {l}
               </option>

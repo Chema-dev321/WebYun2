@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import type { NAP, Cliente } from "@/lib/types";
-import { getClienteByWisp, getNAPById, updateCliente, deleteCliente, updateClienteNAP } from "@/lib/firestore";
+import { getClienteByWisp, getNAPById, updateCliente, deleteCliente, updateClienteNAP, subscribeToNAPs } from "@/lib/firestore";
 
 export default function BuscarClienteTab({ naps }: { naps: NAP[] }) {
   const [idWisp, setIdWisp] = useState("");
@@ -34,6 +34,18 @@ export default function BuscarClienteTab({ naps }: { naps: NAP[] }) {
     );
     return Array.from(set).sort();
   }, [naps, editMunicipio]);
+
+  // Subscribe to NAP updates when a client is loaded
+  useEffect(() => {
+    if (!cliente) return;
+    const unsub = subscribeToNAPs((allNaps) => {
+      const updated = allNaps.find((n) => n.id_nap === cliente.id_nap || n.id === cliente.id_nap);
+      if (updated) {
+        setNapInfo(updated);
+      }
+    });
+    return () => unsub();
+  }, [cliente]);
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();

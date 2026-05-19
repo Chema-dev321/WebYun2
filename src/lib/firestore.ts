@@ -15,6 +15,7 @@ import {
 } from "firebase/firestore";
 import { db } from "./firebase";
 import type { NAP, Cliente, LocalidadEntry } from "./types";
+import { notifyNapEvent } from "./napNotify";
 
 const NAPS_COL = "naps";
 const CLIENTES_COL = "clientes";
@@ -232,12 +233,29 @@ export async function registerCliente(
       });
 
       // Incrementar contador atómicamente
+      const newOcupados = napData.puertos_ocupados + 1;
       tx.update(napRef, {
-        puertos_ocupados: napData.puertos_ocupados + 1,
+        puertos_ocupados: newOcupados,
       });
 
-      return { success: true, clienteId: clienteRef.id, napData };
+      return { success: true, clienteId: clienteRef.id, napData, newOcupados };
     });
+
+    // Verificar si la NAP se lleno despues de registrar
+    if (result.success && "newOcupados" in result && "napData" in result) {
+      const { napData, newOcupados } = result as { napData: Omit<NAP, "id">; newOcupados: number };
+      if (newOcupados >= napData.capacidad_total) {
+        notifyNapEvent({
+          tipoEvento: "LLENA",
+          idNap: data.id_nap,
+          nombre: napData.nombre,
+          municipio: napData.municipio,
+          localidad: napData.localidad,
+          ocupados: newOcupados,
+          capacidad: napData.capacidad_total,
+        });
+      }
+    }
 
     return result;
   } catch (err: unknown) {
@@ -260,25 +278,42 @@ export async function deleteCliente(clienteId: string): Promise<{ success: boole
 
       const clienteData = clienteSnap.data() as Omit<Cliente, "id">;
       
-      // Manejar el caso donde el cliente no tiene id_nap por alguna razón
       if (!clienteData.id_nap) {
         tx.delete(clienteRef);
-        return { success: true, napData: null };
+        return { success: true, napData: null, idNap: null, wasFull: false };
       }
 
       const napRef = doc(db, NAPS_COL, String(clienteData.id_nap));
       const napSnap = await tx.get(napRef);
 
+      let newOcupados = 0;
+      let wasFull = false;
       if (napSnap.exists()) {
         const napData = napSnap.data() as Omit<NAP, "id">;
+        wasFull = napData.puertos_ocupados >= napData.capacidad_total;
+        newOcupados = Math.max(0, napData.puertos_ocupados - 1);
         tx.update(napRef, {
-          puertos_ocupados: Math.max(0, napData.puertos_ocupados - 1),
+          puertos_ocupados: newOcupados,
         });
       }
 
       tx.delete(clienteRef);
-      return { success: true, napData: napSnap.exists() ? napSnap.data() as Omit<NAP, "id"> : null };
+      return { success: true, napData: napSnap.exists() ? napSnap.data() as Omit<NAP, "id"> : null, newOcupados, idNap: clienteData.id_nap, wasFull };
     });
+
+    // Enviar correo solo si la NAP estaba LLENA y se libero un puerto
+    if (result.success && result.wasFull && "napData" in result && result.napData && result.idNap) {
+      const { napData, newOcupados, idNap } = result as { napData: Omit<NAP, "id">; newOcupados: number; idNap: string };
+      notifyNapEvent({
+        tipoEvento: "LIBERADA",
+        idNap: String(idNap),
+        nombre: napData.nombre,
+        municipio: napData.municipio,
+        localidad: napData.localidad,
+        ocupados: newOcupados,
+        capacidad: napData.capacidad_total,
+      });
+    }
 
     return result;
   } catch (err: unknown) {
