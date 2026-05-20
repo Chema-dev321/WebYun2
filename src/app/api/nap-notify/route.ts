@@ -38,21 +38,35 @@ export async function POST(req: NextRequest) {
       socketTimeout: 10000,
     });
 
+    const emailLlena = (process.env.EMAIL_TO || "chemjmme@gmail.com")
+      .split(",")
+      .map((e) => e.trim())
+      .filter(Boolean);
+
+    const emailLiberada = (process.env.EMAIL_TO_LIBERADA || "chemjmme@gmail.com")
+      .split(",")
+      .map((e) => e.trim())
+      .filter(Boolean);
+
     let asunto: string;
     let html: string;
+    let destinatarios: string[];
 
     switch (tipoEvento) {
       case "LLENA":
         asunto = `[ALERTA] NAP LLENA: ${nombre} (${idNap})`;
         html = buildTemplateLlena(idNap, nombre, municipio, localidad, ocupados, capacidad);
+        destinatarios = emailLlena;
         break;
       case "LIBERADA":
         asunto = `[INFO] Puerto liberado de NAP llena: ${nombre} (${idNap})`;
         html = buildTemplateLiberada(idNap, nombre, municipio, localidad, ocupados, capacidad);
+        destinatarios = emailLiberada;
         break;
       case "VACIA":
         asunto = `[INFO] NAP VACIA: ${nombre} (${idNap})`;
         html = buildTemplateVacia(idNap, nombre, municipio, localidad, ocupados, capacidad);
+        destinatarios = emailLlena;
         break;
       default:
         return NextResponse.json({ error: "Tipo de evento invalido" }, { status: 400 });
@@ -60,7 +74,7 @@ export async function POST(req: NextRequest) {
 
     await transporter.sendMail({
       from: process.env.EMAIL_FROM || "chema.it@hulux.org",
-      to: process.env.EMAIL_TO || "chemjmme@gmail.com",
+      to: destinatarios,
       subject: asunto,
       html,
     });

@@ -172,6 +172,8 @@ export default function NAPTable({ naps, onRefresh, onFilterChange }: Props) {
       capacidad_total: nap.capacidad_total,
       estado_tomodat: nap.estado_tomodat,
       verificacion: nap.verificacion,
+      latitud: nap.latitud,
+      longitud: nap.longitud,
     });
   };
 
@@ -356,6 +358,7 @@ export default function NAPTable({ naps, onRefresh, onFilterChange }: Props) {
                 <th className="p-3">Ocupación</th>
                 <th className="p-3">%</th>
                 <th className="p-3">Verif.</th>
+                <th className="p-3">Coords</th>
                 <th className="p-3">Tomodat</th>
                 <th className="p-3">Acciones</th>
                 <th className="p-3 w-10"></th>
@@ -464,6 +467,32 @@ export default function NAPTable({ naps, onRefresh, onFilterChange }: Props) {
                         />
                       ) : (
                         nap.verificacion || "—"
+                      )}
+                    </td>
+                    <td className="p-3 text-xs text-[var(--hulux-text-muted)]">
+                      {editingId === nap.id ? (
+                        <div className="flex flex-col gap-1">
+                          <input
+                            type="number"
+                            step="any"
+                            value={editFields.latitud ?? ""}
+                            onChange={(e) => setEditFields((f) => ({ ...f, latitud: e.target.value ? parseFloat(e.target.value) : undefined }))}
+                            placeholder="Lat"
+                            className="w-full rounded bg-[var(--hulux-surface)] border border-[var(--hulux-border)] p-1 text-xs text-[var(--hulux-text)] focus:outline-none focus:ring-2 focus:ring-[var(--hulux-blue)]"
+                          />
+                          <input
+                            type="number"
+                            step="any"
+                            value={editFields.longitud ?? ""}
+                            onChange={(e) => setEditFields((f) => ({ ...f, longitud: e.target.value ? parseFloat(e.target.value) : undefined }))}
+                            placeholder="Lon"
+                            className="w-full rounded bg-[var(--hulux-surface)] border border-[var(--hulux-border)] p-1 text-xs text-[var(--hulux-text)] focus:outline-none focus:ring-2 focus:ring-[var(--hulux-blue)]"
+                          />
+                        </div>
+                      ) : nap.latitud != null && nap.longitud != null ? (
+                        <span>{nap.latitud.toFixed(4)}, {nap.longitud.toFixed(4)}</span>
+                      ) : (
+                        <span>—</span>
                       )}
                     </td>
                     <td className="p-3">
