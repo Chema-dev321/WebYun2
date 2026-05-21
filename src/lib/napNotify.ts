@@ -10,6 +10,8 @@ interface NapNotifyParams {
 
 export async function notifyNapEvent(params: NapNotifyParams): Promise<void> {
   try {
+    console.log(`[NAP Notify] Enviando evento: ${params.tipoEvento} - NAP: ${params.idNap}`);
+    
     const response = await fetch("/api/nap-notify", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -17,12 +19,13 @@ export async function notifyNapEvent(params: NapNotifyParams): Promise<void> {
     });
 
     if (!response.ok) {
-      console.error("[NAP Notify] Error en la respuesta:", response.status);
+      const errorText = await response.text();
+      console.error(`[NAP Notify] Error HTTP ${response.status}: ${errorText}`);
       return;
     }
 
     const data = await response.json();
-    console.log(`[NAP Notify] Email enviado: ${data.evento} - ${data.idNap}`);
+    console.log(`[NAP Notify] Email enviado exitosamente: ${data.evento} - ${data.idNap}`);
   } catch (error) {
     console.error("[NAP Notify] Error al enviar notificacion:", error);
   }

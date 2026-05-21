@@ -21,6 +21,12 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { tipoEvento, idNap, nombre, municipio, localidad, ocupados, capacidad } = body;
 
+    console.log(`[NAP API] Recibido: ${tipoEvento} - ${idNap} - ${nombre}`);
+    console.log(`[NAP API] SMTP_HOST: ${process.env.SMTP_HOST}`);
+    console.log(`[NAP API] SMTP_USER: ${process.env.SMTP_USER}`);
+    console.log(`[NAP API] EMAIL_TO: ${process.env.EMAIL_TO}`);
+    console.log(`[NAP API] EMAIL_TO_LIBERADA: ${process.env.EMAIL_TO_LIBERADA}`);
+
     if (!tipoEvento || !idNap || !nombre) {
       return NextResponse.json({ error: "Datos incompletos" }, { status: 400 });
     }
