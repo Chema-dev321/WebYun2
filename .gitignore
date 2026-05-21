@@ -6,3 +6,5 @@ out/
 .npm-cache/
 functions/lib/
 functions/node_modules/
+functions/.env
+csv/

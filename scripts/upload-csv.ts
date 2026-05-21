@@ -16,14 +16,16 @@ import {
 import * as fs from "fs";
 import * as path from "path";
 
-// ── Firebase Config ──
+// ── Firebase Config (leer desde variables de entorno) ──
+// Evita incluir claves en el repositorio. Define estas variables en tu entorno
+// o en un archivo local `.env` que esté ignorado por Git.
 const firebaseConfig = {
-  apiKey: "AIzaSyCiTxcp3Ir33okaYQF8G_IdR4iRlfLWtYY",
-  authDomain: "appgio-77c48.firebaseapp.com",
-  projectId: "appgio-77c48",
-  storageBucket: "appgio-77c48.firebasestorage.app",
-  messagingSenderId: "711938578327",
-  appId: "1:711938578327:web:75bf734d6b1d65bb22d6d2",
+  apiKey: process.env.FIREBASE_API_KEY || "replace-with-api-key",
+  authDomain: process.env.FIREBASE_AUTH_DOMAIN || "your-app.firebaseapp.com",
+  projectId: process.env.FIREBASE_PROJECT_ID || "your-project-id",
+  storageBucket: process.env.FIREBASE_STORAGE_BUCKET || "your-project.appspot.com",
+  messagingSenderId: process.env.FIREBASE_MESSAGING_SENDER_ID || "messaging-sender-id",
+  appId: process.env.FIREBASE_APP_ID || "app-id",
 };
 
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
