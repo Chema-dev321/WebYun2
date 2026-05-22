@@ -1,0 +1,29 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "clientes",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "id_nap", "order": "ASCENDING" },
+        { "fieldPath": "fecha_alta", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "config_geografica",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "municipio", "order": "ASCENDING" },
+        { "fieldPath": "localidad", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "naps",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "localidad", "order": "ASCENDING" },
+        { "fieldPath": "nombre", "order": "ASCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}

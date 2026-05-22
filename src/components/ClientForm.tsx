@@ -29,7 +29,7 @@ export default function ClientForm({ onSuccess }: Props) {
 
   useEffect(() => {
     getMunicipios().then(setMunicipios);
-    getNAPs().then(setTodasLasNaps);
+    getNAPs(200).then((result) => setTodasLasNaps(result.data));
   }, []);
 
   useEffect(() => {

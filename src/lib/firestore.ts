@@ -9,6 +9,9 @@ import {
   deleteDoc,
   query,
   where,
+  orderBy,
+  limit,
+  startAfter,
   runTransaction,
   onSnapshot,
   getCountFromServer
@@ -23,10 +26,30 @@ const GEO_COL = "config_geografica";
 
 // ── NAPs ──
 
-export async function getNAPs(): Promise<NAP[]> {
-  const snap = await getDocs(collection(db, NAPS_COL));
+export interface PaginatedResult<T> {
+  data: T[];
+  lastVisible: unknown;
+  hasMore: boolean;
+}
+
+const DEFAULT_PAGE_SIZE = 50;
+
+export async function getNAPs(pageSize: number = DEFAULT_PAGE_SIZE, lastVisible?: unknown): Promise<PaginatedResult<NAP>> {
+  const colRef = collection(db, NAPS_COL);
+  let q = query(colRef, orderBy("nombre"), limit(pageSize));
+  
+  if (lastVisible) {
+    q = query(colRef, orderBy("nombre"), startAfter(lastVisible), limit(pageSize));
+  }
+  
+  const snap = await getDocs(q);
   const napsData = snap.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<NAP, "id">) }));
-  return napsData.sort((a, b) => a.nombre.localeCompare(b.nombre));
+  
+  return {
+    data: napsData,
+    lastVisible: snap.docs[snap.docs.length - 1] || null,
+    hasMore: snap.docs.length === pageSize,
+  };
 }
 
 export async function getNAPById(id: string): Promise<NAP | null> {
@@ -71,10 +94,22 @@ export async function deleteNAP(napId: string): Promise<{ success: boolean; erro
 
 // ── Clientes ──
 
-export async function getClientes(): Promise<Cliente[]> {
-  const snap = await getDocs(collection(db, CLIENTES_COL));
+export async function getClientes(pageSize: number = DEFAULT_PAGE_SIZE, lastVisible?: unknown): Promise<PaginatedResult<Cliente>> {
+  const colRef = collection(db, CLIENTES_COL);
+  let q = query(colRef, orderBy("fecha_alta", "desc"), limit(pageSize));
+  
+  if (lastVisible) {
+    q = query(colRef, orderBy("fecha_alta", "desc"), startAfter(lastVisible), limit(pageSize));
+  }
+  
+  const snap = await getDocs(q);
   const clientes = snap.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<Cliente, "id">) }));
-  return clientes.sort((a, b) => b.fecha_alta.localeCompare(a.fecha_alta));
+  
+  return {
+    data: clientes,
+    lastVisible: snap.docs[snap.docs.length - 1] || null,
+    hasMore: snap.docs.length === pageSize,
+  };
 }
 
 export async function getClientesCount(): Promise<number> {
@@ -83,7 +118,7 @@ export async function getClientesCount(): Promise<number> {
     return snap.data().count;
   } catch {
     const clientes = await getClientes();
-    return clientes.length;
+    return clientes.data.length;
   }
 }
 
@@ -389,16 +424,18 @@ export async function addUsuario(uid: string, email: string): Promise<void> {
 // ── Optimizaciones (Suscripciones en tiempo real) ──
 
 export function subscribeToNAPs(callback: (naps: NAP[]) => void) {
-  return onSnapshot(collection(db, NAPS_COL), (snap) => {
+  const q = query(collection(db, NAPS_COL), orderBy("nombre"), limit(200));
+  return onSnapshot(q, (snap) => {
     const napsData = snap.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<NAP, "id">) }));
-    callback(napsData.sort((a, b) => a.nombre.localeCompare(b.nombre)));
+    callback(napsData);
   });
 }
 
 export function subscribeToClientes(callback: (clientes: Cliente[]) => void) {
-  return onSnapshot(collection(db, CLIENTES_COL), (snap) => {
+  const q = query(collection(db, CLIENTES_COL), orderBy("fecha_alta", "desc"), limit(200));
+  return onSnapshot(q, (snap) => {
     const clientes = snap.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<Cliente, "id">) }));
-    callback(clientes.sort((a, b) => b.fecha_alta.localeCompare(a.fecha_alta)));
+    callback(clientes);
   });
 }
 
