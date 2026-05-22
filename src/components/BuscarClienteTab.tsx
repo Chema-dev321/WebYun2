@@ -47,6 +47,15 @@ export default function BuscarClienteTab({ naps }: { naps: NAP[] }) {
     return () => unsub();
   }, [cliente]);
 
+  const limpiarBusqueda = () => {
+    setIdWisp("");
+    setCliente(null);
+    setNapInfo(null);
+    setSearched(false);
+    setError("");
+    setEditando(false);
+  };
+
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -172,6 +181,13 @@ export default function BuscarClienteTab({ naps }: { naps: NAP[] }) {
             className="px-6 py-2.5 bg-[var(--hulux-orange)] hover:brightness-95 disabled:opacity-50 text-[var(--hulux-blue)] font-semibold rounded-lg transition-colors text-sm"
           >
             {loading ? "Buscando..." : "Buscar"}
+          </button>
+          <button
+            type="button"
+            onClick={limpiarBusqueda}
+            className="px-4 py-2.5 bg-[var(--hulux-surface)] hover:bg-[rgba(148,237,242,0.18)] text-[var(--hulux-text)] border border-[var(--hulux-border)] rounded-lg transition-colors text-sm"
+          >
+            Limpiar
           </button>
         </div>
       </form>
