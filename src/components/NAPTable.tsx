@@ -283,7 +283,7 @@ export default function NAPTable({ naps, onRefresh, onFilterChange }: Props) {
                 onClick={() => setDisponibilidad(d)}
                 className={`px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
                   disponibilidad === d
-                    ? "bg-[var(--hulux-blue)] text-white"
+                    ? "bg-[var(--hulux-blue)] text-white dark:bg-[var(--hulux-cyan)] dark:text-[var(--hulux-blue)]"
                     : "bg-[var(--hulux-surface-elevated)] text-[var(--hulux-text-muted)] hover:text-[var(--hulux-text)] border border-[var(--hulux-border)] hover:bg-[rgba(148,237,242,0.18)]"
                 }`}
               >
@@ -306,7 +306,7 @@ export default function NAPTable({ naps, onRefresh, onFilterChange }: Props) {
                   onClick={() => toggleSemaforo(s)}
                   className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs transition-colors ${
                     active
-                      ? "bg-[var(--hulux-blue)] text-white"
+                      ? "bg-[var(--hulux-blue)] text-white dark:bg-[var(--hulux-cyan)] dark:text-[var(--hulux-blue)]"
                       : "bg-[var(--hulux-surface-elevated)] text-[var(--hulux-text-muted)] hover:text-[var(--hulux-text)] border border-[var(--hulux-border)] hover:bg-[rgba(148,237,242,0.18)]"
                   }`}
                 >
@@ -655,7 +655,7 @@ export default function NAPTable({ naps, onRefresh, onFilterChange }: Props) {
                   onClick={() => setPage(pageNum)}
                   className={`w-8 h-8 text-xs rounded-lg transition-colors ${
                     pageNum === page
-                      ? "bg-[var(--hulux-blue)] text-white"
+                      ? "bg-[var(--hulux-blue)] text-white dark:bg-[var(--hulux-cyan)] dark:text-[var(--hulux-blue)]"
                       : "bg-[var(--hulux-surface)] hover:bg-[rgba(148,237,242,0.18)] text-[var(--hulux-text-muted)] border border-[var(--hulux-border)]"
                   }`}
                 >

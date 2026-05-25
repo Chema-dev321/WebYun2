@@ -140,7 +140,7 @@ function Dashboard() {
               onClick={() => setTab(t.key)}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
                 tab === t.key
-                  ? "bg-(--hulux-blue) text-white shadow"
+                  ? "bg-(--hulux-blue) text-white shadow dark:bg-(--hulux-cyan) dark:text-(--hulux-blue)"
                   : "text-(--hulux-text-muted) hover:text-(--hulux-text) hover:bg-[rgba(148,237,242,0.18)]"
               }`}
             >
