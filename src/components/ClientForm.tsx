@@ -147,7 +147,7 @@ export default function ClientForm({ onSuccess }: Props) {
             <option value="">Seleccionar NAP</option>
             {napsFiltradas.map((n) => (
               <option key={n.id} value={n.id}>
-                {n.nombre} — {n.municipio}, {n.localidad} ({n.puertos_ocupados}/{n.capacidad_total})
+                {n.id_nap} — {n.municipio}, {n.localidad} ({n.puertos_ocupados}/{n.capacidad_total})
               </option>
             ))}
           </select>

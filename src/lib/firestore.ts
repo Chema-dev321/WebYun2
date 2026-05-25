@@ -373,9 +373,11 @@ export async function getMunicipios(): Promise<string[]> {
 export async function getLocalidadesByMunicipio(municipio: string): Promise<string[]> {
   const q = query(collection(db, GEO_COL), where("municipio", "==", municipio));
   const snap = await getDocs(q);
-  return snap.docs
-    .map((d) => (d.data() as LocalidadEntry).localidad)
-    .sort();
+  const localidades = new Set<string>();
+  snap.docs.forEach((d) => {
+    localidades.add((d.data() as LocalidadEntry).localidad);
+  });
+  return Array.from(localidades).sort();
 }
 
 export async function getNAPsByLocalidad(localidad: string): Promise<NAP[]> {

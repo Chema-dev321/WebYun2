@@ -98,8 +98,9 @@ export default function NAPTable({ naps, onRefresh, onFilterChange }: Props) {
       if (search.trim()) {
         const q = search.toLowerCase();
         const match =
-          nap.nombre.toLowerCase().includes(q) ||
-          nap.id_nap.toLowerCase().includes(q);
+          nap.id_nap.toLowerCase().includes(q) ||
+          nap.municipio.toLowerCase().includes(q) ||
+          nap.localidad.toLowerCase().includes(q);
         if (!match) return false;
       }
 
@@ -243,7 +244,7 @@ export default function NAPTable({ naps, onRefresh, onFilterChange }: Props) {
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Nombre o ID de NAP..."
+                placeholder="Buscar por ID, municipio o localidad..."
                 className="w-full pl-10 pr-3 py-2 bg-[var(--hulux-surface-elevated)] border border-[var(--hulux-border)] rounded-lg text-sm text-[var(--hulux-text)] placeholder-[var(--hulux-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--hulux-blue)]"
               />
             </div>
@@ -354,7 +355,6 @@ export default function NAPTable({ naps, onRefresh, onFilterChange }: Props) {
             <thead className="bg-[var(--hulux-subtle)] text-[var(--hulux-text)]">
               <tr>
                 <th className="p-3 w-10">Semáforo</th>
-                <th className="p-3">Nombre NAP</th>
                 <th className="p-3">ID NAP</th>
                 <th className="p-3">Municipio</th>
                 <th className="p-3">Localidad</th>
@@ -393,19 +393,7 @@ export default function NAPTable({ naps, onRefresh, onFilterChange }: Props) {
                         }
                       />
                     </td>
-                    <td className="p-3 font-medium">
-                      {editingId === nap.id ? (
-                        <input
-                          type="text"
-                          value={editFields.nombre || ""}
-                          onChange={(e) => setEditFields((f) => ({ ...f, nombre: e.target.value }))}
-                          className="w-full rounded bg-[var(--hulux-surface)] border border-[var(--hulux-border)] p-1 text-sm text-[var(--hulux-text)] focus:outline-none focus:ring-2 focus:ring-[var(--hulux-blue)]"
-                        />
-                      ) : (
-                        nap.nombre
-                      )}
-                    </td>
-                    <td className="p-3 text-[var(--hulux-text-muted)]">{nap.id_nap}</td>
+                    <td className="p-3 text-[var(--hulux-text-muted)] font-medium">{nap.id_nap}</td>
                     <td className="p-3">
                       {editingId === nap.id ? (
                         <input
@@ -576,10 +564,10 @@ export default function NAPTable({ naps, onRefresh, onFilterChange }: Props) {
                   </tr>
                   {isExpanded && (
                     <tr className="bg-[rgba(17,41,62,0.02)] dark:bg-[rgba(148,237,242,0.03)] border-b border-[var(--hulux-border)]">
-                      <td colSpan={12} className="p-4">
+                      <td colSpan={11} className="p-4">
                         <div className="bg-[var(--hulux-surface-elevated)] border border-[var(--hulux-border)] rounded-xl p-4 shadow-inner">
                           <h3 className="text-sm font-semibold mb-3 text-[var(--hulux-blue)] dark:text-[var(--hulux-cyan)]">
-                            Clientes en {nap.nombre}
+                            Clientes en {nap.id_nap}
                           </h3>
                           {loadingClientes ? (
                             <p className="text-[var(--hulux-text-muted)] text-sm flex items-center gap-2">

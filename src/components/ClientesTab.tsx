@@ -7,8 +7,23 @@ export default function ClientesTab({ naps }: { naps: NAP[] }) {
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [loadingClientes, setLoadingClientes] = useState(true);
   const [search, setSearch] = useState("");
+  const [municipio, setMunicipio] = useState("");
+  const [localidad, setLocalidad] = useState("");
   const [page, setPage] = useState(0);
   const pageSize = 25;
+
+  const municipios = useMemo(() => {
+    const set = new Set(clientes.map((c) => c.municipio));
+    return Array.from(set).sort();
+  }, [clientes]);
+
+  const localidades = useMemo(() => {
+    if (!municipio) return [];
+    const set = new Set(
+      clientes.filter((c) => c.municipio === municipio).map((c) => c.localidad)
+    );
+    return Array.from(set).sort();
+  }, [clientes, municipio]);
 
   useEffect(() => {
     let unsubs = () => {};
@@ -22,27 +37,37 @@ export default function ClientesTab({ naps }: { naps: NAP[] }) {
   }, []);
 
   const filtered = useMemo(() => {
-    if (!search.trim()) return clientes;
-    const q = search.toLowerCase();
-    return clientes.filter(
-      (c) =>
-        c.nombre.toLowerCase().includes(q) ||
-        c.id_wisp.toLowerCase().includes(q) ||
-        c.municipio.toLowerCase().includes(q) ||
-        c.localidad.toLowerCase().includes(q) ||
-        c.id_nap.toLowerCase().includes(q)
-    );
-  }, [clientes, search]);
+    let result = clientes;
+
+    if (municipio) {
+      result = result.filter((c) => c.municipio === municipio);
+    }
+    if (localidad) {
+      result = result.filter((c) => c.localidad === localidad);
+    }
+
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      result = result.filter(
+        (c) =>
+          c.nombre.toLowerCase().includes(q) ||
+          c.id_wisp.toLowerCase().includes(q) ||
+          c.id_nap.toLowerCase().includes(q)
+      );
+    }
+    return result;
+  }, [clientes, search, municipio, localidad]);
 
   const totalPages = Math.ceil(filtered.length / pageSize);
   const paged = filtered.slice(page * pageSize, (page + 1) * pageSize);
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-3">
-        <div className="relative flex-1 max-w-md">
+      <div className="flex flex-wrap items-end gap-3">
+        <div className="relative flex-1 min-w-[200px]">
+          <label className="block text-xs text-[var(--hulux-text-muted)] mb-1">Buscar</label>
           <svg
-            className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--hulux-text-muted)]"
+            className="absolute left-3 top-[34px] -translate-y-1/2 h-4 w-4 text-[var(--hulux-text-muted)]"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -58,11 +83,48 @@ export default function ClientesTab({ naps }: { naps: NAP[] }) {
             type="text"
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(0); }}
-            placeholder="Buscar por nombre, ID WISP, NAP, municipio..."
+            placeholder="Buscar por nombre, ID WISP, NAP..."
             className="w-full pl-10 pr-4 py-2 bg-[var(--hulux-surface)] border border-[var(--hulux-border)] rounded-lg text-sm text-[var(--hulux-text)] placeholder-[var(--hulux-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--hulux-blue)]"
           />
         </div>
-        <span className="text-xs text-[var(--hulux-text-muted)]">
+
+        <div>
+          <label className="block text-xs text-[var(--hulux-text-muted)] mb-1">Municipio</label>
+          <select
+            value={municipio}
+            onChange={(e) => {
+              setMunicipio(e.target.value);
+              setLocalidad("");
+              setPage(0);
+            }}
+            className="px-3 py-2 bg-[var(--hulux-surface)] border border-[var(--hulux-border)] rounded-lg text-sm text-[var(--hulux-text)] focus:outline-none focus:ring-2 focus:ring-[var(--hulux-blue)]"
+          >
+            <option value="">Todos</option>
+            {municipios.map((m) => (
+              <option key={m} value={m}>{m}</option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-xs text-[var(--hulux-text-muted)] mb-1">Localidad</label>
+          <select
+            value={localidad}
+            onChange={(e) => {
+              setLocalidad(e.target.value);
+              setPage(0);
+            }}
+            disabled={!municipio}
+            className="px-3 py-2 bg-[var(--hulux-surface)] border border-[var(--hulux-border)] rounded-lg text-sm text-[var(--hulux-text)] disabled:opacity-40 focus:outline-none focus:ring-2 focus:ring-[var(--hulux-blue)]"
+          >
+            <option value="">Todas</option>
+            {localidades.map((l) => (
+              <option key={l} value={l}>{l}</option>
+            ))}
+          </select>
+        </div>
+
+        <span className="text-xs text-[var(--hulux-text-muted)] mb-3 whitespace-nowrap">
           {filtered.length} cliente{filtered.length !== 1 ? "s" : ""}
         </span>
       </div>
