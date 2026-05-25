@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useEffect, useState, useCallback, useMemo, Fragment } from "react";
 import type { NAP } from "@/lib/types";
 import { deleteCliente, getNAPColor, updateNAP, deleteNAP } from "@/lib/firestore";
 
@@ -138,6 +138,9 @@ export default function NAPTable({ naps, onRefresh, onFilterChange }: Props) {
       const result = await deleteCliente(clienteId);
       if (!result.success) {
         alert(result.error || "Error al eliminar cliente.");
+      } else {
+        // Actualizamos el estado local para que el cambio sea instantáneo
+        setExpandedClientes((prev) => prev.filter((c) => c.id !== clienteId));
       }
     } catch (e: any) {
       alert("Excepción: " + e.message);
@@ -373,8 +376,9 @@ export default function NAPTable({ naps, onRefresh, onFilterChange }: Props) {
                 const isExpanded = expandedId === nap.id;
 
                 return (
-                  <tr key={nap.id} className="border-t border-[var(--hulux-border)] hover:bg-[rgba(148,237,242,0.12)]">
-                    <td className="p-3">
+                  <Fragment key={nap.id}>
+                    <tr className="border-t border-[var(--hulux-border)] hover:bg-[rgba(148,237,242,0.12)]">
+                      <td className="p-3">
                       <span
                         className="inline-block w-3 h-3 rounded-full"
                         style={{ backgroundColor: color }}
@@ -552,52 +556,74 @@ export default function NAPTable({ naps, onRefresh, onFilterChange }: Props) {
                         </div>
                       )}
                     </td>
-                    <td className="p-3">
-                      <button
-                        onClick={() => toggleExpand(nap.id)}
-                        className="text-[var(--hulux-maroon-light)] hover:underline text-xs whitespace-nowrap"
-                      >
-                        {isExpanded ? "▼" : "▶"}
-                      </button>
+                    <td className="p-3 text-right">
+                      <div className="group relative inline-flex justify-center items-center">
+                        <button
+                          onClick={() => toggleExpand(nap.id)}
+                          className="text-[var(--hulux-maroon-light)] hover:bg-[rgba(112,0,63,0.1)] p-2 rounded text-xs transition-colors"
+                        >
+                          {isExpanded ? "▼" : "▶"}
+                        </button>
+                        {/* Tooltip flotante */}
+                        <div className="absolute right-full mr-1 top-1/2 -translate-y-1/2 hidden group-hover:flex items-center z-50 pointer-events-none">
+                          <div className="bg-[var(--hulux-blue)] dark:bg-[var(--hulux-surface-elevated)] dark:border dark:border-[var(--hulux-border)] text-white text-[11px] px-2.5 py-1.5 rounded-lg whitespace-nowrap shadow-xl font-medium">
+                            {isExpanded ? "Ocultar menú de clientes" : "Ver menú desplegable de clientes"}
+                          </div>
+                          <div className="w-0 h-0 border-y-[5px] border-y-transparent border-l-[5px] border-l-[var(--hulux-blue)] dark:border-l-[var(--hulux-border)]" />
+                        </div>
+                      </div>
                     </td>
                   </tr>
+                  {isExpanded && (
+                    <tr className="bg-[rgba(17,41,62,0.02)] dark:bg-[rgba(148,237,242,0.03)] border-b border-[var(--hulux-border)]">
+                      <td colSpan={12} className="p-4">
+                        <div className="bg-[var(--hulux-surface-elevated)] border border-[var(--hulux-border)] rounded-xl p-4 shadow-inner">
+                          <h3 className="text-sm font-semibold mb-3 text-[var(--hulux-blue)] dark:text-[var(--hulux-cyan)]">
+                            Clientes en {nap.nombre}
+                          </h3>
+                          {loadingClientes ? (
+                            <p className="text-[var(--hulux-text-muted)] text-sm flex items-center gap-2">
+                              <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                              </svg>
+                              Cargando clientes...
+                            </p>
+                          ) : expandedClientes.length === 0 ? (
+                            <p className="text-[var(--hulux-text-muted)] text-sm bg-[var(--hulux-surface)] border border-[var(--hulux-border)] rounded-lg p-3 inline-block">
+                              Sin clientes registrados en esta NAP.
+                            </p>
+                          ) : (
+                            <div className="flex flex-wrap gap-2">
+                              {expandedClientes.map((c) => (
+                                <div
+                                  key={c.id}
+                                  className="flex items-center gap-2 bg-[var(--hulux-surface)] border border-[var(--hulux-border)] rounded-lg px-3 py-1.5 text-sm shadow-sm transition-colors hover:bg-[rgba(148,237,242,0.05)]"
+                                >
+                                  <span className="text-[var(--hulux-text)] font-medium">{c.nombre}</span>
+                                  <span className="text-[var(--hulux-text-muted)] text-xs bg-[var(--hulux-subtle)] px-1.5 py-0.5 rounded">
+                                    {c.id_wisp}
+                                  </span>
+                                  <button
+                                    onClick={() => handleDelete(c.id, nap.id)}
+                                    className="text-[var(--hulux-maroon-light)] hover:bg-[rgba(112,0,63,0.1)] p-1 rounded transition-colors ml-1"
+                                    title="Eliminar cliente"
+                                  >
+                                    ✕
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                  </Fragment>
                 );
               })}
             </tbody>
           </table>
-
-          {/* ── Expanded client panel ── */}
-          {expandedId && (
-            <div className="bg-[var(--hulux-surface)] border-t border-[var(--hulux-border)] p-4">
-              <h3 className="text-sm font-semibold mb-2">
-                Clientes en NAP: {naps.find((n) => n.id === expandedId)?.nombre}
-              </h3>
-              {loadingClientes ? (
-                <p className="text-[var(--hulux-text-muted)] text-sm">Cargando clientes...</p>
-              ) : expandedClientes.length === 0 ? (
-                <p className="text-[var(--hulux-text-muted)] text-sm">Sin clientes registrados.</p>
-              ) : (
-                <div className="flex flex-wrap gap-2">
-                  {expandedClientes.map((c) => (
-                    <div
-                      key={c.id}
-                      className="flex items-center gap-2 bg-[var(--hulux-subtle)] border border-[var(--hulux-border)] rounded-lg px-3 py-1.5 text-sm"
-                    >
-                      <span className="text-[var(--hulux-text)]">{c.nombre}</span>
-                      <span className="text-[var(--hulux-text-muted)] text-xs">({c.id_wisp})</span>
-                      <button
-                        onClick={() => handleDelete(c.id, expandedId)}
-                        className="text-[var(--hulux-maroon-light)] hover:underline ml-1 text-xs"
-                        title="Eliminar cliente"
-                      >
-                        ✕
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
 
           {/* ── Legend ── */}
           <div className="flex flex-wrap gap-4 p-3 bg-[var(--hulux-subtle)] rounded-b-xl border-t border-[var(--hulux-border)] text-xs text-[var(--hulux-text-muted)]">
