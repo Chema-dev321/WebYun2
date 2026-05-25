@@ -27,4 +27,4 @@ export interface LocalidadEntry {
   localidad: string;
 }
 
-export type SemaphoreColor = "verde" | "amarillo" | "rojo" | "morado";
+export type SemaphoreColor = "verde" | "amarillo" | "rojo" | "celeste";

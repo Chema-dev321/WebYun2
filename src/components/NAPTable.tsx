@@ -10,12 +10,12 @@ interface Props {
   onFilterChange?: (filtered: NAP[]) => void;
 }
 
-type SemaforoFilter = "verde" | "amarillo" | "rojo" | "morado";
+type SemaforoFilter = "verde" | "amarillo" | "rojo" | "celeste";
 
 function getSemaforo(nap: NAP): SemaforoFilter {
   const o = nap.puertos_ocupados;
   const c = nap.capacidad_total;
-  if (o > c) return "morado";
+  if (o > c) return "celeste";
   if (o === c) return "rojo";
   if (o >= c * 0.7) return "amarillo";
   return "verde";
@@ -25,15 +25,15 @@ const SEMAFORO_COLORS: Record<SemaforoFilter, string> = {
   verde: "bg-(--hulux-lime)",
   amarillo: "bg-(--hulux-orange)",
   rojo: "bg-(--hulux-maroon)",
-  // Use cyan but ensure it's visible on white by giving it a subtle outline.
-  morado: "bg-(--hulux-cyan) ring-1 ring-[rgba(17,41,62,0.28)]",
+  // Azul celeste (sobre-ocupación): usa cyan con contorno sutil para visibilidad.
+  celeste: "bg-(--hulux-cyan) ring-1 ring-[rgba(17,41,62,0.28)]",
 };
 
 const SEMAFORO_LABELS: Record<SemaforoFilter, string> = {
   verde: "Verde (disponible)",
   amarillo: "Amarillo (≥70%)",
   rojo: "Rojo (lleno)",
-  morado: "Morado (error)",
+  celeste: "Azul celeste (sobre-ocupación)",
 };
 
 export default function NAPTable({ naps, onRefresh, onFilterChange }: Props) {
@@ -625,7 +625,7 @@ export default function NAPTable({ naps, onRefresh, onFilterChange }: Props) {
               <span className="w-3 h-3 rounded-full bg-(--hulux-maroon)" /> Lleno
             </span>
             <span className="flex items-center gap-1">
-              <span className="w-3 h-3 rounded-full bg-(--hulux-cyan)" /> Sobre-ocupación
+              <span className="w-3 h-3 rounded-full bg-(--hulux-cyan)" /> Azul celeste (sobre-ocupación)
             </span>
           </div>
         </div>
