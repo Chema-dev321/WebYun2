@@ -51,7 +51,7 @@ export default function ThemeToggle() {
       aria-label={
         theme === "dark" ? "Cambiar a modo claro" : "Cambiar a modo oscuro"
       }
-      className="inline-flex items-center justify-center w-9 h-9 rounded-lg border border-[var(--hulux-border)] bg-[var(--hulux-surface)] text-[var(--hulux-text)] hover:bg-[rgba(148,237,242,0.18)] transition-colors"
+      className="inline-flex items-center justify-center w-9 h-9 rounded-lg border border-(--hulux-border) bg-(--hulux-surface) text-(--hulux-text) hover:bg-[rgba(148,237,242,0.18)] transition-colors"
     >
       {theme === "dark" ? (
         <svg

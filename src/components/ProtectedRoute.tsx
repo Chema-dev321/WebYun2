@@ -26,8 +26,8 @@ export default function ProtectedRoute({
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[var(--hulux-bg)]">
-        <div className="flex items-center gap-3 text-[var(--hulux-text-muted)]">
+      <div className="min-h-screen flex items-center justify-center bg-(--hulux-bg)">
+        <div className="flex items-center gap-3 text-(--hulux-text-muted)">
           <svg
             className="animate-spin h-5 w-5"
             viewBox="0 0 24 24"

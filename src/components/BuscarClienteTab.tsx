@@ -164,7 +164,7 @@ export default function BuscarClienteTab({ naps }: { naps: NAP[] }) {
     <div className="max-w-2xl mx-auto">
 
       <form onSubmit={handleSearch} className="mb-6">
-        <label className="block text-sm text-[var(--hulux-text)] mb-2">
+        <label className="block text-sm text-(--hulux-text) mb-2">
           Buscar cliente por ID WISP
         </label>
         <div className="flex gap-2">
@@ -173,19 +173,19 @@ export default function BuscarClienteTab({ naps }: { naps: NAP[] }) {
             value={idWisp}
             onChange={(e) => setIdWisp(e.target.value)}
             placeholder="Ej. 12594"
-            className="flex-1 px-4 py-2.5 bg-[var(--hulux-surface)] border border-[var(--hulux-border)] rounded-lg text-[var(--hulux-text)] placeholder-[var(--hulux-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--hulux-blue)]"
+            className="flex-1 px-4 py-2.5 bg-(--hulux-surface) border border-(--hulux-border) rounded-lg text-(--hulux-text) placeholder-(--hulux-text-muted) focus:outline-none focus:ring-2 focus:ring-(--hulux-blue)"
           />
           <button
             type="submit"
             disabled={loading}
-            className="px-6 py-2.5 bg-[var(--hulux-orange)] hover:brightness-95 disabled:opacity-50 text-[var(--hulux-blue)] font-semibold rounded-lg transition-colors text-sm"
+            className="px-6 py-2.5 bg-(--hulux-orange) hover:brightness-95 disabled:opacity-50 text-(--hulux-blue) font-semibold rounded-lg transition-colors text-sm"
           >
             {loading ? "Buscando..." : "Buscar"}
           </button>
           <button
             type="button"
             onClick={limpiarBusqueda}
-            className="px-4 py-2.5 bg-[var(--hulux-surface)] hover:bg-[rgba(148,237,242,0.18)] text-[var(--hulux-text)] border border-[var(--hulux-border)] rounded-lg transition-colors text-sm"
+            className="px-4 py-2.5 bg-(--hulux-surface) hover:bg-[rgba(148,237,242,0.18)] text-(--hulux-text) border border-(--hulux-border) rounded-lg transition-colors text-sm"
           >
             Limpiar
           </button>
@@ -193,27 +193,27 @@ export default function BuscarClienteTab({ naps }: { naps: NAP[] }) {
       </form>
 
       {error && (
-        <div className="bg-[rgba(112,0,63,0.08)] border border-[rgba(112,0,63,0.22)] text-[var(--hulux-maroon)] text-sm px-4 py-3 rounded-lg">
+        <div className="bg-[rgba(112,0,63,0.08)] border border-[rgba(112,0,63,0.22)] text-(--hulux-maroon) text-sm px-4 py-3 rounded-lg">
           {error}
         </div>
       )}
 
       {cliente && (
-        <div className="rounded-xl border border-[var(--hulux-border)] bg-[var(--hulux-surface)] shadow-[var(--hulux-shadow)] overflow-hidden">
-          <div className="bg-[var(--hulux-subtle)] px-5 py-3 border-b border-[var(--hulux-border)] flex items-center justify-between">
-            <h3 className="text-sm font-semibold text-[var(--hulux-text)]">Cliente encontrado</h3>
+        <div className="rounded-xl border border-(--hulux-border) bg-(--hulux-surface) shadow-(--hulux-shadow) overflow-hidden">
+          <div className="bg-(--hulux-subtle) px-5 py-3 border-b border-(--hulux-border) flex items-center justify-between">
+            <h3 className="text-sm font-semibold text-(--hulux-text)">Cliente encontrado</h3>
             {!editando ? (
               <div className="flex gap-1.5">
                 <button
                   onClick={eliminarCliente}
                   disabled={deleting}
-                  className="px-3 py-1 text-xs bg-transparent hover:bg-[rgba(112,0,63,0.12)] text-[var(--hulux-maroon-light)] border border-[rgba(112,0,63,0.35)] rounded-lg transition-colors disabled:opacity-50"
+                  className="px-3 py-1 text-xs bg-transparent hover:bg-[rgba(112,0,63,0.12)] text-(--hulux-maroon-light) border border-[rgba(112,0,63,0.35)] rounded-lg transition-colors disabled:opacity-50"
                 >
                   {deleting ? "Eliminando..." : "Eliminar"}
                 </button>
                 <button
                   onClick={iniciarEdicion}
-                  className="px-3 py-1 text-xs bg-[rgba(148,237,242,0.22)] hover:bg-[rgba(148,237,242,0.32)] text-[var(--hulux-blue)] border border-[rgba(148,237,242,0.45)] rounded-lg transition-colors"
+                  className="px-3 py-1 text-xs bg-[rgba(148,237,242,0.22)] hover:bg-[rgba(148,237,242,0.32)] text-(--hulux-blue) border border-[rgba(148,237,242,0.45)] rounded-lg transition-colors"
                 >
                   Editar
                 </button>
@@ -223,13 +223,13 @@ export default function BuscarClienteTab({ naps }: { naps: NAP[] }) {
                 <button
                   onClick={guardarCambios}
                   disabled={saving}
-                  className="px-3 py-1 text-xs bg-[var(--hulux-orange)] hover:brightness-95 disabled:opacity-50 text-[var(--hulux-blue)] rounded-lg transition-colors"
+                  className="px-3 py-1 text-xs bg-(--hulux-orange) hover:brightness-95 disabled:opacity-50 text-(--hulux-blue) rounded-lg transition-colors"
                 >
                   {saving ? "Guardando..." : "Guardar"}
                 </button>
                 <button
                   onClick={cancelarEdicion}
-                  className="px-3 py-1 text-xs bg-[var(--hulux-surface)] hover:bg-[rgba(148,237,242,0.18)] text-[var(--hulux-text)] border border-[var(--hulux-border)] rounded-lg transition-colors"
+                  className="px-3 py-1 text-xs bg-(--hulux-surface) hover:bg-[rgba(148,237,242,0.18)] text-(--hulux-text) border border-(--hulux-border) rounded-lg transition-colors"
                 >
                   Cancelar
                 </button>
@@ -248,7 +248,7 @@ export default function BuscarClienteTab({ naps }: { naps: NAP[] }) {
             {editando ? (
               <>
                 <div className="flex items-center gap-3">
-                  <span className="text-xs text-[var(--hulux-text-muted)] w-28 shrink-0">Municipio</span>
+                  <span className="text-xs text-(--hulux-text-muted) w-28 shrink-0">Municipio</span>
                   <select
                     value={editMunicipio}
                     onChange={(e) => {
@@ -256,7 +256,7 @@ export default function BuscarClienteTab({ naps }: { naps: NAP[] }) {
                       setEditLocalidad("");
                       setEditIdNap("");
                     }}
-                    className="flex-1 px-3 py-1.5 bg-[var(--hulux-surface)] border border-[var(--hulux-border)] rounded-lg text-sm text-[var(--hulux-text)] focus:outline-none focus:ring-2 focus:ring-[var(--hulux-blue)]"
+                    className="flex-1 px-3 py-1.5 bg-(--hulux-surface) border border-(--hulux-border) rounded-lg text-sm text-(--hulux-text) focus:outline-none focus:ring-2 focus:ring-(--hulux-blue)"
                   >
                     <option value="">Seleccionar</option>
                     {municipiosUnicos.map((m) => (
@@ -265,7 +265,7 @@ export default function BuscarClienteTab({ naps }: { naps: NAP[] }) {
                   </select>
                 </div>
                 <div className="flex items-center gap-3">
-                  <span className="text-xs text-[var(--hulux-text-muted)] w-28 shrink-0">Localidad</span>
+                  <span className="text-xs text-(--hulux-text-muted) w-28 shrink-0">Localidad</span>
                   <select
                     value={editLocalidad}
                     onChange={(e) => {
@@ -273,7 +273,7 @@ export default function BuscarClienteTab({ naps }: { naps: NAP[] }) {
                       setEditIdNap("");
                     }}
                     disabled={!editMunicipio}
-                    className="flex-1 px-3 py-1.5 bg-[var(--hulux-surface)] border border-[var(--hulux-border)] rounded-lg text-sm text-[var(--hulux-text)] focus:outline-none focus:ring-2 focus:ring-[var(--hulux-blue)] disabled:opacity-40"
+                    className="flex-1 px-3 py-1.5 bg-(--hulux-surface) border border-(--hulux-border) rounded-lg text-sm text-(--hulux-text) focus:outline-none focus:ring-2 focus:ring-(--hulux-blue) disabled:opacity-40"
                   >
                     <option value="">Seleccionar</option>
                     {localidadesFiltradas.map((l) => (
@@ -282,12 +282,12 @@ export default function BuscarClienteTab({ naps }: { naps: NAP[] }) {
                   </select>
                 </div>
                 <div className="flex items-center gap-3">
-                  <span className="text-xs text-[var(--hulux-text-muted)] w-28 shrink-0">NAP</span>
+                  <span className="text-xs text-(--hulux-text-muted) w-28 shrink-0">NAP</span>
                   <select
                     value={editIdNap}
                     onChange={(e) => setEditIdNap(e.target.value)}
                     disabled={!editLocalidad}
-                    className="flex-1 px-3 py-1.5 bg-[var(--hulux-surface)] border border-[var(--hulux-border)] rounded-lg text-sm text-[var(--hulux-text)] focus:outline-none focus:ring-2 focus:ring-[var(--hulux-blue)] disabled:opacity-40"
+                    className="flex-1 px-3 py-1.5 bg-(--hulux-surface) border border-(--hulux-border) rounded-lg text-sm text-(--hulux-text) focus:outline-none focus:ring-2 focus:ring-(--hulux-blue) disabled:opacity-40"
                   >
                     <option value="">Seleccionar NAP</option>
                     {naps
@@ -331,7 +331,7 @@ export default function BuscarClienteTab({ naps }: { naps: NAP[] }) {
       )}
 
       {searched && !cliente && !error && !loading && (
-        <div className="text-center py-8 text-[var(--hulux-text-muted)] text-sm">
+        <div className="text-center py-8 text-(--hulux-text-muted) text-sm">
           No se encontraron resultados.
         </div>
       )}
@@ -351,12 +351,12 @@ function EditableRow({
 }) {
   return (
     <div className="flex items-center gap-3">
-      <span className="text-xs text-[var(--hulux-text-muted)] w-28 shrink-0">{label}</span>
+      <span className="text-xs text-(--hulux-text-muted) w-28 shrink-0">{label}</span>
       <input
         type="text"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="flex-1 px-3 py-1.5 bg-[var(--hulux-surface)] border border-[var(--hulux-border)] rounded-lg text-sm text-[var(--hulux-text)] focus:outline-none focus:ring-2 focus:ring-[var(--hulux-blue)]"
+        className="flex-1 px-3 py-1.5 bg-(--hulux-surface) border border-(--hulux-border) rounded-lg text-sm text-(--hulux-text) focus:outline-none focus:ring-2 focus:ring-(--hulux-blue)"
       />
     </div>
   );
@@ -366,8 +366,8 @@ function EditableRow({
 function InfoRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-start gap-3">
-      <span className="text-xs text-[var(--hulux-text-muted)] w-28 shrink-0">{label}</span>
-      <span className="text-sm text-[var(--hulux-text)] font-semibold">{value || "—"}</span>
+      <span className="text-xs text-(--hulux-text-muted) w-28 shrink-0">{label}</span>
+      <span className="text-sm text-(--hulux-text) font-semibold">{value || "—"}</span>
     </div>
   );
 }

@@ -94,22 +94,22 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[var(--hulux-bg)] px-4">
+    <div className="min-h-screen flex items-center justify-center bg-(--hulux-bg) px-4">
       <div className="w-full max-w-md">
-        <div className="bg-[var(--hulux-surface)] border border-[var(--hulux-border)] shadow-[var(--hulux-shadow)] rounded-2xl p-8 relative">
+        <div className="bg-(--hulux-surface) border border-(--hulux-border) shadow-(--hulux-shadow) rounded-2xl p-8 relative">
           <div className="absolute top-4 right-4">
             <ThemeToggle />
           </div>
           <div className="text-center mb-8">
-            <h1 className="text-2xl font-bold text-[var(--hulux-text)]">WebYun</h1>
-            <p className="text-[var(--hulux-text-muted)] text-sm mt-1">
+            <h1 className="text-2xl font-bold text-(--hulux-text)">WebYun</h1>
+            <p className="text-(--hulux-text-muted) text-sm mt-1">
               {isRegister ? "Crea tu cuenta" : "Inicia sesión para continuar"}
             </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-[var(--hulux-text)] mb-1.5">
+              <label className="block text-sm font-medium text-(--hulux-text) mb-1.5">
                 Correo electrónico
               </label>
               <input
@@ -117,13 +117,13 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full px-4 py-2.5 bg-[var(--hulux-surface)] border border-[var(--hulux-border)] rounded-lg text-[var(--hulux-text)] placeholder-[var(--hulux-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--hulux-blue)] focus:border-transparent"
+                className="w-full px-4 py-2.5 bg-(--hulux-surface) border border-(--hulux-border) rounded-lg text-(--hulux-text) placeholder-(--hulux-text-muted) focus:outline-none focus:ring-2 focus:ring-(--hulux-blue) focus:border-transparent"
                 placeholder="tu@correo.com"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-[var(--hulux-text)] mb-1.5">
+              <label className="block text-sm font-medium text-(--hulux-text) mb-1.5">
                 Contraseña
               </label>
               <div className="relative">
@@ -133,13 +133,13 @@ export default function LoginPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 minLength={6}
-                className="w-full px-4 py-2.5 bg-[var(--hulux-surface)] border border-[var(--hulux-border)] rounded-lg text-[var(--hulux-text)] placeholder-[var(--hulux-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--hulux-blue)] focus:border-transparent pr-10"
+                className="w-full px-4 py-2.5 bg-(--hulux-surface) border border-(--hulux-border) rounded-lg text-(--hulux-text) placeholder-(--hulux-text-muted) focus:outline-none focus:ring-2 focus:ring-(--hulux-blue) focus:border-transparent pr-10"
                 placeholder="••••••••"
               />
               <button
                 type="button"
                 onClick={() => setVerPassword(!verPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--hulux-text-muted)] hover:text-[var(--hulux-text)]"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-(--hulux-text-muted) hover:text-(--hulux-text)"
                 tabIndex={-1}
               >
                 {verPassword ? (
@@ -157,26 +157,26 @@ export default function LoginPage() {
             </div>
 
             <div className="flex items-center justify-between text-xs">
-              <label className="flex items-center gap-1.5 text-[var(--hulux-text-muted)] cursor-pointer select-none">
+              <label className="flex items-center gap-1.5 text-(--hulux-text-muted) cursor-pointer select-none">
                 <input
                   type="checkbox"
                   checked={recordar}
                   onChange={(e) => setRecordar(e.target.checked)}
-                  className="rounded border-[var(--hulux-border)] bg-[var(--hulux-surface)] text-[var(--hulux-orange)] focus:ring-[var(--hulux-blue)] focus:ring-offset-0"
+                  className="rounded border-(--hulux-border) bg-(--hulux-surface) text-(--hulux-orange) focus:ring-(--hulux-blue) focus:ring-offset-0"
                 />
                 Recordarme
               </label>
               <button
                 type="button"
                 onClick={() => setVerPassword(!verPassword)}
-                className="text-[var(--hulux-text-muted)] hover:text-[var(--hulux-text)]"
+                className="text-(--hulux-text-muted) hover:text-(--hulux-text)"
               >
                 {verPassword ? "Ocultar contraseña" : "Ver contraseña"}
               </button>
             </div>
 
             {error && (
-              <div className="bg-[rgba(112,0,63,0.08)] border border-[rgba(112,0,63,0.22)] text-[var(--hulux-maroon)] text-sm px-4 py-2.5 rounded-lg">
+              <div className="bg-[rgba(112,0,63,0.08)] border border-[rgba(112,0,63,0.22)] text-(--hulux-maroon) text-sm px-4 py-2.5 rounded-lg">
                 {error}
               </div>
             )}
@@ -184,7 +184,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-2.5 bg-[var(--hulux-orange)] hover:brightness-95 disabled:opacity-50 text-[var(--hulux-blue)] font-semibold rounded-lg transition-colors"
+              className="w-full py-2.5 bg-(--hulux-orange) hover:brightness-95 disabled:opacity-50 text-(--hulux-blue) font-semibold rounded-lg transition-colors"
             >
               {loading
                 ? "Procesando..."
@@ -197,16 +197,16 @@ export default function LoginPage() {
           <div className="mt-4">
             <div className="relative mb-4">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-[var(--hulux-border)]" />
+                <div className="w-full border-t border-(--hulux-border)" />
               </div>
               <div className="relative flex justify-center text-xs">
-                <span className="bg-[var(--hulux-surface)] px-2 text-[var(--hulux-text-muted)]">o continúa con</span>
+                <span className="bg-(--hulux-surface) px-2 text-(--hulux-text-muted)">o continúa con</span>
               </div>
             </div>
             <button
               onClick={handleGoogleLogin}
               disabled={loading}
-              className="w-full py-2.5 bg-[var(--hulux-surface)] hover:bg-[rgba(148,237,242,0.18)] disabled:opacity-50 text-[var(--hulux-blue)] font-semibold rounded-lg transition-colors flex items-center justify-center gap-2 border border-[var(--hulux-border)]"
+              className="w-full py-2.5 bg-(--hulux-surface) hover:bg-[rgba(148,237,242,0.18)] disabled:opacity-50 text-(--hulux-blue) font-semibold rounded-lg transition-colors flex items-center justify-center gap-2 border border-(--hulux-border)"
             >
               <svg viewBox="0 0 24 24" className="h-5 w-5">
                 <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
@@ -224,7 +224,7 @@ export default function LoginPage() {
                 setIsRegister(!isRegister);
                 setError("");
               }}
-              className="text-sm text-[var(--hulux-text-muted)] hover:text-[var(--hulux-maroon)] transition-colors"
+              className="text-sm text-(--hulux-text-muted) hover:text-(--hulux-maroon) transition-colors"
             >
               {isRegister
                 ? "¿Ya tienes cuenta? Inicia sesión"

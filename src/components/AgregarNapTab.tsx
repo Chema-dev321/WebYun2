@@ -238,17 +238,17 @@ export default function AgregarNapTab({ onSuccess, naps }: { onSuccess: () => vo
     <div className="max-w-lg mx-auto">
       <form
         onSubmit={handleSubmit}
-        className="space-y-4 rounded-xl border border-[var(--hulux-border)] bg-[var(--hulux-surface)] shadow-[var(--hulux-shadow)] p-5"
+        className="space-y-4 rounded-xl border border-(--hulux-border) bg-(--hulux-surface) shadow-(--hulux-shadow) p-5"
       >
         <h2 className="text-lg font-semibold">{napExiste ? "Editar NAP" : "Agregar NAP"}</h2>
 
         <div>
-          <label className="block text-xs text-[var(--hulux-text-muted)] mb-1">
+          <label className="block text-xs text-(--hulux-text-muted) mb-1">
             ID NAP (código)
-            {checking && <span className="ml-2 text-[var(--hulux-text-muted)] animate-pulse">verificando...</span>}
-            {!checking && napExiste && <span className="ml-2 text-[var(--hulux-maroon)] font-semibold">ya existe</span>}
+            {checking && <span className="ml-2 text-(--hulux-text-muted) animate-pulse">verificando...</span>}
+            {!checking && napExiste && <span className="ml-2 text-(--hulux-maroon) font-semibold">ya existe</span>}
             {!checking && idNap.trim().length >= 2 && !napExiste && (
-              <span className="ml-2 text-[var(--hulux-blue)] font-semibold">nuevo</span>
+              <span className="ml-2 text-(--hulux-blue) font-semibold">nuevo</span>
             )}
           </label>
           <input
@@ -256,27 +256,27 @@ export default function AgregarNapTab({ onSuccess, naps }: { onSuccess: () => vo
             value={idNap}
             onChange={(e) => handleIdNapChange(e.target.value.toUpperCase())}
             placeholder="Ej. ACT 201"
-            className="w-full rounded-lg bg-[var(--hulux-surface)] border border-[var(--hulux-border)] p-2 text-sm text-[var(--hulux-text)] placeholder-[var(--hulux-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--hulux-blue)]"
+            className="w-full rounded-lg bg-(--hulux-surface) border border-(--hulux-border) p-2 text-sm text-(--hulux-text) placeholder-(--hulux-text-muted) focus:outline-none focus:ring-2 focus:ring-(--hulux-blue)"
           />
           {nomenclaturaMsg && (
-            <p className="mt-1 text-xs text-[var(--hulux-maroon)]">{nomenclaturaMsg}</p>
+            <p className="mt-1 text-xs text-(--hulux-maroon)">{nomenclaturaMsg}</p>
           )}
         </div>
 
         <div>
-          <label className="block text-xs text-[var(--hulux-text-muted)] mb-1">Nombre de la NAP</label>
+          <label className="block text-xs text-(--hulux-text-muted) mb-1">Nombre de la NAP</label>
           <input
             type="text"
             value={nombre}
             onChange={(e) => setNombre(e.target.value)}
             placeholder="Ej. COL. CENTRO - ACT 201"
-            className="w-full rounded-lg bg-[var(--hulux-surface)] border border-[var(--hulux-border)] p-2 text-sm text-[var(--hulux-text)] placeholder-[var(--hulux-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--hulux-blue)]"
+            className="w-full rounded-lg bg-(--hulux-surface) border border-(--hulux-border) p-2 text-sm text-(--hulux-text) placeholder-(--hulux-text-muted) focus:outline-none focus:ring-2 focus:ring-(--hulux-blue)"
           />
         </div>
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-xs text-[var(--hulux-text-muted)] mb-1">
+            <label className="block text-xs text-(--hulux-text-muted) mb-1">
               Municipio
               <button
                 type="button"
@@ -285,7 +285,7 @@ export default function AgregarNapTab({ onSuccess, naps }: { onSuccess: () => vo
                   setMunicipio("");
                   setLocalidad("");
                 }}
-                className="ml-2 text-[var(--hulux-maroon)] hover:underline"
+                className="ml-2 text-(--hulux-maroon) hover:underline"
               >
                 {modoMunicipio === "select" ? "+ nuevo" : "▾ existente"}
               </button>
@@ -294,7 +294,7 @@ export default function AgregarNapTab({ onSuccess, naps }: { onSuccess: () => vo
               <select
                 value={municipio}
                 onChange={(e) => setMunicipio(e.target.value)}
-                className="w-full rounded-lg bg-[var(--hulux-surface)] border border-[var(--hulux-border)] p-2 text-sm text-[var(--hulux-text)] focus:outline-none focus:ring-2 focus:ring-[var(--hulux-blue)]"
+                className="w-full rounded-lg bg-(--hulux-surface) border border-(--hulux-border) p-2 text-sm text-(--hulux-text) focus:outline-none focus:ring-2 focus:ring-(--hulux-blue)"
               >
                 <option value="">Seleccionar</option>
                 {municipios.map((m) => (
@@ -307,12 +307,12 @@ export default function AgregarNapTab({ onSuccess, naps }: { onSuccess: () => vo
                 value={municipio}
                 onChange={(e) => setMunicipio(e.target.value.toUpperCase())}
                 placeholder="Escribe el municipio"
-                className="w-full rounded-lg bg-[var(--hulux-surface)] border border-[var(--hulux-border)] p-2 text-sm text-[var(--hulux-text)] placeholder-[var(--hulux-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--hulux-blue)]"
+                className="w-full rounded-lg bg-(--hulux-surface) border border-(--hulux-border) p-2 text-sm text-(--hulux-text) placeholder-(--hulux-text-muted) focus:outline-none focus:ring-2 focus:ring-(--hulux-blue)"
               />
             )}
           </div>
           <div>
-            <label className="block text-xs text-[var(--hulux-text-muted)] mb-1">
+            <label className="block text-xs text-(--hulux-text-muted) mb-1">
               Localidad
               {municipio && (
                 <button
@@ -321,7 +321,7 @@ export default function AgregarNapTab({ onSuccess, naps }: { onSuccess: () => vo
                     setModoLocalidad(modoLocalidad === "select" ? "custom" : "select");
                     setLocalidad("");
                   }}
-                  className="ml-2 text-[var(--hulux-maroon)] hover:underline"
+                  className="ml-2 text-(--hulux-maroon) hover:underline"
                 >
                   {modoLocalidad === "select" ? "+ nueva" : "▾ existente"}
                 </button>
@@ -331,7 +331,7 @@ export default function AgregarNapTab({ onSuccess, naps }: { onSuccess: () => vo
               <select
                 value={localidad}
                 onChange={(e) => setLocalidad(e.target.value)}
-                className="w-full rounded-lg bg-[var(--hulux-surface)] border border-[var(--hulux-border)] p-2 text-sm text-[var(--hulux-text)] focus:outline-none focus:ring-2 focus:ring-[var(--hulux-blue)]"
+                className="w-full rounded-lg bg-(--hulux-surface) border border-(--hulux-border) p-2 text-sm text-(--hulux-text) focus:outline-none focus:ring-2 focus:ring-(--hulux-blue)"
               >
                 <option value="">Seleccionar</option>
                 {localidades.map((l) => (
@@ -344,7 +344,7 @@ export default function AgregarNapTab({ onSuccess, naps }: { onSuccess: () => vo
                 value={localidad}
                 onChange={(e) => setLocalidad(e.target.value.toUpperCase())}
                 placeholder="Ej. COL. CENTRO"
-                className="w-full rounded-lg bg-[var(--hulux-surface)] border border-[var(--hulux-border)] p-2 text-sm text-[var(--hulux-text)] placeholder-[var(--hulux-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--hulux-blue)]"
+                className="w-full rounded-lg bg-(--hulux-surface) border border-(--hulux-border) p-2 text-sm text-(--hulux-text) placeholder-(--hulux-text-muted) focus:outline-none focus:ring-2 focus:ring-(--hulux-blue)"
               />
             )}
           </div>
@@ -352,59 +352,59 @@ export default function AgregarNapTab({ onSuccess, naps }: { onSuccess: () => vo
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-xs text-[var(--hulux-text-muted)] mb-1">Capacidad (puertos)</label>
+            <label className="block text-xs text-(--hulux-text-muted) mb-1">Capacidad (puertos)</label>
             <select
               value={capacidad}
               onChange={(e) => setCapacidad(e.target.value)}
-              className="w-full rounded-lg bg-[var(--hulux-surface)] border border-[var(--hulux-border)] p-2 text-sm text-[var(--hulux-text)]"
+              className="w-full rounded-lg bg-(--hulux-surface) border border-(--hulux-border) p-2 text-sm text-(--hulux-text)"
             >
               <option value="8">8</option>
               <option value="16">16</option>
             </select>
           </div>
           <div>
-            <label className="block text-xs text-[var(--hulux-text-muted)] mb-1">Verificación</label>
+            <label className="block text-xs text-(--hulux-text-muted) mb-1">Verificación</label>
             <input
               type="number"
               value={verificacion}
               onChange={(e) => setVerificacion(e.target.value)}
               min="0"
-              className="w-full rounded-lg bg-[var(--hulux-surface)] border border-[var(--hulux-border)] p-2 text-sm text-[var(--hulux-text)] focus:outline-none focus:ring-2 focus:ring-[var(--hulux-blue)]"
+              className="w-full rounded-lg bg-(--hulux-surface) border border-(--hulux-border) p-2 text-sm text-(--hulux-text) focus:outline-none focus:ring-2 focus:ring-(--hulux-blue)"
             />
           </div>
         </div>
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-xs text-[var(--hulux-text-muted)] mb-1">Latitud</label>
+            <label className="block text-xs text-(--hulux-text-muted) mb-1">Latitud</label>
             <input
               type="number"
               step="any"
               value={latitud}
               onChange={(e) => setLatitud(e.target.value)}
               placeholder="Ej. 19.4326"
-              className="w-full rounded-lg bg-[var(--hulux-surface)] border border-[var(--hulux-border)] p-2 text-sm text-[var(--hulux-text)] placeholder-[var(--hulux-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--hulux-blue)]"
+              className="w-full rounded-lg bg-(--hulux-surface) border border-(--hulux-border) p-2 text-sm text-(--hulux-text) placeholder-(--hulux-text-muted) focus:outline-none focus:ring-2 focus:ring-(--hulux-blue)"
             />
           </div>
           <div>
-            <label className="block text-xs text-[var(--hulux-text-muted)] mb-1">Longitud</label>
+            <label className="block text-xs text-(--hulux-text-muted) mb-1">Longitud</label>
             <input
               type="number"
               step="any"
               value={longitud}
               onChange={(e) => setLongitud(e.target.value)}
               placeholder="Ej. -99.1332"
-              className="w-full rounded-lg bg-[var(--hulux-surface)] border border-[var(--hulux-border)] p-2 text-sm text-[var(--hulux-text)] placeholder-[var(--hulux-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--hulux-blue)]"
+              className="w-full rounded-lg bg-(--hulux-surface) border border-(--hulux-border) p-2 text-sm text-(--hulux-text) placeholder-(--hulux-text-muted) focus:outline-none focus:ring-2 focus:ring-(--hulux-blue)"
             />
           </div>
         </div>
 
         <div>
-          <label className="block text-xs text-[var(--hulux-text-muted)] mb-1">Estado Tomodat</label>
+          <label className="block text-xs text-(--hulux-text-muted) mb-1">Estado Tomodat</label>
           <select
             value={estadoTomodat}
             onChange={(e) => setEstadoTomodat(e.target.value)}
-            className="w-full rounded-lg bg-[var(--hulux-surface)] border border-[var(--hulux-border)] p-2 text-sm text-[var(--hulux-text)]"
+            className="w-full rounded-lg bg-(--hulux-surface) border border-(--hulux-border) p-2 text-sm text-(--hulux-text)"
           >
             <option value="Activo">Activo</option>
             <option value="Rojo">Rojo</option>
@@ -415,10 +415,10 @@ export default function AgregarNapTab({ onSuccess, naps }: { onSuccess: () => vo
           <div
             className={`text-sm p-2 rounded-lg ${
               msg.type === "error"
-                ? "bg-[rgba(112,0,63,0.08)] border border-[rgba(112,0,63,0.22)] text-[var(--hulux-maroon)]"
+                ? "bg-[rgba(112,0,63,0.08)] border border-[rgba(112,0,63,0.22)] text-(--hulux-maroon)"
                 : msg.type === "info"
-                ? "bg-[rgba(148,237,242,0.22)] border border-[rgba(148,237,242,0.45)] text-[var(--hulux-blue)]"
-                : "bg-[rgba(205,219,0,0.18)] border border-[rgba(205,219,0,0.35)] text-[var(--hulux-blue)]"
+                ? "bg-[rgba(148,237,242,0.22)] border border-[rgba(148,237,242,0.45)] text-(--hulux-blue)"
+                : "bg-[rgba(205,219,0,0.18)] border border-[rgba(205,219,0,0.35)] text-(--hulux-blue)"
             }`}
           >
             {msg.text}
@@ -428,7 +428,7 @@ export default function AgregarNapTab({ onSuccess, naps }: { onSuccess: () => vo
         <button
           type="submit"
           disabled={loading}
-          className="w-full rounded-lg bg-[var(--hulux-orange)] hover:brightness-95 disabled:opacity-50 p-2.5 text-sm font-semibold text-[var(--hulux-blue)] transition-colors"
+          className="w-full rounded-lg bg-(--hulux-orange) hover:brightness-95 disabled:opacity-50 p-2.5 text-sm font-semibold text-(--hulux-blue) transition-colors"
         >
           {loading ? "Guardando..." : napExiste ? "Actualizar NAP" : "Agregar NAP"}
         </button>
