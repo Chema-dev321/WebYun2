@@ -157,7 +157,7 @@ export async function updateClienteNAP(
   const clienteRef = doc(db, CLIENTES_COL, clienteId);
 
   try {
-    await runTransaction(db, async (tx) => {
+    const result = await runTransaction(db, async (tx) => {
       const clienteSnap = await tx.get(clienteRef);
       if (!clienteSnap.exists()) {
         return { success: false, error: "Cliente no encontrado." };
@@ -173,6 +173,11 @@ export async function updateClienteNAP(
       const newNapData = newNapSnap.data() as Omit<NAP, "id">;
 
       if (oldNapId !== newNapId) {
+        // Validar capacidad ANTES de cualquier escritura
+        if (newNapData.puertos_ocupados >= newNapData.capacidad_total) {
+          return { success: false, error: "La NAP destino está llena." };
+        }
+
         // Decrement old NAP
         if (oldNapId) {
           const oldNapRef = doc(db, NAPS_COL, oldNapId);
@@ -186,9 +191,6 @@ export async function updateClienteNAP(
         }
 
         // Increment new NAP
-        if (newNapData.puertos_ocupados >= newNapData.capacidad_total) {
-          return { success: false, error: "La NAP destino está llena." };
-        }
         tx.update(newNapRef, {
           puertos_ocupados: newNapData.puertos_ocupados + 1,
         });
@@ -204,7 +206,8 @@ export async function updateClienteNAP(
       return { success: true };
     });
 
-    return { success: true };
+    // Propagar correctamente el resultado de la transacción (éxito o fallo)
+    return result;
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Error al reasignar cliente.";
     return { success: false, error: message };
