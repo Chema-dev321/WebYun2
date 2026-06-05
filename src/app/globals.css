@@ -88,6 +88,16 @@ a:hover {
     transform: translateY(0);
   }
 }
+
+/* ── Hide Scrollbar utility ── */
+.hide-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
 .leaflet-popup-content-wrapper {
   border-radius: 10px !important;
   box-shadow: 0 8px 24px rgba(0,0,0,0.18) !important;

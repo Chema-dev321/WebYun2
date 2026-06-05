@@ -14,22 +14,24 @@ export default function UsuariosTab({ usuarios }: { usuarios: Usuario[] }) {
             No hay usuarios registrados aún.
           </div>
         ) : (
-          <table className="w-full text-left text-sm table-zebra">
-            <thead className="bg-(--hulux-subtle) text-(--hulux-text) text-xs uppercase tracking-wider">
-              <tr>
-                <th className="p-3">Email</th>
-                <th className="p-3">Creado</th>
-              </tr>
-            </thead>
-            <tbody>
-              {usuarios.map((u) => (
-                <tr key={u.id} className="border-t border-(--hulux-border) hover:bg-[rgba(148,237,242,0.12)] transition-colors">
-                  <td className="p-3 font-semibold text-(--hulux-text)">{u.email}</td>
-                  <td className="p-3 text-(--hulux-text-muted) text-xs">{u.creado}</td>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm table-zebra">
+              <thead className="bg-(--hulux-subtle) text-(--hulux-text) text-xs uppercase tracking-wider">
+                <tr>
+                  <th className="p-3">Email</th>
+                  <th className="p-3">Creado</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {usuarios.map((u) => (
+                  <tr key={u.id} className="border-t border-(--hulux-border) hover:bg-[rgba(148,237,242,0.12)] transition-colors">
+                    <td className="p-3 font-semibold text-(--hulux-text)">{u.email}</td>
+                    <td className="p-3 text-(--hulux-text-muted) text-xs">{u.creado}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
     </div>

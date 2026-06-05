@@ -130,13 +130,13 @@ function Dashboard() {
       </header>
 
       <div className="max-w-7xl mx-auto px-4 py-6">
-        {/* Stats Cards */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-6">
-          <StatCard label="Total NAPs" value={stats.totalNaps} accentColor="var(--hulux-text)" />
-          <StatCard label="Total Clientes" value={stats.totalClientes} accentColor="var(--hulux-lime)" />
-          <StatCard label="Puertos Totales" value={stats.totalPuertos} accentColor="var(--hulux-orange)" />
-          <StatCard label="Puertos Ocupados" value={stats.totalOcupados} accentColor="var(--hulux-cyan)" />
-          <StatCard label="% Ocupación" value={`${stats.pctOcupacion}%`} accentColor="var(--hulux-text)" />
+        {/* Stats Cards (scrollable on mobile) */}
+        <div className="flex sm:grid sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-6 overflow-x-auto pb-2 snap-x snap-mandatory hide-scrollbar">
+          <div className="shrink-0 w-3/4 sm:w-auto snap-start"><StatCard label="Total NAPs" value={stats.totalNaps} accentColor="var(--hulux-text)" /></div>
+          <div className="shrink-0 w-3/4 sm:w-auto snap-start"><StatCard label="Total Clientes" value={stats.totalClientes} accentColor="var(--hulux-lime)" /></div>
+          <div className="shrink-0 w-3/4 sm:w-auto snap-start"><StatCard label="Puertos Totales" value={stats.totalPuertos} accentColor="var(--hulux-orange)" /></div>
+          <div className="shrink-0 w-3/4 sm:w-auto snap-start"><StatCard label="Puertos Ocupados" value={stats.totalOcupados} accentColor="var(--hulux-cyan)" /></div>
+          <div className="shrink-0 w-3/4 sm:w-auto snap-start"><StatCard label="% Ocupación" value={`${stats.pctOcupacion}%`} accentColor="var(--hulux-text)" /></div>
         </div>
 
         {/* Reconcile */}
@@ -182,21 +182,44 @@ function Dashboard() {
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-1 mb-6 bg-(--hulux-surface) rounded-xl p-1 border border-(--hulux-border) shadow-(--hulux-shadow) overflow-x-auto">
-          {TABS.map((t) => (
-            <button
-              key={t.key}
-              onClick={() => setTab(t.key)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
-                tab === t.key
-                  ? "bg-(--hulux-blue) text-white shadow dark:bg-(--hulux-cyan) dark:text-(--hulux-blue)"
-                  : "text-(--hulux-text-muted) hover:text-(--hulux-text) hover:bg-[rgba(148,237,242,0.18)]"
-              }`}
+        <div className="mb-6">
+          {/* Mobile Select */}
+          <div className="sm:hidden relative">
+            <select
+              value={tab}
+              onChange={(e) => setTab(e.target.value as Tab)}
+              className="w-full appearance-none bg-[var(--hulux-surface)] border border-[var(--hulux-border)] text-[var(--hulux-text)] font-semibold rounded-xl px-4 py-3 shadow-[var(--hulux-shadow)] focus:outline-none focus:ring-2 focus:ring-[var(--hulux-blue)]"
             >
-              <span className="mr-1.5">{t.icon}</span>
-              {t.label}
-            </button>
-          ))}
+              {TABS.map((t) => (
+                <option key={t.key} value={t.key}>
+                  {t.icon} {t.label}
+                </option>
+              ))}
+            </select>
+            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-[var(--hulux-text-muted)]">
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </div>
+          </div>
+
+          {/* Desktop Tabs */}
+          <div className="hidden sm:flex flex-wrap gap-1 bg-[var(--hulux-surface)] rounded-xl p-1 border border-[var(--hulux-border)] shadow-[var(--hulux-shadow)]">
+            {TABS.map((t) => (
+              <button
+                key={t.key}
+                onClick={() => setTab(t.key)}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex-1 whitespace-nowrap text-center ${
+                  tab === t.key
+                    ? "bg-[var(--hulux-blue)] text-white shadow dark:bg-[var(--hulux-cyan)] dark:text-[var(--hulux-blue)]"
+                    : "text-[var(--hulux-text-muted)] hover:text-[var(--hulux-text)] hover:bg-[rgba(148,237,242,0.18)]"
+                }`}
+              >
+                <span className="mr-1.5">{t.icon}</span>
+                {t.label}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Tab content */}

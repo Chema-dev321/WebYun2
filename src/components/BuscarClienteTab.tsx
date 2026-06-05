@@ -170,28 +170,30 @@ export default function BuscarClienteTab({ naps }: { naps: NAP[] }) {
         <label className="block text-sm text-(--hulux-text) mb-2">
           Buscar cliente por ID WISP
         </label>
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-2">
           <input
             type="text"
             value={idWisp}
             onChange={(e) => setIdWisp(e.target.value)}
             placeholder="Ej. 12594"
-            className="flex-1 px-4 py-2.5 bg-(--hulux-surface) border border-(--hulux-border) rounded-lg text-(--hulux-text) placeholder-(--hulux-text-muted) focus:outline-none focus:ring-2 focus:ring-(--hulux-blue)"
+            className="w-full sm:flex-1 px-4 py-2.5 bg-(--hulux-surface) border border-(--hulux-border) rounded-lg text-(--hulux-text) placeholder-(--hulux-text-muted) focus:outline-none focus:ring-2 focus:ring-(--hulux-blue)"
           />
-          <button
-            type="submit"
-            disabled={loading}
-            className="px-6 py-2.5 bg-(--hulux-orange) hover:brightness-95 disabled:opacity-50 text-(--hulux-blue) font-semibold rounded-lg transition-colors text-sm"
-          >
-            {loading ? "Buscando..." : "Buscar"}
-          </button>
-          <button
-            type="button"
-            onClick={limpiarBusqueda}
-            className="px-4 py-2.5 bg-(--hulux-surface) hover:bg-[rgba(148,237,242,0.18)] text-(--hulux-text) border border-(--hulux-border) rounded-lg transition-colors text-sm"
-          >
-            Limpiar
-          </button>
+          <div className="flex gap-2 w-full sm:w-auto">
+            <button
+              type="submit"
+              disabled={loading}
+              className="flex-1 sm:flex-none px-6 py-2.5 bg-(--hulux-orange) hover:brightness-95 disabled:opacity-50 text-(--hulux-blue) font-semibold rounded-lg transition-colors text-sm"
+            >
+              {loading ? "Buscando..." : "Buscar"}
+            </button>
+            <button
+              type="button"
+              onClick={limpiarBusqueda}
+              className="flex-1 sm:flex-none px-4 py-2.5 bg-(--hulux-surface) hover:bg-[rgba(148,237,242,0.18)] text-(--hulux-text) border border-(--hulux-border) rounded-lg transition-colors text-sm"
+            >
+              Limpiar
+            </button>
+          </div>
         </div>
       </form>
 
@@ -250,8 +252,8 @@ export default function BuscarClienteTab({ naps }: { naps: NAP[] }) {
 
             {editando ? (
               <>
-                <div className="flex items-center gap-3">
-                  <span className="text-xs text-(--hulux-text-muted) w-28 shrink-0">Municipio</span>
+                <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
+                  <span className="text-xs text-(--hulux-text-muted) sm:w-28 shrink-0">Municipio</span>
                   <select
                     value={editMunicipio}
                     onChange={(e) => {
@@ -267,8 +269,8 @@ export default function BuscarClienteTab({ naps }: { naps: NAP[] }) {
                     ))}
                   </select>
                 </div>
-                <div className="flex items-center gap-3">
-                  <span className="text-xs text-(--hulux-text-muted) w-28 shrink-0">Localidad</span>
+                <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
+                  <span className="text-xs text-(--hulux-text-muted) sm:w-28 shrink-0">Localidad</span>
                   <select
                     value={editLocalidad}
                     onChange={(e) => {
@@ -284,8 +286,8 @@ export default function BuscarClienteTab({ naps }: { naps: NAP[] }) {
                     ))}
                   </select>
                 </div>
-                <div className="flex items-center gap-3">
-                  <span className="text-xs text-(--hulux-text-muted) w-28 shrink-0">NAP</span>
+                <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
+                  <span className="text-xs text-(--hulux-text-muted) sm:w-28 shrink-0">NAP</span>
                   <select
                     value={editIdNap}
                     onChange={(e) => setEditIdNap(e.target.value)}
@@ -353,8 +355,8 @@ function EditableRow({
   onChange: (v: string) => void;
 }) {
   return (
-    <div className="flex items-center gap-3">
-      <span className="text-xs text-(--hulux-text-muted) w-28 shrink-0">{label}</span>
+    <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
+      <span className="text-xs text-(--hulux-text-muted) sm:w-28 shrink-0">{label}</span>
       <input
         type="text"
         value={value}
@@ -368,9 +370,9 @@ function EditableRow({
 // ── Info Row ──
 function InfoRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-start gap-3">
-      <span className="text-xs text-(--hulux-text-muted) w-28 shrink-0">{label}</span>
-      <span className="text-sm text-(--hulux-text) font-semibold">{value || "—"}</span>
+    <div className="flex flex-col sm:flex-row sm:items-start gap-0.5 sm:gap-3">
+      <span className="text-xs text-(--hulux-text-muted) sm:w-28 shrink-0">{label}</span>
+      <span className="text-sm text-(--hulux-text) font-semibold break-all">{value || "—"}</span>
     </div>
   );
 }

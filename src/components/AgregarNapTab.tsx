@@ -285,7 +285,7 @@ export default function AgregarNapTab({ onSuccess, naps }: { onSuccess: () => vo
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div>
             <label className="block text-xs text-(--hulux-text-muted) mb-1">
               Municipio
@@ -361,7 +361,7 @@ export default function AgregarNapTab({ onSuccess, naps }: { onSuccess: () => vo
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div>
             <label className="block text-xs text-(--hulux-text-muted) mb-1">Capacidad (puertos)</label>
             <select
@@ -385,7 +385,7 @@ export default function AgregarNapTab({ onSuccess, naps }: { onSuccess: () => vo
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div>
             <label className="block text-xs text-(--hulux-text-muted) mb-1">Latitud</label>
             <input

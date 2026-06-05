@@ -63,71 +63,86 @@ export default function ClientesTab({ naps }: { naps: NAP[] }) {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-end gap-3">
-        <div className="relative flex-1 min-w-[200px]">
-          <label className="block text-xs text-(--hulux-text-muted) mb-1">Buscar</label>
-          <svg
-            className="absolute left-3 top-[34px] -translate-y-1/2 h-4 w-4 text-(--hulux-text-muted)"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-            />
+      {/* ── Filter bar (Collapsible on mobile) ── */}
+      <details className="group rounded-xl border border-[var(--hulux-border)] bg-[var(--hulux-surface)] shadow-[var(--hulux-shadow)] [&:not([open])_.content]:hidden sm:[&:not([open])_.content]:block" open>
+        <summary className="p-4 text-[13px] font-semibold text-[var(--hulux-text)] cursor-pointer sm:hidden flex items-center justify-between list-none">
+          <div className="flex items-center gap-2">
+            <svg className="w-4 h-4 text-[var(--hulux-text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+            </svg>
+            Filtros y Búsqueda
+          </div>
+          <svg className="w-4 h-4 transition-transform group-open:rotate-180 text-[var(--hulux-text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
           </svg>
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => { setSearch(e.target.value); setPage(0); }}
-            placeholder="Buscar por nombre, ID WISP, NAP..."
-            className="w-full pl-10 pr-4 py-2 bg-(--hulux-surface) border border-(--hulux-border) rounded-lg text-sm text-(--hulux-text) placeholder-(--hulux-text-muted) focus:outline-none focus:ring-2 focus:ring-(--hulux-blue)"
-          />
-        </div>
+        </summary>
+        
+        <div className="content p-4 pt-0 sm:pt-4 flex flex-wrap items-end gap-3 border-t border-[var(--hulux-border)] sm:border-0">
+          <div className="relative flex-1 min-w-[200px]">
+            <label className="block text-xs text-(--hulux-text-muted) mb-1">Buscar</label>
+            <svg
+              className="absolute left-3 top-[34px] -translate-y-1/2 h-4 w-4 text-(--hulux-text-muted)"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              />
+            </svg>
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => { setSearch(e.target.value); setPage(0); }}
+              placeholder="Buscar por nombre, ID WISP, NAP..."
+              className="w-full pl-10 pr-4 py-2 bg-(--hulux-surface-elevated) border border-(--hulux-border) rounded-lg text-sm text-(--hulux-text) placeholder-(--hulux-text-muted) focus:outline-none focus:ring-2 focus:ring-(--hulux-blue)"
+            />
+          </div>
 
-        <div>
-          <label className="block text-xs text-(--hulux-text-muted) mb-1">Municipio</label>
-          <select
-            value={municipio}
-            onChange={(e) => {
-              setMunicipio(e.target.value);
-              setLocalidad("");
-              setPage(0);
-            }}
-            className="px-3 py-2 bg-(--hulux-surface) border border-(--hulux-border) rounded-lg text-sm text-(--hulux-text) focus:outline-none focus:ring-2 focus:ring-(--hulux-blue)"
-          >
-            <option value="">Todos</option>
-            {municipios.map((m) => (
-              <option key={m} value={m}>{m}</option>
-            ))}
-          </select>
-        </div>
+          <div className="flex-1 min-w-[140px] sm:flex-none">
+            <label className="block text-xs text-(--hulux-text-muted) mb-1">Municipio</label>
+            <select
+              value={municipio}
+              onChange={(e) => {
+                setMunicipio(e.target.value);
+                setLocalidad("");
+                setPage(0);
+              }}
+              className="w-full sm:w-auto px-3 py-2 bg-(--hulux-surface-elevated) border border-(--hulux-border) rounded-lg text-sm text-(--hulux-text) focus:outline-none focus:ring-2 focus:ring-(--hulux-blue)"
+            >
+              <option value="">Todos</option>
+              {municipios.map((m) => (
+                <option key={m} value={m}>{m}</option>
+              ))}
+            </select>
+          </div>
 
-        <div>
-          <label className="block text-xs text-(--hulux-text-muted) mb-1">Localidad</label>
-          <select
-            value={localidad}
-            onChange={(e) => {
-              setLocalidad(e.target.value);
-              setPage(0);
-            }}
-            disabled={!municipio}
-            className="px-3 py-2 bg-(--hulux-surface) border border-(--hulux-border) rounded-lg text-sm text-(--hulux-text) disabled:opacity-40 focus:outline-none focus:ring-2 focus:ring-(--hulux-blue)"
-          >
-            <option value="">Todas</option>
-            {localidades.map((l) => (
-              <option key={l} value={l}>{l}</option>
-            ))}
-          </select>
-        </div>
+          <div className="flex-1 min-w-[140px] sm:flex-none">
+            <label className="block text-xs text-(--hulux-text-muted) mb-1">Localidad</label>
+            <select
+              value={localidad}
+              onChange={(e) => {
+                setLocalidad(e.target.value);
+                setPage(0);
+              }}
+              disabled={!municipio}
+              className="w-full sm:w-auto px-3 py-2 bg-(--hulux-surface-elevated) border border-(--hulux-border) rounded-lg text-sm text-(--hulux-text) disabled:opacity-40 focus:outline-none focus:ring-2 focus:ring-(--hulux-blue)"
+            >
+              <option value="">Todas</option>
+              {localidades.map((l) => (
+                <option key={l} value={l}>{l}</option>
+              ))}
+            </select>
+          </div>
 
-        <span className="text-xs text-(--hulux-text-muted) mb-3 whitespace-nowrap">
-          {filtered.length} cliente{filtered.length !== 1 ? "s" : ""}
-        </span>
-      </div>
+          <span className="text-xs text-(--hulux-text-muted) mb-3 whitespace-nowrap ml-auto">
+            {filtered.length} cliente{filtered.length !== 1 ? "s" : ""}
+          </span>
+        </div>
+      </details>
 
       {loadingClientes ? (
         <div className="text-center py-12 text-(--hulux-text-muted)">Cargando lista de clientes...</div>

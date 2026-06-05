@@ -140,9 +140,21 @@ export default function LogsTab() {
         </div>
       </div>
 
-      {/* Filters */}
-      <div className="bg-[var(--hulux-surface)] border border-[var(--hulux-border)] rounded-xl p-4 shadow-[var(--hulux-shadow)]">
-        <div className="flex flex-wrap items-end gap-3">
+      {/* Filters (Collapsible on mobile) */}
+      <details className="group bg-[var(--hulux-surface)] border border-[var(--hulux-border)] rounded-xl shadow-[var(--hulux-shadow)] [&:not([open])_.content]:hidden sm:[&:not([open])_.content]:block" open>
+        <summary className="p-4 text-[13px] font-semibold text-[var(--hulux-text)] cursor-pointer sm:hidden flex items-center justify-between list-none">
+          <div className="flex items-center gap-2">
+            <svg className="w-4 h-4 text-[var(--hulux-text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+            </svg>
+            Filtros
+          </div>
+          <svg className="w-4 h-4 transition-transform group-open:rotate-180 text-[var(--hulux-text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </summary>
+        
+        <div className="content p-4 pt-0 sm:pt-4 flex flex-wrap items-end gap-3 border-t border-[var(--hulux-border)] sm:border-0">
           {/* Search */}
           <div className="relative flex-1 min-w-[200px]">
             <label className="block text-xs text-[var(--hulux-text-muted)] mb-1">Buscar</label>
@@ -163,12 +175,12 @@ export default function LogsTab() {
           </div>
 
           {/* Accion filter */}
-          <div>
+          <div className="flex-1 min-w-[140px] sm:flex-none">
             <label className="block text-xs text-[var(--hulux-text-muted)] mb-1">Tipo de acción</label>
             <select
               value={filtroAccion}
               onChange={(e) => { setFiltroAccion(e.target.value as AccionLog | ""); setPage(0); }}
-              className="px-3 py-2 bg-[var(--hulux-surface-elevated)] border border-[var(--hulux-border)] rounded-lg text-sm text-[var(--hulux-text)] focus:outline-none focus:ring-2 focus:ring-[var(--hulux-blue)]"
+              className="w-full sm:w-auto px-3 py-2 bg-[var(--hulux-surface-elevated)] border border-[var(--hulux-border)] rounded-lg text-sm text-[var(--hulux-text)] focus:outline-none focus:ring-2 focus:ring-[var(--hulux-blue)]"
             >
               <option value="">Todas las acciones</option>
               {(Object.keys(ACCION_LABELS) as AccionLog[]).map((a) => (
@@ -178,12 +190,12 @@ export default function LogsTab() {
           </div>
 
           {/* User filter */}
-          <div>
+          <div className="flex-1 min-w-[140px] sm:flex-none">
             <label className="block text-xs text-[var(--hulux-text-muted)] mb-1">Usuario</label>
             <select
               value={filtroUsuario}
               onChange={(e) => { setFiltroUsuario(e.target.value); setPage(0); }}
-              className="px-3 py-2 bg-[var(--hulux-surface-elevated)] border border-[var(--hulux-border)] rounded-lg text-sm text-[var(--hulux-text)] focus:outline-none focus:ring-2 focus:ring-[var(--hulux-blue)]"
+              className="w-full sm:w-auto px-3 py-2 bg-[var(--hulux-surface-elevated)] border border-[var(--hulux-border)] rounded-lg text-sm text-[var(--hulux-text)] focus:outline-none focus:ring-2 focus:ring-[var(--hulux-blue)]"
             >
               <option value="">Todos los usuarios</option>
               {usuarios.map((u) => (
@@ -196,13 +208,13 @@ export default function LogsTab() {
           {hasFilters && (
             <button
               onClick={clearFilters}
-              className="px-3 py-2 text-xs text-[var(--hulux-maroon)] hover:underline whitespace-nowrap"
+              className="px-3 py-2 text-xs text-[var(--hulux-maroon)] hover:underline whitespace-nowrap ml-auto"
             >
               Limpiar filtros
             </button>
           )}
         </div>
-      </div>
+      </details>
 
       {/* Table */}
       {loading ? (

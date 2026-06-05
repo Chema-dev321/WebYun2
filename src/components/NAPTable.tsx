@@ -246,126 +246,140 @@ export default function NAPTable({ naps, onRefresh, onFilterChange }: Props) {
 
   return (
     <div className="space-y-4">
-      {/* ── Filter bar ── */}
-      <div className="rounded-xl border border-(--hulux-border) bg-(--hulux-surface) shadow-(--hulux-shadow) p-4 space-y-3">
-        {/* Row 1: Search + Municipio + Localidad + Disponibilidad */}
-        <div className="flex flex-wrap gap-3 items-end">
-          <div className="flex-1 min-w-[200px]">
-            <label className="block text-xs text-(--hulux-text-muted) mb-1">Buscar</label>
-            <div className="relative">
-              <svg
-                className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-(--hulux-text-muted)"
-                fill="none" viewBox="0 0 24 24" stroke="currentColor"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-              <input
-                type="text"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Buscar por ID, municipio o localidad..."
-                className="w-full pl-10 pr-3 py-2 bg-(--hulux-surface-elevated) border border-(--hulux-border) rounded-lg text-sm text-(--hulux-text) placeholder-(--hulux-text-muted) focus:outline-none focus:ring-2 focus:ring-(--hulux-blue)"
-              />
+      {/* ── Filter bar (Collapsible on mobile) ── */}
+      <details className="group rounded-xl border border-[var(--hulux-border)] bg-[var(--hulux-surface)] shadow-[var(--hulux-shadow)] [&:not([open])_.content]:hidden sm:[&:not([open])_.content]:block" open>
+        <summary className="p-4 text-[13px] font-semibold text-[var(--hulux-text)] cursor-pointer sm:hidden flex items-center justify-between list-none">
+          <div className="flex items-center gap-2">
+            <svg className="w-4 h-4 text-[var(--hulux-text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+            </svg>
+            Filtros y Búsqueda
+          </div>
+          <svg className="w-4 h-4 transition-transform group-open:rotate-180 text-[var(--hulux-text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </summary>
+        
+        <div className="content p-4 pt-0 sm:pt-4 space-y-3 border-t border-[var(--hulux-border)] sm:border-0">
+          {/* Row 1: Search + Municipio + Localidad + Disponibilidad */}
+          <div className="flex flex-wrap gap-3 items-end">
+            <div className="flex-1 min-w-[200px]">
+              <label className="block text-xs text-(--hulux-text-muted) mb-1">Buscar</label>
+              <div className="relative">
+                <svg
+                  className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-(--hulux-text-muted)"
+                  fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                <input
+                  type="text"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Buscar por ID, municipio o localidad..."
+                  className="w-full pl-10 pr-3 py-2 bg-(--hulux-surface-elevated) border border-(--hulux-border) rounded-lg text-sm text-(--hulux-text) placeholder-(--hulux-text-muted) focus:outline-none focus:ring-2 focus:ring-(--hulux-blue)"
+                />
+              </div>
             </div>
-          </div>
 
-          <div>
-            <label className="block text-xs text-(--hulux-text-muted) mb-1">Municipio</label>
-            <select
-              value={municipio}
-              onChange={(e) => setMunicipio(e.target.value)}
-              className="px-3 py-2 bg-(--hulux-surface-elevated) border border-(--hulux-border) rounded-lg text-sm text-(--hulux-text) focus:outline-none focus:ring-2 focus:ring-(--hulux-blue)"
-            >
-              <option value="">Todos</option>
-              {municipios.map((m) => (
-                <option key={m} value={m}>{m}</option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-xs text-(--hulux-text-muted) mb-1">Localidad</label>
-            <select
-              value={localidad}
-              onChange={(e) => setLocalidad(e.target.value)}
-              disabled={!municipio}
-              className="px-3 py-2 bg-(--hulux-surface-elevated) border border-(--hulux-border) rounded-lg text-sm text-(--hulux-text) disabled:opacity-40 focus:outline-none focus:ring-2 focus:ring-(--hulux-blue)"
-            >
-              <option value="">Todas</option>
-              {localidades.map((l) => (
-                <option key={l} value={l}>{l}</option>
-              ))}
-            </select>
-          </div>
-
-          <div className="flex gap-1">
-            {(["todas", "espacio", "llenas"] as const).map((d) => (
-              <button
-                key={d}
-                type="button"
-                onClick={() => setDisponibilidad(d)}
-                className={`px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
-                  disponibilidad === d
-                    ? "bg-(--hulux-blue) text-white dark:bg-(--hulux-cyan) dark:text-(--hulux-blue)"
-                    : "bg-(--hulux-surface-elevated) text-(--hulux-text-muted) hover:text-(--hulux-text) border border-(--hulux-border) hover:bg-[rgba(148,237,242,0.18)]"
-                }`}
+            <div className="flex-1 min-w-[140px] sm:flex-none">
+              <label className="block text-xs text-(--hulux-text-muted) mb-1">Municipio</label>
+              <select
+                value={municipio}
+                onChange={(e) => setMunicipio(e.target.value)}
+                className="w-full sm:w-auto px-3 py-2 bg-(--hulux-surface-elevated) border border-(--hulux-border) rounded-lg text-sm text-(--hulux-text) focus:outline-none focus:ring-2 focus:ring-(--hulux-blue)"
               >
-                {d === "todas" ? "Todas" : d === "espacio" ? "Con espacio" : "Llenas"}
-              </button>
-            ))}
-          </div>
-        </div>
+                <option value="">Todos</option>
+                {municipios.map((m) => (
+                  <option key={m} value={m}>{m}</option>
+                ))}
+              </select>
+            </div>
 
-        {/* Row 2: Semaforo chips */}
-        <div>
-          <label className="block text-xs text-(--hulux-text-muted) mb-1.5">Semáforo</label>
-          <div className="flex flex-wrap gap-1.5">
-            {(Object.keys(SEMAFORO_LABELS) as SemaforoState[]).map((s) => {
-              const active = activosSemaforo.has(s);
-              return (
+            <div className="flex-1 min-w-[140px] sm:flex-none">
+              <label className="block text-xs text-(--hulux-text-muted) mb-1">Localidad</label>
+              <select
+                value={localidad}
+                onChange={(e) => setLocalidad(e.target.value)}
+                disabled={!municipio}
+                className="w-full sm:w-auto px-3 py-2 bg-(--hulux-surface-elevated) border border-(--hulux-border) rounded-lg text-sm text-(--hulux-text) disabled:opacity-40 focus:outline-none focus:ring-2 focus:ring-(--hulux-blue)"
+              >
+                <option value="">Todas</option>
+                {localidades.map((l) => (
+                  <option key={l} value={l}>{l}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex gap-1 w-full sm:w-auto">
+              {(["todas", "espacio", "llenas"] as const).map((d) => (
                 <button
-                  key={s}
+                  key={d}
                   type="button"
-                  onClick={() => toggleSemaforo(s)}
-                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs transition-colors ${
-                    active
+                  onClick={() => setDisponibilidad(d)}
+                  className={`flex-1 sm:flex-none px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
+                    disponibilidad === d
                       ? "bg-(--hulux-blue) text-white dark:bg-(--hulux-cyan) dark:text-(--hulux-blue)"
                       : "bg-(--hulux-surface-elevated) text-(--hulux-text-muted) hover:text-(--hulux-text) border border-(--hulux-border) hover:bg-[rgba(148,237,242,0.18)]"
                   }`}
                 >
-                  <span
-                    className="w-2 h-2 rounded-full"
-                    style={{ backgroundColor: SEMAFORO_COLORS[s] }}
-                  />
-                  {SEMAFORO_LABELS[s]}
+                  {d === "todas" ? "Todas" : d === "espacio" ? "Con espacio" : "Llenas"}
                 </button>
-              );
-            })}
+              ))}
+            </div>
+          </div>
+
+          {/* Row 2: Semaforo chips */}
+          <div>
+            <label className="block text-xs text-(--hulux-text-muted) mb-1.5">Semáforo</label>
+            <div className="flex flex-wrap gap-1.5">
+              {(Object.keys(SEMAFORO_LABELS) as SemaforoState[]).map((s) => {
+                const active = activosSemaforo.has(s);
+                return (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => toggleSemaforo(s)}
+                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs transition-colors ${
+                      active
+                        ? "bg-(--hulux-blue) text-white dark:bg-(--hulux-cyan) dark:text-(--hulux-blue)"
+                        : "bg-(--hulux-surface-elevated) text-(--hulux-text-muted) hover:text-(--hulux-text) border border-(--hulux-border) hover:bg-[rgba(148,237,242,0.18)]"
+                    }`}
+                  >
+                    <span
+                      className="w-2 h-2 rounded-full shrink-0"
+                      style={{ backgroundColor: SEMAFORO_COLORS[s] }}
+                    />
+                    {SEMAFORO_LABELS[s]}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Results count */}
+          <div className="flex items-center justify-between text-xs text-(--hulux-text-muted) pt-2">
+            <span>
+              Mostrando {filteredNaps.length} de {naps.length} NAPs
+            </span>
+            {(search || municipio || activosSemaforo.size > 0 || disponibilidad !== "todas") && (
+              <button
+                onClick={() => {
+                  setSearch("");
+                  setMunicipio("");
+                  setLocalidad("");
+                  setActivosSemaforo(new Set());
+                  setDisponibilidad("todas");
+                }}
+                className="text-(--hulux-maroon-light) hover:underline flex items-center gap-1"
+              >
+                Limpiar filtros
+              </button>
+            )}
           </div>
         </div>
-
-        {/* Results count */}
-        <div className="flex items-center justify-between text-xs text-(--hulux-text-muted)">
-          <span>
-            Mostrando {filteredNaps.length} de {naps.length} NAPs
-          </span>
-          {(search || municipio || activosSemaforo.size > 0 || disponibilidad !== "todas") && (
-            <button
-              onClick={() => {
-                setSearch("");
-                setMunicipio("");
-                setLocalidad("");
-                setActivosSemaforo(new Set());
-                setDisponibilidad("todas");
-              }}
-              className="text-(--hulux-maroon-light) hover:underline"
-            >
-              Limpiar filtros
-            </button>
-          )}
-        </div>
-      </div>
+      </details>
 
       {/* ── Table ── */}
       {pagedNaps.length === 0 ? (
