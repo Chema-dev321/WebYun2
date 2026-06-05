@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { AuthProvider } from "@/lib/AuthContext";
+import { ToastProvider } from "@/components/ToastContext";
 
 export const metadata: Metadata = {
   title: "WebYun - Gestión de NAPs",
@@ -35,7 +36,9 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-screen antialiased">
-        <AuthProvider>{children}</AuthProvider>
+        <AuthProvider>
+          <ToastProvider>{children}</ToastProvider>
+        </AuthProvider>
       </body>
     </html>
   );

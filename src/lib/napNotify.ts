@@ -1,3 +1,5 @@
+import { auth } from "./firebase";
+
 interface NapNotifyParams {
   tipoEvento: "LLENA" | "LIBERADA" | "VACIA";
   idNap: string;
@@ -10,11 +12,14 @@ interface NapNotifyParams {
 
 export async function notifyNapEvent(params: NapNotifyParams): Promise<void> {
   try {
-    console.log(`[NAP Notify] Enviando evento: ${params.tipoEvento} - NAP: ${params.idNap}`);
-    
+    const token = auth.currentUser ? await auth.currentUser.getIdToken() : null;
+
     const response = await fetch("/api/nap-notify", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
       body: JSON.stringify(params),
     });
 

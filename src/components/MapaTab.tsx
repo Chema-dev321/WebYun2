@@ -1,0 +1,558 @@
+"use client";
+
+import { useEffect, useState, useRef, useCallback } from "react";
+import type { NAP } from "@/lib/types";
+import { addNAP } from "@/lib/firestore";
+
+const SEED_NAPS = [
+  { id_nap: "ACT 101", localidad: "CENTRO",               municipio: "ACTOPAN", cap: 8,  ocu: 3,  lat: 20.2695, lng: -98.9386, tom: "Activo" },
+  { id_nap: "ACT 102", localidad: "CENTRO",               municipio: "ACTOPAN", cap: 8,  ocu: 8,  lat: 20.2710, lng: -98.9401, tom: "Activo" },
+  { id_nap: "ACT 103", localidad: "COL. NUEVA",           municipio: "ACTOPAN", cap: 16, ocu: 12, lat: 20.2730, lng: -98.9355, tom: "Activo" },
+  { id_nap: "ACT 104", localidad: "COL. NUEVA",           municipio: "ACTOPAN", cap: 8,  ocu: 2,  lat: 20.2748, lng: -98.9340, tom: "Rojo"   },
+  { id_nap: "ACT 105", localidad: "LAS PALMAS",           municipio: "ACTOPAN", cap: 8,  ocu: 6,  lat: 20.2665, lng: -98.9420, tom: "Activo" },
+  { id_nap: "ACT 106", localidad: "EL HUERTO",            municipio: "ACTOPAN", cap: 8,  ocu: 8,  lat: 20.2680, lng: -98.9448, tom: "Rojo"   },
+  { id_nap: "ACT 107", localidad: "BARRIO SAN MIGUEL",    municipio: "ACTOPAN", cap: 16, ocu: 4,  lat: 20.2718, lng: -98.9373, tom: "Activo" },
+  { id_nap: "ACT 108", localidad: "LA ESTACION",          municipio: "ACTOPAN", cap: 8,  ocu: 7,  lat: 20.2655, lng: -98.9395, tom: "Activo" },
+  { id_nap: "ACT 109", localidad: "FRACCIONAMIENTO NORTE",municipio: "ACTOPAN", cap: 16, ocu: 1,  lat: 20.2758, lng: -98.9380, tom: "Activo" },
+  { id_nap: "ACT 110", localidad: "COLONIA HIDALGO",      municipio: "ACTOPAN", cap: 8,  ocu: 0,  lat: 20.2700, lng: -98.9330, tom: "Activo" },
+];
+
+interface Props {
+  naps: NAP[];
+}
+
+// Semaphore logic
+function getSemaforo(nap: NAP): "verde" | "amarillo" | "rojo" | "celeste" {
+  const o = nap.puertos_ocupados;
+  const c = nap.capacidad_total;
+  if (o > c) return "celeste";     // over-occupied
+  if (o === c) return "rojo";      // full
+  if (o >= c * 0.7) return "amarillo"; // ≥70%
+  return "verde";                  // available
+}
+
+const SEMAFORO_HEX: Record<string, string> = {
+  verde: "#4ade80",
+  amarillo: "#f59e0b",
+  rojo: "#ef4444",
+  celeste: "#67e8f9",
+};
+
+const SEMAFORO_LABEL: Record<string, string> = {
+  verde: "Disponible",
+  amarillo: "Alta ocupación (≥70%)",
+  rojo: "Llena",
+  celeste: "Sobre-ocupación",
+};
+
+const TOMODAT_COLOR: Record<string, string> = {
+  Activo: "#4ade80",
+  Rojo: "#ef4444",
+};
+
+function createMarkerIcon(color: string, tomodatOk: boolean) {
+  // NAP cabinet icon: a rectangular fiber box with ports and a signal arc on top
+  const alertBadge = !tomodatOk
+    ? `<circle cx="34" cy="6" r="7" fill="#f59e0b" stroke="white" stroke-width="1.5"/>
+       <text x="34" y="10" text-anchor="middle" font-size="9" font-weight="bold" fill="white">!</text>`
+    : "";
+
+  const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 44 52" width="44" height="52">
+      <defs>
+        <filter id="s" x="-20%" y="-10%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="3" stdDeviation="2.5" flood-color="rgba(0,0,0,0.4)"/>
+        </filter>
+        <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="${color}" stop-opacity="1"/>
+          <stop offset="100%" stop-color="${color}" stop-opacity="0.72"/>
+        </linearGradient>
+      </defs>
+
+      <!-- Drop shadow base -->
+      <ellipse cx="22" cy="50" rx="9" ry="3" fill="rgba(0,0,0,0.18)"/>
+
+      <!-- Main body: NAP cabinet box -->
+      <rect x="4" y="6" width="36" height="30" rx="5" ry="5"
+        fill="url(#g)" stroke="white" stroke-width="2" filter="url(#s)"/>
+
+      <!-- Cabinet inner panel (darker inset) -->
+      <rect x="8" y="10" width="28" height="19" rx="3" ry="3"
+        fill="rgba(0,0,0,0.18)"/>
+
+      <!-- Fiber ports row — 4 circles -->
+      <circle cx="13" cy="17" r="2.8" fill="white" opacity="0.9"/>
+      <circle cx="20" cy="17" r="2.8" fill="white" opacity="0.9"/>
+      <circle cx="27" cy="17" r="2.8" fill="white" opacity="0.9"/>
+      <circle cx="34" cy="17" r="2.8" fill="white" opacity="0.9"/>
+
+      <!-- Port dots (colored) -->
+      <circle cx="13" cy="17" r="1.4" fill="${color}"/>
+      <circle cx="20" cy="17" r="1.4" fill="${color}"/>
+      <circle cx="27" cy="17" r="1.4" fill="${color}"/>
+      <circle cx="34" cy="17" r="1.4" fill="${color}"/>
+
+      <!-- Label area: "NAP" text -->
+      <rect x="9" y="22" width="26" height="5" rx="2" fill="rgba(255,255,255,0.15)"/>
+      <text x="22" y="26.5" text-anchor="middle" font-size="4.5" font-weight="800"
+        fill="white" letter-spacing="1" font-family="monospace">NAP</text>
+
+      <!-- Bottom connector stem -->
+      <rect x="19" y="36" width="6" height="10" rx="2" fill="${color}" stroke="white" stroke-width="1.5"/>
+      <polygon points="22,50 17,38 27,38" fill="${color}" stroke="white" stroke-width="1"/>
+
+      <!-- Signal arc on top -->
+      <path d="M10,8 Q22,-4 34,8" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" opacity="0.7"/>
+      <path d="M14,8 Q22,1 30,8" fill="none" stroke="white" stroke-width="1.4" stroke-linecap="round" opacity="0.5"/>
+
+      <!-- Tomodat alert badge -->
+      ${alertBadge}
+    </svg>
+  `;
+  return `data:image/svg+xml,${encodeURIComponent(svg)}`;
+}
+
+export default function MapaTab({ naps }: Props) {
+  const mapRef = useRef<HTMLDivElement>(null);
+  const mapInstanceRef = useRef<import("leaflet").Map | null>(null);
+  const markersRef = useRef<import("leaflet").Marker[]>([]);
+  const [userPos, setUserPos] = useState<[number, number] | null>(null);
+  const [locating, setLocating] = useState(false);
+  const [filtro, setFiltro] = useState<"todas" | "disponibles" | "llenas">("todas");
+  const [tomodatFiltro, setTomodatFiltro] = useState<"todos" | "Activo" | "Rojo">("todos");
+  const [selectedNap, setSelectedNap] = useState<NAP | null>(null);
+  const [mounted, setMounted] = useState(false);
+  const [seeding, setSeeding] = useState(false);
+  const [seedMsg, setSeedMsg] = useState("");
+
+  // NAPs with coords
+  const napsConCoords = naps.filter(
+    (n) => n.latitud != null && n.longitud != null
+  );
+
+  const napsFiltradas = napsConCoords.filter((n) => {
+    const sem = getSemaforo(n);
+    if (filtro === "disponibles" && (sem === "rojo" || sem === "celeste")) return false;
+    if (filtro === "llenas" && sem !== "rojo" && sem !== "celeste") return false;
+    if (tomodatFiltro !== "todos" && n.estado_tomodat !== tomodatFiltro) return false;
+    return true;
+  });
+
+  // Stats
+  const stats = {
+    total: napsConCoords.length,
+    disponibles: napsConCoords.filter((n) => {
+      const s = getSemaforo(n); return s === "verde" || s === "amarillo";
+    }).length,
+    llenas: napsConCoords.filter((n) => {
+      const s = getSemaforo(n); return s === "rojo" || s === "celeste";
+    }).length,
+    sinCoords: naps.length - napsConCoords.length,
+  };
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Init map
+  useEffect(() => {
+    if (!mounted || !mapRef.current || mapInstanceRef.current) return;
+
+    import("leaflet").then((L) => {
+      // Fix default icon path issue with Next.js
+      delete (L.Icon.Default.prototype as unknown as Record<string, unknown>)._getIconUrl;
+      L.Icon.Default.mergeOptions({
+        iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
+        iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+        shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+      });
+
+      // Default center: Mexico
+      const defaultCenter: [number, number] = [23.6345, -102.5528];
+      const map = L.map(mapRef.current!, {
+        center: defaultCenter,
+        zoom: 6,
+        zoomControl: true,
+      });
+
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+        maxZoom: 19,
+      }).addTo(map);
+
+      mapInstanceRef.current = map;
+    });
+
+    return () => {
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
+      }
+    };
+  }, [mounted]);
+
+  // Update markers when naps or filters change
+  useEffect(() => {
+    if (!mapInstanceRef.current) return;
+
+    import("leaflet").then((L) => {
+      const map = mapInstanceRef.current!;
+
+      // Remove old markers
+      markersRef.current.forEach((m) => m.remove());
+      markersRef.current = [];
+
+      napsFiltradas.forEach((nap) => {
+        const lat = nap.latitud!;
+        const lng = nap.longitud!;
+        const sem = getSemaforo(nap);
+        const color = SEMAFORO_HEX[sem];
+        const tomodatOk = nap.estado_tomodat === "Activo";
+        const iconUrl = createMarkerIcon(color, tomodatOk);
+        const pct = Math.round((nap.puertos_ocupados / nap.capacidad_total) * 100);
+
+        const icon = L.icon({
+          iconUrl,
+          iconSize: [44, 52],
+          iconAnchor: [22, 52],
+          popupAnchor: [0, -54],
+        });
+
+        const marker = L.marker([lat, lng], { icon });
+
+        const tomodatBadge = tomodatOk
+          ? `<span style="background:#4ade8022;color:#16a34a;border:1px solid #4ade8055;padding:1px 7px;border-radius:999px;font-size:10px;font-weight:600">✓ Tomodat Activo</span>`
+          : `<span style="background:#f59e0b22;color:#b45309;border:1px solid #f59e0b55;padding:1px 7px;border-radius:999px;font-size:10px;font-weight:600">⚠ Tomodat Rojo</span>`;
+
+        const semBadge = `<span style="background:${color}22;color:${color === "#4ade80" ? "#16a34a" : color};border:1px solid ${color}55;padding:1px 7px;border-radius:999px;font-size:10px;font-weight:600">${SEMAFORO_LABEL[sem]}</span>`;
+
+        marker.bindPopup(`
+          <div style="font-family:system-ui,sans-serif;min-width:200px">
+            <div style="font-weight:700;font-size:13px;margin-bottom:6px;color:#11293e">${nap.id_nap}</div>
+            <div style="font-size:11px;color:#666;margin-bottom:8px">${nap.municipio} › ${nap.localidad}</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
+              ${semBadge}
+              ${tomodatBadge}
+            </div>
+            <div style="background:#f5f5f5;border-radius:6px;padding:6px 10px;font-size:12px">
+              <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+                <span style="color:#888">Puertos ocupados</span>
+                <strong style="color:#11293e">${nap.puertos_ocupados} / ${nap.capacidad_total}</strong>
+              </div>
+              <div style="background:#e5e7eb;border-radius:4px;height:6px;overflow:hidden">
+                <div style="height:100%;width:${Math.min(pct, 100)}%;background:${color};border-radius:4px;transition:width .3s"></div>
+              </div>
+              <div style="text-align:right;font-size:10px;color:#888;margin-top:2px">${pct}%</div>
+            </div>
+          </div>
+        `, { maxWidth: 260 });
+
+        marker.on("click", () => {
+          setSelectedNap(nap);
+        });
+
+        marker.addTo(map);
+        markersRef.current.push(marker);
+      });
+
+      // Auto-fit bounds if markers exist and no user pos
+      if (napsFiltradas.length > 0 && !userPos) {
+        const bounds = L.latLngBounds(
+          napsFiltradas.map((n) => [n.latitud!, n.longitud!] as [number, number])
+        );
+        map.fitBounds(bounds, { padding: [40, 40], maxZoom: 14 });
+      }
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [napsFiltradas, mounted]);
+
+  // Locate user
+  const locateUser = useCallback(() => {
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+        setUserPos([lat, lng]);
+        setLocating(false);
+
+        import("leaflet").then((L) => {
+          const map = mapInstanceRef.current;
+          if (!map) return;
+          map.setView([lat, lng], 13);
+
+          // User marker
+          const userIcon = L.divIcon({
+            html: `<div style="width:14px;height:14px;background:#3b82f6;border:3px solid white;border-radius:50%;box-shadow:0 0 0 4px rgba(59,130,246,0.3)"></div>`,
+            iconSize: [14, 14],
+            iconAnchor: [7, 7],
+            className: "",
+          });
+          L.marker([lat, lng], { icon: userIcon })
+            .bindPopup("<b>Tu ubicación</b>")
+            .addTo(map)
+            .openPopup();
+        });
+      },
+      () => {
+        setLocating(false);
+        alert("No se pudo obtener tu ubicación.");
+      }
+    );
+  }, []);
+
+  const seedTestNaps = useCallback(async () => {
+    setSeeding(true);
+    setSeedMsg("");
+    let ok = 0;
+    let fail = 0;
+    for (const n of SEED_NAPS) {
+      try {
+        await addNAP({
+          id_nap: n.id_nap,
+          nombre: `${n.localidad} - ${n.id_nap}`,
+          municipio: n.municipio,
+          localidad: n.localidad,
+          capacidad_total: n.cap,
+          puertos_ocupados: n.ocu,
+          estado_tomodat: n.tom,
+          verificacion: 1,
+          latitud: n.lat,
+          longitud: n.lng,
+        });
+        ok++;
+      } catch {
+        fail++;
+      }
+    }
+    setSeedMsg(`✅ ${ok} NAPs insertadas${fail > 0 ? `, ${fail} errores` : ""}. El mapa se actualizará en segundos.`);
+    setSeeding(false);
+  }, []);
+
+  if (!mounted) return null;
+
+  return (
+    <div className="flex flex-col gap-3">
+
+      {/* ── Header ── */}
+      <div className="flex items-center justify-between gap-2">
+        <div>
+          <h2 className="text-base sm:text-lg font-bold text-[var(--hulux-text)]">Mapa de NAPs</h2>
+          <p className="text-[11px] sm:text-xs text-[var(--hulux-text-muted)]">
+            {stats.total} con coords
+            {stats.sinCoords > 0 && (
+              <span className="ml-1 text-[var(--hulux-maroon)]">· {stats.sinCoords} sin ubicación</span>
+            )}
+          </p>
+        </div>
+
+        {/* Mini stat pills */}
+        <div className="flex gap-1.5 shrink-0">
+          {[
+            { label: "Disp.", count: stats.disponibles, color: "#4ade80" },
+            { label: "Llenas", count: stats.llenas, color: "#ef4444" },
+          ].map((s) => (
+            <div key={s.label}
+              className="flex items-center gap-1 px-2 py-1 rounded-lg border border-[var(--hulux-border)] bg-[var(--hulux-surface)] text-[11px]">
+              <span className="w-2 h-2 rounded-full" style={{ background: s.color }} />
+              <span className="font-bold text-[var(--hulux-text)]">{s.count}</span>
+              <span className="text-[var(--hulux-text-muted)] hidden sm:inline">{s.label}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Filter bar ── */}
+      <div className="bg-[var(--hulux-surface)] border border-[var(--hulux-border)] rounded-xl px-3 py-2 shadow-[var(--hulux-shadow)]">
+        <div className="flex flex-wrap items-center gap-2">
+
+          {/* Disponibilidad */}
+          <div className="flex gap-1 flex-1">
+            {(["todas", "disponibles", "llenas"] as const).map((f) => (
+              <button key={f} onClick={() => setFiltro(f)}
+                className={`flex-1 py-1.5 rounded-lg text-[11px] font-medium transition-all ${
+                  filtro === f
+                    ? "bg-[var(--hulux-blue)] text-white dark:bg-[var(--hulux-cyan)] dark:text-[var(--hulux-blue)]"
+                    : "text-[var(--hulux-text-muted)] hover:bg-[rgba(148,237,242,0.18)]"
+                }`}>
+                {f === "todas" ? "Todas" : f === "disponibles" ? "🟢 Disp." : "🔴 Llenas"}
+              </button>
+            ))}
+          </div>
+
+          <div className="w-px h-5 bg-[var(--hulux-border)] hidden sm:block" />
+
+          {/* Tomodat — icon only on mobile */}
+          <div className="flex gap-1">
+            {(["todos", "Activo", "Rojo"] as const).map((t) => (
+              <button key={t} onClick={() => setTomodatFiltro(t)}
+                title={t === "todos" ? "Todos" : t === "Activo" ? "Tomodat Activo" : "Tomodat Rojo"}
+                className={`px-2 sm:px-3 py-1.5 rounded-lg text-[11px] font-medium transition-all ${
+                  tomodatFiltro === t
+                    ? "bg-[var(--hulux-blue)] text-white dark:bg-[var(--hulux-cyan)] dark:text-[var(--hulux-blue)]"
+                    : "text-[var(--hulux-text-muted)] hover:bg-[rgba(148,237,242,0.18)]"
+                }`}>
+                {t === "todos" ? <span className="hidden sm:inline">Tomodat: </span> : null}
+                {t === "todos" ? <span>Todos</span> : t === "Activo" ? "✅" : "⚠️"}
+                <span className="hidden sm:inline">{t === "todos" ? "" : t === "Activo" ? " Activo" : " Rojo"}</span>
+              </button>
+            ))}
+          </div>
+
+          {/* Location + seed */}
+          <div className="flex gap-1 ml-auto">
+            {napsConCoords.length === 0 && (
+              <button onClick={seedTestNaps} disabled={seeding}
+                className="flex items-center gap-1 px-2 py-1.5 rounded-lg text-[11px] font-medium bg-[var(--hulux-lime)] text-[var(--hulux-blue)] disabled:opacity-60 transition-all">
+                {seeding ? (
+                  <svg className="animate-spin h-3 w-3" viewBox="0 0 24 24" fill="none">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                  </svg>
+                ) : "🧪"}
+                <span className="hidden sm:inline">{seeding ? "Insertando..." : "NAPs prueba"}</span>
+              </button>
+            )}
+
+            <button onClick={locateUser} disabled={locating}
+              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-medium bg-[var(--hulux-blue)] text-white dark:bg-[var(--hulux-cyan)] dark:text-[var(--hulux-blue)] disabled:opacity-60 transition-all">
+              {locating ? (
+                <svg className="animate-spin h-3.5 w-3.5" viewBox="0 0 24 24" fill="none">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                </svg>
+              ) : (
+                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                    d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                    d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+              )}
+              <span className="hidden sm:inline">{locating ? "Localizando..." : "Mi ubicación"}</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Seed message */}
+      {seedMsg && (
+        <div className="text-xs text-[var(--hulux-text)] bg-[rgba(205,219,0,0.15)] border border-[rgba(205,219,0,0.35)] rounded-lg px-3 py-2">
+          {seedMsg}
+        </div>
+      )}
+
+      {/* ── Map ── fills available vertical space on mobile */}
+      <div className="relative rounded-xl overflow-hidden border border-[var(--hulux-border)] shadow-[var(--hulux-shadow)]"
+        style={{ height: "clamp(360px, 65vh, 620px)" }}>
+        <div ref={mapRef} style={{ height: "100%", width: "100%" }} />
+
+        {/* No coords overlay */}
+        {napsConCoords.length === 0 && (
+          <div className="absolute inset-0 flex items-center justify-center bg-[var(--hulux-surface)]/90 z-[9999]">
+            <div className="text-center p-6">
+              <p className="text-4xl mb-3">📍</p>
+              <p className="font-semibold text-[var(--hulux-text)]">Ninguna NAP tiene coordenadas</p>
+              <p className="text-xs text-[var(--hulux-text-muted)] mt-1 max-w-[200px] mx-auto">
+                Agrega latitud y longitud en &ldquo;Agregar NAP&rdquo;
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Counter badge */}
+        <div className="absolute top-2 right-2 z-[9999] bg-[var(--hulux-surface)]/90 backdrop-blur border border-[var(--hulux-border)] rounded-lg px-2.5 py-1 text-[11px] font-medium text-[var(--hulux-text)] shadow">
+          {napsFiltradas.length}/{napsConCoords.length} NAPs
+        </div>
+      </div>
+
+      {/* ── Selected NAP — slides up as a card on mobile ── */}
+      {selectedNap && (
+        <div className="bg-[var(--hulux-surface)] border border-[var(--hulux-border)] rounded-xl p-3 sm:p-4 shadow-[var(--hulux-shadow)]">
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex items-start gap-2 min-w-0">
+              <span className="w-3 h-3 rounded-full shrink-0 mt-1"
+                style={{ background: SEMAFORO_HEX[getSemaforo(selectedNap)] }}/>
+              <div className="min-w-0">
+                <p className="font-bold text-[var(--hulux-text)] text-sm">{selectedNap.id_nap}</p>
+                <p className="text-[11px] text-[var(--hulux-text-muted)] truncate">
+                  {selectedNap.municipio} › {selectedNap.localidad}
+                </p>
+                {/* Progress bar */}
+                <div className="mt-2 w-full">
+                  <div className="flex justify-between text-[10px] text-[var(--hulux-text-muted)] mb-1">
+                    <span>Puertos</span>
+                    <span className="font-semibold text-[var(--hulux-text)]">
+                      {selectedNap.puertos_ocupados}/{selectedNap.capacidad_total}
+                    </span>
+                  </div>
+                  <div className="h-1.5 bg-[var(--hulux-progress-track)] rounded-full overflow-hidden w-40 sm:w-56">
+                    <div className="h-full rounded-full transition-all duration-300"
+                      style={{
+                        width: `${Math.min(Math.round(selectedNap.puertos_ocupados / selectedNap.capacidad_total * 100), 100)}%`,
+                        background: SEMAFORO_HEX[getSemaforo(selectedNap)]
+                      }}/>
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-2 mt-2 text-[10px]">
+                  <span style={{ color: SEMAFORO_HEX[getSemaforo(selectedNap)] }} className="font-semibold">
+                    {SEMAFORO_LABEL[getSemaforo(selectedNap)]}
+                  </span>
+                  <span className="text-[var(--hulux-text-muted)]">·</span>
+                  <span style={{ color: TOMODAT_COLOR[selectedNap.estado_tomodat] ?? "#888" }} className="font-semibold">
+                    Tomodat {selectedNap.estado_tomodat}
+                  </span>
+                </div>
+              </div>
+            </div>
+            <button onClick={() => setSelectedNap(null)}
+              className="shrink-0 w-7 h-7 flex items-center justify-center rounded-lg text-[var(--hulux-text-muted)] hover:bg-[var(--hulux-subtle)] transition-colors text-lg leading-none">
+              ×
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── Legend — collapsible on mobile ── */}
+      <details className="sm:open" open={false}>
+        <summary className="text-[11px] text-[var(--hulux-text-muted)] cursor-pointer select-none list-none flex items-center gap-1.5 sm:hidden">
+          <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          Ver leyenda de colores
+        </summary>
+        <div className="flex flex-wrap gap-x-4 gap-y-1.5 text-[11px] text-[var(--hulux-text-muted)] mt-2">
+          {Object.entries(SEMAFORO_LABEL).map(([key, label]) => (
+            <div key={key} className="flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded-full" style={{ background: SEMAFORO_HEX[key] }}/>
+              {label}
+            </div>
+          ))}
+          <div className="flex items-center gap-1.5">
+            <span className="w-2.5 h-2.5 rounded-full border-2 border-[#f59e0b]"/>
+            Tomodat Rojo
+          </div>
+        </div>
+      </details>
+
+      {/* ── NAPs sin coords ── */}
+      {stats.sinCoords > 0 && (
+        <details className="bg-[var(--hulux-surface)] border border-[var(--hulux-border)] rounded-xl shadow-[var(--hulux-shadow)]">
+          <summary className="p-3 text-xs text-[var(--hulux-text-muted)] cursor-pointer hover:text-[var(--hulux-text)] transition-colors select-none">
+            ⚠️ {stats.sinCoords} NAP{stats.sinCoords !== 1 ? "s" : ""} sin coordenadas
+          </summary>
+          <div className="px-3 pb-3 flex flex-wrap gap-2">
+            {naps.filter((n) => n.latitud == null || n.longitud == null).map((n) => (
+              <span key={n.id}
+                className="px-2 py-0.5 text-xs rounded-md bg-[var(--hulux-subtle)] text-[var(--hulux-text-muted)] border border-[var(--hulux-border)]">
+                {n.id_nap}
+              </span>
+            ))}
+          </div>
+        </details>
+      )}
+    </div>
+  );
+}
+
+

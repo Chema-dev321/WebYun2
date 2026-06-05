@@ -267,7 +267,8 @@ async function uploadGeographicConfig() {
 
   for (const entry of geoEntries.values()) {
     try {
-      await addDoc(collection(db, "config_geografica"), entry);
+      const geoId = `${entry.municipio}|${entry.localidad}`;
+      await setDoc(doc(db, "config_geografica", geoId), entry);
       count++;
       if (count % 10 === 0) {
         console.log(`  📤 ${count} entradas geográficas subidas...`);

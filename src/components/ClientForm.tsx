@@ -8,12 +8,15 @@ import {
   getNAPs,
   registerCliente,
 } from "@/lib/firestore";
+import { useAuth } from "@/lib/AuthContext";
+import { registrarLog } from "@/lib/audit";
 
 interface Props {
   onSuccess: () => void;
 }
 
 export default function ClientForm({ onSuccess }: Props) {
+  const { user } = useAuth();
   const [municipios, setMunicipios] = useState<string[]>([]);
   const [localidades, setLocalidades] = useState<string[]>([]);
   const [todasLasNaps, setTodasLasNaps] = useState<NAP[]>([]);
@@ -81,6 +84,13 @@ export default function ClientForm({ onSuccess }: Props) {
     });
 
     if (result.success) {
+      await registrarLog(
+        "CREAR_CLIENTE",
+        user?.email ?? "desconocido",
+        user?.uid ?? "",
+        `Registró cliente "${nombre.trim()}" (WISP: ${idWisp.trim()}) en NAP ${idNap}`,
+        { nombre: nombre.trim(), id_wisp: idWisp.trim(), id_nap: idNap }
+      );
       setMsg({ type: "success", text: "Cliente registrado correctamente." });
       setNombre("");
       setIdWisp("");

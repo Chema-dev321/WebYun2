@@ -15,8 +15,11 @@ import ClientesTab from "@/components/ClientesTab";
 import BuscarClienteTab from "@/components/BuscarClienteTab";
 import AgregarNapTab from "@/components/AgregarNapTab";
 import UsuariosTab from "@/components/UsuariosTab";
+import LogsTab from "@/components/LogsTab";
+import MapaTab from "@/components/MapaTab";
+import { registrarLog } from "@/lib/audit";
 
-type Tab = "dashboard" | "registro" | "clientes" | "buscar" | "agregarNap" | "usuarios";
+type Tab = "dashboard" | "registro" | "clientes" | "buscar" | "agregarNap" | "usuarios" | "logs" | "mapa";
 
 const TABS: { key: Tab; label: string; icon: string }[] = [
   { key: "dashboard", label: "Dashboard NAPs", icon: "📊" },
@@ -25,6 +28,8 @@ const TABS: { key: Tab; label: string; icon: string }[] = [
   { key: "clientes", label: "Clientes", icon: "👥" },
   { key: "buscar", label: "Buscar Cliente", icon: "🔍" },
   { key: "usuarios", label: "Usuarios", icon: "👤" },
+  { key: "logs", label: "Actividad", icon: "📋" },
+  { key: "mapa", label: "Mapa NAPs", icon: "🗺️" },
 ];
 
 export default function Home() {
@@ -43,14 +48,16 @@ function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<Tab>("dashboard");
   const [filteredNaps, setFilteredNaps] = useState<NAP[] | null>(null);
+  const [reconciling, setReconciling] = useState(false);
+  const [reconcileMsg, setReconcileMsg] = useState("");
 
   useEffect(() => {
-    let unsubs: Array<() => void> = [];
+    let mounted = true;
+    const unsubs: Array<() => void> = [];
     import("@/lib/firestore")
       .then(({ subscribeToNAPs, subscribeToUsuarios, getClientesCount }) => {
-        if (unsubs.length === -1) return; // unmounted
+        if (!mounted) return;
 
-        // Get count without reading all documents
         getClientesCount().then(setTotalClientesCount).catch(console.error);
 
         unsubs.push(
@@ -66,8 +73,8 @@ function Dashboard() {
         setLoading(false);
       });
     return () => {
+      mounted = false;
       unsubs.forEach((fn) => fn());
-      unsubs = [-1 as unknown as () => void]; // mark unmounted
     };
   }, []);
 
@@ -132,6 +139,48 @@ function Dashboard() {
           <StatCard label="% Ocupación" value={`${stats.pctOcupacion}%`} accentColor="var(--hulux-text)" />
         </div>
 
+        {/* Reconcile */}
+        <div className="flex items-center gap-3 mb-6">
+          <button
+            onClick={async () => {
+              setReconciling(true);
+              setReconcileMsg("");
+              try {
+                const { reconcileNAPs } = await import("@/lib/firestore");
+                const r = await reconcileNAPs();
+                setReconcileMsg(`${r.corregidas} NAPs corregidas, ${r.correctas} correctas.`);
+                await registrarLog(
+                  "SINCRONIZAR_CONTADORES",
+                  user?.email ?? "desconocido",
+                  user?.uid ?? "",
+                  `Sincronizó contadores: ${r.corregidas} corregidas, ${r.correctas} correctas`
+                );
+              } catch (e: unknown) {
+                const msg = e instanceof Error ? e.message : "Error";
+                setReconcileMsg(`Error: ${msg}`);
+              }
+              setReconciling(false);
+            }}
+            disabled={reconciling}
+            className="px-3 py-1.5 text-xs bg-(--hulux-surface) hover:bg-[rgba(148,237,242,0.18)] disabled:opacity-50 text-(--hulux-text) border border-(--hulux-border) rounded-lg transition-colors flex items-center gap-2"
+          >
+            {reconciling ? (
+              <>
+                <svg className="animate-spin h-3.5 w-3.5" viewBox="0 0 24 24" fill="none">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+                Sincronizando...
+              </>
+            ) : (
+              "Sincronizar contadores"
+            )}
+          </button>
+          {reconcileMsg && (
+            <span className="text-xs text-(--hulux-text-muted)">{reconcileMsg}</span>
+          )}
+        </div>
+
         {/* Tabs */}
         <div className="flex gap-1 mb-6 bg-(--hulux-surface) rounded-xl p-1 border border-(--hulux-border) shadow-(--hulux-shadow) overflow-x-auto">
           {TABS.map((t) => (
@@ -175,6 +224,14 @@ function Dashboard() {
 
         {tab === "usuarios" && (
           <UsuariosTab usuarios={usuarios} />
+        )}
+
+        {tab === "logs" && (
+          <LogsTab />
+        )}
+
+        {tab === "mapa" && (
+          <MapaTab naps={naps} />
         )}
       </div>
     </main>

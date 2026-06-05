@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "leaflet/dist/leaflet.css";
 
 :root {
   color-scheme: light;
@@ -74,4 +75,28 @@ a:hover {
 /* ── Dark table zebra striping ── */
 [data-theme="dark"] .table-zebra tbody tr:nth-child(even) {
   background-color: rgba(255, 255, 255, 0.03);
+}
+
+/* ── Toast animation ── */
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.leaflet-popup-content-wrapper {
+  border-radius: 10px !important;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.18) !important;
+}
+.leaflet-popup-content a {
+  color: var(--hulux-blue);
+  background: none;
+}
+.leaflet-popup-content a:hover {
+  background: none;
+  text-decoration: underline;
 }

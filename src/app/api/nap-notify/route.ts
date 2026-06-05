@@ -1,6 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
 import nodemailer from "nodemailer";
 
+async function verifyFirebaseToken(idToken: string): Promise<boolean> {
+  try {
+    const apiKey = process.env.NEXT_PUBLIC_FIREBASE_API_KEY;
+    if (!apiKey) return false;
+    const res = await fetch(
+      `https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${apiKey}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ idToken }),
+      }
+    );
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
 function buildTemplateLlena(idNap: string, nombre: string, municipio: string, localidad: string, ocupados: number, capacidad: number): string {
   const fecha = new Date().toLocaleString("es-ES", { timeZone: "America/Argentina/Buenos_Aires" });
   return `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>ALERTA - NAP Llena</title></head><body style="margin:0;padding:0;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background-color:#f4f4f4;"><div style="max-width:600px;margin:20px auto;background-color:#ffffff;border-radius:8px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,0.1);"><div style="background:linear-gradient(135deg,#dc3545 0%,#ffc107 100%);padding:30px 20px;text-align:center;color:#ffffff;"><div style="font-size:48px;margin-bottom:10px;">&#9888;&#65039;</div><h1 style="margin:0;font-size:28px;font-weight:700;">ALERTA: NAP LLENA</h1></div><div style="padding:30px 20px;"><div style="background-color:#fff3cd;border-left:4px solid #dc3545;padding:15px;margin-bottom:20px;border-radius:4px;"><p style="margin:0;color:#856404;font-size:14px;"><strong>Atencion:</strong> La caja NAP ha alcanzado el 100% de su capacidad. No hay puertos disponibles. Se requiere accion tecnica inmediata.</p></div><table style="width:100%;border-collapse:collapse;margin:20px 0;"><tr><th style="padding:12px 15px;text-align:left;border-bottom:1px solid #e0e0e0;background-color:#f8f9fa;color:#495057;font-weight:600;width:40%;">ID NAP</th><td style="padding:12px 15px;text-align:left;border-bottom:1px solid #e0e0e0;color:#212529;">${idNap}</td></tr><tr><th style="padding:12px 15px;text-align:left;border-bottom:1px solid #e0e0e0;background-color:#f8f9fa;color:#495057;font-weight:600;width:40%;">Nombre</th><td style="padding:12px 15px;text-align:left;border-bottom:1px solid #e0e0e0;color:#212529;">${nombre}</td></tr><tr><th style="padding:12px 15px;text-align:left;border-bottom:1px solid #e0e0e0;background-color:#f8f9fa;color:#495057;font-weight:600;width:40%;">Ubicacion</th><td style="padding:12px 15px;text-align:left;border-bottom:1px solid #e0e0e0;color:#212529;">${municipio}, ${localidad}</td></tr><tr><th style="padding:12px 15px;text-align:left;border-bottom:1px solid #e0e0e0;background-color:#f8f9fa;color:#495057;font-weight:600;width:40%;">Ocupacion</th><td style="padding:12px 15px;text-align:left;border-bottom:1px solid #e0e0e0;color:#212529;"><span style="display:inline-block;background-color:#dc3545;color:#ffffff;padding:5px 15px;border-radius:20px;font-size:12px;font-weight:600;text-transform:uppercase;">LLENA - ${ocupados}/${capacidad}</span></td></tr><tr><th style="padding:12px 15px;text-align:left;border-bottom:1px solid #e0e0e0;background-color:#f8f9fa;color:#495057;font-weight:600;width:40%;">Fecha del evento</th><td style="padding:12px 15px;text-align:left;border-bottom:1px solid #e0e0e0;color:#212529;">${fecha}</td></tr></table><p style="color:#6c757d;font-size:14px;">Por favor, revise la infraestructura y planifique una ampliacion o liberacion de puertos lo antes posible.</p></div><div style="background-color:#f8f9fa;padding:20px;text-align:center;color:#6c757d;font-size:12px;border-top:1px solid #e0e0e0;"><p style="margin:5px 0;">Sistema de Monitoreo NAP - Notificacion automatica</p><p style="margin:5px 0;">Este es un mensaje generado automaticamente, no responda a este correo.</p></div></div></body></html>`;
@@ -18,6 +36,13 @@ function buildTemplateVacia(idNap: string, nombre: string, municipio: string, lo
 
 export async function POST(req: NextRequest) {
   try {
+    // Verify Firebase Auth token
+    const authHeader = req.headers.get("authorization");
+    const token = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null;
+    if (!token || !(await verifyFirebaseToken(token))) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+    }
+
     const body = await req.json();
     const { tipoEvento, idNap, nombre, municipio, localidad, ocupados, capacidad } = body;
 
@@ -33,7 +58,7 @@ export async function POST(req: NextRequest) {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS,
       },
-      tls: { rejectUnauthorized: false },
+      tls: process.env.NODE_ENV === "development" ? { rejectUnauthorized: false } : undefined,
       connectionTimeout: 10000,
       socketTimeout: 10000,
     });

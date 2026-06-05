@@ -3,6 +3,7 @@
 import { useState, useMemo, useEffect } from "react";
 import type { NAP, Cliente } from "@/lib/types";
 import { getClienteByWisp, getNAPById, updateCliente, deleteCliente, updateClienteNAP, subscribeToNAPs } from "@/lib/firestore";
+import { useConfirm } from "@/components/ToastContext";
 
 export default function BuscarClienteTab({ naps }: { naps: NAP[] }) {
   const [idWisp, setIdWisp] = useState("");
@@ -11,6 +12,8 @@ export default function BuscarClienteTab({ naps }: { naps: NAP[] }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [searched, setSearched] = useState(false);
+
+  const { confirm } = useConfirm();
 
   // Edit mode
   const [editando, setEditando] = useState(false);
@@ -138,8 +141,8 @@ export default function BuscarClienteTab({ naps }: { naps: NAP[] }) {
 
   const eliminarCliente = async () => {
     if (!cliente) return;
-    const ok = confirm(
-      `¿Eliminar a "${cliente.nombre}" (ID ${cliente.id_wisp})?\nSe liberará el puerto en la NAP.`
+    const ok = await confirm(
+      `¿Eliminar a "${cliente.nombre}" (ID ${cliente.id_wisp})? Se liberará el puerto en la NAP.`
     );
     if (!ok) return;
     setDeleting(true);

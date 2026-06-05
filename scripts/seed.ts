@@ -8,7 +8,8 @@ import { initializeApp, getApps } from "firebase/app";
 import {
   getFirestore,
   collection,
-  addDoc,
+  doc,
+  setDoc,
   getDocs,
 } from "firebase/firestore";
 
@@ -114,12 +115,13 @@ const NAPS = [
 async function seed() {
   console.log("⏳ Poblando config_geografica...");
   for (const entry of CONFIG_GEOGRAFICA) {
-    await addDoc(collection(db, "config_geografica"), entry);
+    const geoId = `${entry.municipio}|${entry.localidad}`;
+    await setDoc(doc(db, "config_geografica", geoId), entry);
   }
 
   console.log("⏳ Poblando naps...");
   for (const nap of NAPS) {
-    await addDoc(collection(db, "naps"), nap);
+    await setDoc(doc(db, "naps", nap.id_nap), nap);
   }
 
   console.log("✅ Seed completado:");

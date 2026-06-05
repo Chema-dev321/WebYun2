@@ -1,8 +1,12 @@
 "use client";
 
 import { useEffect, useState, useCallback, useMemo, Fragment } from "react";
-import type { NAP } from "@/lib/types";
+import type { NAP, Cliente as ClienteType } from "@/lib/types";
 import { deleteCliente, getNAPColor, updateNAP, deleteNAP } from "@/lib/firestore";
+import type { SemaforoState } from "@/lib/firestore";
+import { useToast, useConfirm } from "@/components/ToastContext";
+import { useAuth } from "@/lib/AuthContext";
+import { registrarLog } from "@/lib/audit";
 
 interface Props {
   naps: NAP[];
@@ -10,26 +14,14 @@ interface Props {
   onFilterChange?: (filtered: NAP[]) => void;
 }
 
-type SemaforoFilter = "verde" | "amarillo" | "rojo" | "celeste";
-
-function getSemaforo(nap: NAP): SemaforoFilter {
-  const o = nap.puertos_ocupados;
-  const c = nap.capacidad_total;
-  if (o > c) return "celeste";
-  if (o === c) return "rojo";
-  if (o >= c * 0.7) return "amarillo";
-  return "verde";
-}
-
-const SEMAFORO_COLORS: Record<SemaforoFilter, string> = {
-  verde: "bg-(--hulux-lime)",
-  amarillo: "bg-(--hulux-orange)",
-  rojo: "bg-(--hulux-maroon)",
-  // Azul celeste (sobre-ocupación): usa cyan con contorno sutil para visibilidad.
-  celeste: "bg-(--hulux-cyan) ring-1 ring-[rgba(17,41,62,0.28)]",
+const SEMAFORO_COLORS: Record<SemaforoState, string> = {
+  verde: "var(--hulux-lime)",
+  amarillo: "var(--hulux-orange)",
+  rojo: "var(--hulux-maroon)",
+  celeste: "var(--hulux-cyan)",
 };
 
-const SEMAFORO_LABELS: Record<SemaforoFilter, string> = {
+const SEMAFORO_LABELS: Record<SemaforoState, string> = {
   verde: "Verde (disponible)",
   amarillo: "Amarillo (≥70%)",
   rojo: "Rojo (lleno)",
@@ -41,7 +33,7 @@ export default function NAPTable({ naps, onRefresh, onFilterChange }: Props) {
   const [search, setSearch] = useState("");
   const [municipio, setMunicipio] = useState("");
   const [localidad, setLocalidad] = useState("");
-  const [activosSemaforo, setActivosSemaforo] = useState<Set<SemaforoFilter>>(new Set());
+  const [activosSemaforo, setActivosSemaforo] = useState<Set<SemaforoState>>(new Set());
   const [disponibilidad, setDisponibilidad] = useState<"todas" | "espacio" | "llenas">("todas");
   const [page, setPage] = useState(0);
   const pageSize = 20;
@@ -54,8 +46,12 @@ export default function NAPTable({ naps, onRefresh, onFilterChange }: Props) {
 
   // Expand
   const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [expandedClientes, setExpandedClientes] = useState<import("@/lib/types").Cliente[]>([]);
+  const [expandedClientes, setExpandedClientes] = useState<ClienteType[]>([]);
   const [loadingClientes, setLoadingClientes] = useState(false);
+
+  const { showToast } = useToast();
+  const { confirm } = useConfirm();
+  const { user } = useAuth();
 
   // Derived lists
   const municipios = useMemo(() => {
@@ -82,7 +78,7 @@ export default function NAPTable({ naps, onRefresh, onFilterChange }: Props) {
   }, [search, municipio, localidad, activosSemaforo, disponibilidad]);
 
   // Toggle semaforo filter
-  const toggleSemaforo = (s: SemaforoFilter) => {
+  const toggleSemaforo = (s: SemaforoState) => {
     setActivosSemaforo((prev) => {
       const next = new Set(prev);
       if (next.has(s)) next.delete(s);
@@ -112,7 +108,7 @@ export default function NAPTable({ naps, onRefresh, onFilterChange }: Props) {
 
       // Semaforo
       if (activosSemaforo.size > 0) {
-        if (!activosSemaforo.has(getSemaforo(nap))) return false;
+        if (!activosSemaforo.has(getNAPColor(nap))) return false;
       }
 
       // Disponibilidad
@@ -133,18 +129,26 @@ export default function NAPTable({ naps, onRefresh, onFilterChange }: Props) {
   }, [filteredNaps, onFilterChange]);
 
   const handleDelete = async (clienteId: string, napId: string) => {
-    const ok = confirm("¿Eliminar este cliente? Se liberará el puerto en la NAP.");
+    const ok = await confirm("¿Eliminar este cliente? Se liberará el puerto en la NAP.");
     if (!ok) return;
     try {
+      const cliente = expandedClientes.find((c) => c.id === clienteId);
       const result = await deleteCliente(clienteId);
       if (!result.success) {
-        alert(result.error || "Error al eliminar cliente.");
+        showToast(result.error || "Error al eliminar cliente.", "error");
       } else {
-        // Actualizamos el estado local para que el cambio sea instantáneo
         setExpandedClientes((prev) => prev.filter((c) => c.id !== clienteId));
+        await registrarLog(
+          "ELIMINAR_CLIENTE",
+          user?.email ?? "desconocido",
+          user?.uid ?? "",
+          `Eliminó cliente "${cliente?.nombre ?? clienteId}" de NAP ${napId}`,
+          { clienteId, napId, cliente }
+        );
       }
-    } catch (e: any) {
-      alert("Excepción: " + e.message);
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : "Error desconocido";
+      showToast(message, "error");
     }
     onRefresh();
   };
@@ -190,32 +194,48 @@ export default function NAPTable({ naps, onRefresh, onFilterChange }: Props) {
     if (!editingId) return;
     setSaving(true);
     try {
+      const napOriginal = naps.find((n) => n.id === editingId);
       await updateNAP(editingId, editFields);
+      await registrarLog(
+        "EDITAR_NAP",
+        user?.email ?? "desconocido",
+        user?.uid ?? "",
+        `Editó NAP ${napOriginal?.id_nap ?? editingId}`,
+        { napId: editingId, antes: napOriginal, despues: editFields }
+      );
       cancelEdit();
       onRefresh();
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Error al guardar.";
       console.error("Error al editar NAP:", message);
-      alert(message);
+      showToast(message, "error");
     }
     setSaving(false);
   };
 
   const handleDeleteNAP = async (napId: string) => {
-    const ok = confirm("¿Eliminar esta NAP y todos sus clientes? Esta acción no se puede deshacer.");
+    const ok = await confirm("¿Eliminar esta NAP y todos sus clientes? Esta acción no se puede deshacer.");
     if (!ok) return;
     setDeleting(napId);
     try {
+      const napTarget = naps.find((n) => n.id === napId);
       const result = await deleteNAP(napId);
       if (result.success) {
+        await registrarLog(
+          "ELIMINAR_NAP",
+          user?.email ?? "desconocido",
+          user?.uid ?? "",
+          `Eliminó NAP ${napTarget?.id_nap ?? napId} (${napTarget?.localidad ?? ""})`,
+          { napId, nap: napTarget }
+        );
         onRefresh();
       } else {
-        alert(result.error || "Error al eliminar NAP.");
+        showToast(result.error || "Error al eliminar NAP.", "error");
       }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Error al eliminar NAP.";
       console.error("Error al eliminar NAP:", message);
-      alert(message);
+      showToast(message, "error");
     }
     setDeleting(null);
   };
@@ -301,7 +321,7 @@ export default function NAPTable({ naps, onRefresh, onFilterChange }: Props) {
         <div>
           <label className="block text-xs text-(--hulux-text-muted) mb-1.5">Semáforo</label>
           <div className="flex flex-wrap gap-1.5">
-            {(Object.keys(SEMAFORO_LABELS) as SemaforoFilter[]).map((s) => {
+            {(Object.keys(SEMAFORO_LABELS) as SemaforoState[]).map((s) => {
               const active = activosSemaforo.has(s);
               return (
                 <button
@@ -314,7 +334,10 @@ export default function NAPTable({ naps, onRefresh, onFilterChange }: Props) {
                       : "bg-(--hulux-surface-elevated) text-(--hulux-text-muted) hover:text-(--hulux-text) border border-(--hulux-border) hover:bg-[rgba(148,237,242,0.18)]"
                   }`}
                 >
-                  <span className={`w-2 h-2 rounded-full ${SEMAFORO_COLORS[s]}`} />
+                  <span
+                    className="w-2 h-2 rounded-full"
+                    style={{ backgroundColor: SEMAFORO_COLORS[s] }}
+                  />
                   {SEMAFORO_LABELS[s]}
                 </button>
               );
@@ -369,7 +392,7 @@ export default function NAPTable({ naps, onRefresh, onFilterChange }: Props) {
             </thead>
             <tbody>
               {pagedNaps.map((nap) => {
-                const color = getNAPColor(nap);
+                const color = SEMAFORO_COLORS[getNAPColor(nap)];
                 const pct = Math.round(
                   (nap.puertos_ocupados / nap.capacidad_total) * 100
                 );

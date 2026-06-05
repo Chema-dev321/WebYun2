@@ -3,8 +3,11 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import type { NAP } from "@/lib/types";
 import { addNAP } from "@/lib/firestore";
+import { useAuth } from "@/lib/AuthContext";
+import { registrarLog } from "@/lib/audit";
 
 export default function AgregarNapTab({ onSuccess, naps }: { onSuccess: () => void; naps: NAP[] }) {
+  const { user } = useAuth();
   const [idNap, setIdNap] = useState("");
   const [nombre, setNombre] = useState("");
   const [municipio, setMunicipio] = useState("");
@@ -209,6 +212,14 @@ export default function AgregarNapTab({ onSuccess, naps }: { onSuccess: () => vo
         verificacion: parseInt(verificacion) || 0,
         latitud: latitud ? parseFloat(latitud) : undefined,
         longitud: longitud ? parseFloat(longitud) : undefined,
+      });
+      const accion = napExiste ? "EDITAR_NAP" : "CREAR_NAP";
+      const desc = napExiste
+        ? `Actualizó NAP "${idNap.trim()}" en ${localidad.trim()}`
+        : `Creó NAP "${idNap.trim()}" en ${localidad.trim()}, ${municipio.trim()}`;
+      await registrarLog(accion, user?.email ?? "desconocido", user?.uid ?? "", desc, {
+        id_nap: idNap.trim(), municipio: municipio.trim(), localidad: localidad.trim(),
+        capacidad: parseInt(capacidad) || 8,
       });
       setMsg({ type: "success", text: napExiste ? `NAP "${idNap}" actualizada.` : `NAP "${idNap}" agregada.` });
       if (!napExiste) {

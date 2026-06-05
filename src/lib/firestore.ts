@@ -133,11 +133,9 @@ export async function getClientesByNAP(napId: string): Promise<Cliente[]> {
 }
 
 export async function getClienteByWisp(id_wisp: string): Promise<Cliente | null> {
-  const q = query(collection(db, CLIENTES_COL), where("id_wisp", "==", id_wisp));
-  const snap = await getDocs(q);
-  if (snap.empty) return null;
-  const d = snap.docs[0];
-  return { id: d.id, ...(d.data() as Omit<Cliente, "id">) };
+  const snap = await getDoc(doc(db, CLIENTES_COL, id_wisp));
+  if (!snap.exists()) return null;
+  return { id: snap.id, ...(snap.data() as Omit<Cliente, "id">) };
 }
 
 export async function updateCliente(
@@ -236,13 +234,10 @@ export async function registerCliente(
 
       const napData = napSnap.data() as Omit<NAP, "id">;
 
-      // Validar duplicidad de id_wisp
-      const dupQuery = query(
-        collection(db, CLIENTES_COL),
-        where("id_wisp", "==", data.id_wisp)
-      );
-      const dupSnap = await getDocs(dupQuery);
-      if (!dupSnap.empty) {
+      // Validar duplicidad de id_wisp (dentro de la transacción)
+      const dupRef = doc(db, CLIENTES_COL, data.id_wisp);
+      const dupSnap = await tx.get(dupRef);
+      if (dupSnap.exists()) {
         return { success: false, error: `El ID WISP "${data.id_wisp}" ya existe.` };
       }
 
@@ -254,12 +249,12 @@ export async function registerCliente(
         };
       }
 
-      // Crear cliente
+      // Crear cliente usando id_wisp como ID del documento
       const clienteData = {
         ...data,
         fecha_alta: new Date().toISOString().split("T")[0],
       };
-      const clienteRef = doc(collection(db, CLIENTES_COL));
+      const clienteRef = doc(db, CLIENTES_COL, data.id_wisp);
       tx.set(clienteRef, clienteData);
 
       // Registrar municipio/localidad en config_geografica
@@ -391,15 +386,15 @@ export async function getNAPsByLocalidad(localidad: string): Promise<NAP[]> {
 
 // ── Semáforo ──
 
-export function getNAPColor(nap: NAP): string {
+export type SemaforoState = "verde" | "amarillo" | "rojo" | "celeste";
+
+export function getNAPColor(nap: NAP): SemaforoState {
   const o = nap.puertos_ocupados;
   const c = nap.capacidad_total;
-
-  // Use Hulux palette tokens; these resolve at runtime in the browser.
-  if (o > c) return "var(--hulux-cyan)"; // sobre-ocupación
-  if (o === c) return "var(--hulux-maroon)"; // lleno
-  if (o >= c * 0.7) return "var(--hulux-orange)"; // ≥70%
-  return "var(--hulux-lime)"; // disponible
+  if (o > c) return "celeste";
+  if (o === c) return "rojo";
+  if (o >= c * 0.7) return "amarillo";
+  return "verde";
 }
 
 // ── Usuarios de plataforma ──
@@ -449,4 +444,40 @@ export function subscribeToUsuarios(callback: (usuarios: Usuario[]) => void) {
     const usuarios = snap.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<Usuario, "id">) }));
     callback(usuarios);
   });
+}
+
+// ── Reconciliación de puertos ──
+
+export async function reconcileNAPs(): Promise<{ corregidas: number; correctas: number }> {
+  const [napsSnap, clientesSnap] = await Promise.all([
+    getDocs(collection(db, NAPS_COL)),
+    getDocs(collection(db, CLIENTES_COL)),
+  ]);
+
+  // Contar clientes reales por NAP
+  const clientesPorNap = new Map<string, number>();
+  for (const c of clientesSnap.docs) {
+    const idNap = (c.data() as Record<string, unknown>).id_nap as string;
+    if (idNap) {
+      clientesPorNap.set(idNap, (clientesPorNap.get(idNap) || 0) + 1);
+    }
+  }
+
+  let corregidas = 0;
+  let correctas = 0;
+
+  for (const nap of napsSnap.docs) {
+    const data = nap.data() as Record<string, unknown>;
+    const real = clientesPorNap.get(nap.id) || 0;
+    const actual = (data.puertos_ocupados as number) || 0;
+
+    if (actual !== real) {
+      await updateDoc(doc(db, NAPS_COL, nap.id), { puertos_ocupados: real } as Record<string, unknown>);
+      corregidas++;
+    } else {
+      correctas++;
+    }
+  }
+
+  return { corregidas, correctas };
 }
