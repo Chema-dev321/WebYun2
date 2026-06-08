@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import type { NAP } from "@/lib/types";
 
 interface Props {
@@ -112,20 +112,20 @@ export default function MapaTab({ naps }: Props) {
 
 
   // NAPs with coords
-  const napsConCoords = naps.filter(
+  const napsConCoords = useMemo(() => naps.filter(
     (n) => n.latitud != null && n.longitud != null
-  );
+  ), [naps]);
 
-  const napsFiltradas = napsConCoords.filter((n) => {
+  const napsFiltradas = useMemo(() => napsConCoords.filter((n) => {
     const sem = getSemaforo(n);
     if (filtro === "disponibles" && (sem === "rojo" || sem === "celeste")) return false;
     if (filtro === "llenas" && sem !== "rojo" && sem !== "celeste") return false;
     if (tomodatFiltro !== "todos" && n.estado_tomodat !== tomodatFiltro) return false;
     return true;
-  });
+  }), [napsConCoords, filtro, tomodatFiltro]);
 
   // Stats
-  const stats = {
+  const stats = useMemo(() => ({
     total: napsConCoords.length,
     disponibles: napsConCoords.filter((n) => {
       const s = getSemaforo(n); return s === "verde" || s === "amarillo";
@@ -134,7 +134,7 @@ export default function MapaTab({ naps }: Props) {
       const s = getSemaforo(n); return s === "rojo" || s === "celeste";
     }).length,
     sinCoords: naps.length - napsConCoords.length,
-  };
+  }), [naps, napsConCoords]);
 
   useEffect(() => {
     setMounted(true);
@@ -192,6 +192,7 @@ export default function MapaTab({ naps }: Props) {
 
     // Remove old cluster group
     if (clusterGroupRef.current) {
+      map.closePopup(); // Important: Fix for _leaflet_pos crash
       clusterGroupRef.current.clearLayers();
       map.removeLayer(clusterGroupRef.current);
     }

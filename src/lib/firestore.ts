@@ -5,6 +5,7 @@ import {
   getDoc,
   setDoc,
   updateDoc,
+  deleteDoc,
   query,
   where,
   orderBy,
@@ -92,32 +93,35 @@ export async function deleteNAP(napId: string): Promise<{ success: boolean; erro
 
 // ── Clientes ──
 
-export async function getClientes(pageSize: number = DEFAULT_PAGE_SIZE, lastVisible?: unknown): Promise<PaginatedResult<Cliente>> {
+export async function getClientes(
+  pageSize: number = 25,
+  lastVisible?: unknown,
+  municipio?: string,
+  localidad?: string
+): Promise<PaginatedResult<Cliente>> {
   const colRef = collection(db, CLIENTES_COL);
-  let q = query(colRef, orderBy("fecha_alta", "desc"), limit(pageSize));
-  
-  if (lastVisible) {
-    q = query(colRef, orderBy("fecha_alta", "desc"), startAfter(lastVisible), limit(pageSize));
+  const constraints: any[] = [];
+
+  if (municipio) constraints.push(where("municipio", "==", municipio));
+  if (localidad) constraints.push(where("localidad", "==", localidad));
+
+  // Solo ordenamos por fecha_alta si NO hay filtros, para no requerir un composite index
+  if (!municipio && !localidad) {
+    constraints.push(orderBy("fecha_alta", "desc"));
   }
-  
+
+  if (lastVisible) constraints.push(startAfter(lastVisible));
+  constraints.push(limit(pageSize));
+
+  const q = query(colRef, ...constraints);
   const snap = await getDocs(q);
   const clientes = snap.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<Cliente, "id">) }));
   
   return {
     data: clientes,
-    lastVisible: snap.docs[snap.docs.length - 1] || null,
+    lastVisible: snap.docs.length > 0 ? snap.docs[snap.docs.length - 1] : null,
     hasMore: snap.docs.length === pageSize,
   };
-}
-
-export async function getClientesCount(): Promise<number> {
-  try {
-    const snap = await getCountFromServer(collection(db, CLIENTES_COL));
-    return snap.data().count;
-  } catch {
-    const clientes = await getClientes();
-    return clientes.data.length;
-  }
 }
 
 export async function getClientesByNAP(napId: string): Promise<Cliente[]> {
@@ -136,6 +140,52 @@ export async function getClienteByWisp(id_wisp: string): Promise<Cliente | null>
   if (snap.empty) return null;
   const doc = snap.docs[0];
   return { id: doc.id, ...(doc.data() as Omit<Cliente, "id">) };
+}
+
+export async function searchClientes(searchText: string): Promise<Cliente[]> {
+  const txt = searchText.trim();
+  if (!txt) return [];
+
+  // Buscar coincidencia exacta por ID WISP
+  const qWisp = getDocs(query(collection(db, CLIENTES_COL), where("id_wisp", "==", txt), limit(5)));
+  
+  // Buscar coincidencia exacta por ID NAP (ignorando case asumiendo que suelen escribir exacto)
+  // Para hacer búsqueda parcial requeriríamos Algolia, pero un "==" en id_nap ayuda
+  const qNap = getDocs(query(collection(db, CLIENTES_COL), where("id_nap", "==", txt.toUpperCase()), limit(50)));
+
+  // Búsqueda por prefijo de nombre (Case Sensitive en Firestore, asume que está Capitalizado o en Mayúsculas)
+  // Intentamos con la primera letra mayúscula para coincidir con el formato de la BD
+  const txtCapitalizado = txt.charAt(0).toUpperCase() + txt.slice(1).toLowerCase();
+  const txtMayusculas = txt.toUpperCase();
+
+  const qNombreCap = getDocs(
+    query(
+      collection(db, CLIENTES_COL),
+      where("nombre", ">=", txtCapitalizado),
+      where("nombre", "<=", txtCapitalizado + "\uf8ff"),
+      limit(20)
+    )
+  );
+
+  const qNombreMayus = getDocs(
+    query(
+      collection(db, CLIENTES_COL),
+      where("nombre", ">=", txtMayusculas),
+      where("nombre", "<=", txtMayusculas + "\uf8ff"),
+      limit(20)
+    )
+  );
+
+  const results = await Promise.all([qWisp, qNap, qNombreCap, qNombreMayus]);
+  
+  const map = new Map<string, Cliente>();
+  results.forEach(snap => {
+    snap.docs.forEach(doc => {
+      map.set(doc.id, { id: doc.id, ...(doc.data() as Omit<Cliente, "id">) });
+    });
+  });
+
+  return Array.from(map.values());
 }
 
 export async function updateCliente(
@@ -417,16 +467,21 @@ export async function getUsuarios(): Promise<Usuario[]> {
 }
 
 export async function addUsuario(uid: string, email: string): Promise<void> {
-  const userDoc = await getDocs(query(collection(db, USUARIOS_COL), limit(1)));
-  // If it's the very first user in the DB, make them admin, otherwise instalador
-  const defaultRol: Rol = userDoc.empty ? "admin" : "instalador";
+  const userRef = doc(db, USUARIOS_COL, uid);
+  const userSnap = await getDoc(userRef);
 
-  await setDoc(doc(db, USUARIOS_COL, uid), {
-    uid,
-    email,
-    creado: new Date().toISOString().split("T")[0],
-    rol: defaultRol,
-  }, { merge: true });
+  // Solo creamos el documento si no existe, para NO sobrescribir su rol
+  if (!userSnap.exists()) {
+    const allUsersSnap = await getDocs(query(collection(db, USUARIOS_COL), limit(1)));
+    const defaultRol: Rol = allUsersSnap.empty ? "admin" : "instalador";
+
+    await setDoc(userRef, {
+      uid,
+      email,
+      creado: new Date().toISOString().split("T")[0],
+      rol: defaultRol,
+    });
+  }
 }
 
 export async function updateUsuarioRol(uid: string, nuevoRol: Rol): Promise<void> {
@@ -437,25 +492,31 @@ export async function updateUsuarioRol(uid: string, nuevoRol: Rol): Promise<void
 
 export function subscribeToNAPs(callback: (naps: NAP[]) => void) {
   const q = query(collection(db, NAPS_COL), orderBy("nombre"), limit(3000));
-  return onSnapshot(q, (snap) => {
-    const napsData = snap.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<NAP, "id">) }));
-    callback(napsData);
-  });
-}
-
-export function subscribeToClientes(callback: (clientes: Cliente[]) => void) {
-  const q = query(collection(db, CLIENTES_COL), orderBy("fecha_alta", "desc"), limit(3000));
-  return onSnapshot(q, (snap) => {
-    const clientes = snap.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<Cliente, "id">) }));
-    callback(clientes);
-  });
+  return onSnapshot(
+    q,
+    (snap) => {
+      const napsData = snap.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<NAP, "id">) }));
+      callback(napsData);
+    },
+    (error) => {
+      if (error.code === "permission-denied") console.warn("Suscripción a NAPs cancelada (logout).");
+      else console.error("Error en NAPs:", error);
+    }
+  );
 }
 
 export function subscribeToUsuarios(callback: (usuarios: Usuario[]) => void) {
-  return onSnapshot(collection(db, USUARIOS_COL), (snap) => {
-    const usuarios = snap.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<Usuario, "id">) }));
-    callback(usuarios);
-  });
+  return onSnapshot(
+    collection(db, USUARIOS_COL),
+    (snap) => {
+      const usuarios = snap.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<Usuario, "id">) }));
+      callback(usuarios);
+    },
+    (error) => {
+      if (error.code === "permission-denied") console.warn("Suscripción a Usuarios cancelada (logout).");
+      else console.error("Error en Usuarios:", error);
+    }
+  );
 }
 
 // ── Reconciliación de puertos ──

@@ -24,6 +24,8 @@ export default function BuscarClienteTab({ naps, userRole = "instalador" }: { na
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
+  const [resultados, setResultados] = useState<Cliente[]>([]);
+
   // Derived dropdown options for edit mode
   const municipiosUnicos = useMemo(() => {
     const set = new Set(naps.map((n) => n.municipio));
@@ -54,9 +56,21 @@ export default function BuscarClienteTab({ naps, userRole = "instalador" }: { na
     setIdWisp("");
     setCliente(null);
     setNapInfo(null);
+    setResultados([]);
     setSearched(false);
     setError("");
     setEditando(false);
+  };
+
+  const seleccionarCliente = async (c: Cliente) => {
+    setCliente(c);
+    setResultados([]);
+    try {
+      const nap = await getNAPById(c.id_nap);
+      setNapInfo(nap);
+    } catch {
+      // Ignorar si falla la NAP
+    }
   };
 
   const handleSearch = async (e: React.FormEvent) => {
@@ -64,25 +78,30 @@ export default function BuscarClienteTab({ naps, userRole = "instalador" }: { na
     setError("");
     setCliente(null);
     setNapInfo(null);
+    setResultados([]);
     setSearched(false);
     setEditando(false);
 
     if (!idWisp.trim()) {
-      setError("Ingresa un ID WISP para buscar.");
+      setError("Ingresa un ID WISP, NAP o Nombre para buscar.");
       return;
     }
 
     setLoading(true);
     try {
-      const result = await getClienteByWisp(idWisp.trim());
-      if (!result) {
-        setError(`No se encontró cliente con ID WISP "${idWisp.trim()}".`);
+      // Import dynamic to avoid circular dependencies or simply use searchClientes from the top
+      const { searchClientes } = await import("@/lib/firestore");
+      const results = await searchClientes(idWisp.trim());
+      
+      if (results.length === 0) {
+        setError(`No se encontraron clientes para "${idWisp.trim()}".`);
+      } else if (results.length === 1) {
+        await seleccionarCliente(results[0]);
       } else {
-        setCliente(result);
-        const nap = await getNAPById(result.id_nap);
-        setNapInfo(nap);
+        setResultados(results);
       }
-    } catch {
+    } catch (err) {
+      console.error(err);
       setError("Error al buscar. Intenta de nuevo.");
     }
     setSearched(true);
@@ -168,14 +187,14 @@ export default function BuscarClienteTab({ naps, userRole = "instalador" }: { na
 
       <form onSubmit={handleSearch} className="mb-6">
         <label className="block text-sm text-(--hulux-text) mb-2">
-          Buscar cliente por ID WISP
+          Buscar cliente (ID WISP, Nombre o NAP)
         </label>
         <div className="flex flex-col sm:flex-row gap-2">
           <input
             type="text"
             value={idWisp}
             onChange={(e) => setIdWisp(e.target.value)}
-            placeholder="Ej. 12594"
+            placeholder="Ej. 12594, Juan Perez, o 11-01"
             className="w-full sm:flex-1 px-4 py-2.5 bg-(--hulux-surface) border border-(--hulux-border) rounded-lg text-(--hulux-text) placeholder-(--hulux-text-muted) focus:outline-none focus:ring-2 focus:ring-(--hulux-blue)"
           />
           <div className="flex gap-2 w-full sm:w-auto">
@@ -203,13 +222,32 @@ export default function BuscarClienteTab({ naps, userRole = "instalador" }: { na
         </div>
       )}
 
+      {resultados.length > 0 && !cliente && (
+        <div className="rounded-xl border border-(--hulux-border) bg-(--hulux-surface) shadow-(--hulux-shadow) overflow-hidden mt-6">
+          <div className="bg-(--hulux-subtle) px-5 py-3 border-b border-(--hulux-border)">
+            <h3 className="text-sm font-semibold text-(--hulux-text)">Selecciona un cliente ({resultados.length} resultados)</h3>
+          </div>
+          <div className="divide-y divide-(--hulux-border)">
+            {resultados.map(r => (
+              <div key={r.id} onClick={() => seleccionarCliente(r)} className="p-4 hover:bg-[rgba(148,237,242,0.12)] cursor-pointer transition-colors flex justify-between items-center">
+                <div>
+                  <div className="font-semibold text-(--hulux-text) text-sm">{r.nombre}</div>
+                  <div className="text-xs text-(--hulux-text-muted) mt-1">ID WISP: {r.id_wisp} • NAP: {r.id_nap}</div>
+                </div>
+                <div className="text-xs text-(--hulux-blue) font-medium">Ver detalles &rarr;</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {cliente && (
         <div className="rounded-xl border border-(--hulux-border) bg-(--hulux-surface) shadow-(--hulux-shadow) overflow-hidden">
           <div className="bg-(--hulux-subtle) px-5 py-3 border-b border-(--hulux-border) flex items-center justify-between">
             <h3 className="text-sm font-semibold text-(--hulux-text)">Cliente encontrado</h3>
             {!editando ? (
               <div className="flex gap-1.5">
-                {userRole === "admin" && (
+                {(userRole === "admin" || userRole === "administracion") && (
                   <button
                     onClick={eliminarCliente}
                     disabled={deleting}

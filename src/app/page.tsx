@@ -44,7 +44,6 @@ export default function Home() {
 function Dashboard() {
   const { user, logout } = useAuth();
   const [naps, setNaps] = useState<NAP[]>([]);
-  const [totalClientesCount, setTotalClientesCount] = useState(0);
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<Tab>("mapa");
@@ -84,10 +83,8 @@ function Dashboard() {
     let mounted = true;
     const unsubs: Array<() => void> = [];
     import("@/lib/firestore")
-      .then(({ subscribeToNAPs, subscribeToUsuarios, getClientesCount }) => {
+      .then(({ subscribeToNAPs, subscribeToUsuarios }) => {
         if (!mounted) return;
-
-        getClientesCount().then(setTotalClientesCount).catch(console.error);
 
         unsubs.push(
           subscribeToNAPs((data) => {
@@ -118,9 +115,12 @@ function Dashboard() {
     const totalOcupados = sourceNaps.reduce((s, n) => s + n.puertos_ocupados, 0);
     const pctOcupacion =
       totalPuertos > 0 ? Math.round((totalOcupados / totalPuertos) * 100) : 0;
-    const totalClientes = hasFilter ? totalOcupados : totalClientesCount;
+    
+    // Al ser un puerto ocupado por cada cliente, el total de clientes es exactamente igual a los puertos ocupados
+    const totalClientes = totalOcupados;
+    
     return { totalNaps, totalPuertos, totalOcupados, pctOcupacion, totalClientes };
-  }, [naps, filteredNaps, totalClientesCount]);
+  }, [naps, filteredNaps]);
 
   if (loading) {
     return (

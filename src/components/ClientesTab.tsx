@@ -2,64 +2,77 @@
 
 import { useEffect, useState, useMemo } from "react";
 import type { NAP, Cliente } from "@/lib/types";
+import { getClientes } from "@/lib/firestore";
 
 export default function ClientesTab({ naps, userRole = "instalador" }: { naps: NAP[]; userRole?: string }) {
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [loadingClientes, setLoadingClientes] = useState(true);
-  const [search, setSearch] = useState("");
+  
+  // Filtros
   const [municipio, setMunicipio] = useState("");
   const [localidad, setLocalidad] = useState("");
-  const [page, setPage] = useState(0);
-  const pageSize = 25;
 
+  // Paginación de servidor
+  const pageSize = 25;
+  const [history, setHistory] = useState<any[]>([null]); // Historial de cursores
+  const [pageIndex, setPageIndex] = useState(0);
+  const [hasMore, setHasMore] = useState(false);
+
+  // Derivar municipios y localidades desde las NAPs en memoria
   const municipios = useMemo(() => {
-    const set = new Set(clientes.map((c) => c.municipio));
+    const set = new Set(naps.filter(n => n.municipio).map((n) => n.municipio!));
     return Array.from(set).sort();
-  }, [clientes]);
+  }, [naps]);
 
   const localidades = useMemo(() => {
     if (!municipio) return [];
     const set = new Set(
-      clientes.filter((c) => c.municipio === municipio).map((c) => c.localidad)
+      naps.filter((n) => n.municipio === municipio && n.localidad).map((n) => n.localidad!)
     );
     return Array.from(set).sort();
-  }, [clientes, municipio]);
+  }, [naps, municipio]);
 
+  // Cargar clientes desde el servidor (paginado)
   useEffect(() => {
-    let unsubs = () => {};
-    import("@/lib/firestore").then(({ subscribeToClientes }) => {
-      unsubs = subscribeToClientes((data) => {
-        setClientes(data);
+    let mounted = true;
+    setLoadingClientes(true);
+    
+    const lastVisible = history[pageIndex];
+
+    getClientes(pageSize, lastVisible, municipio, localidad)
+      .then((res) => {
+        if (!mounted) return;
+        setClientes(res.data);
+        setHasMore(res.hasMore);
+        
+        // Guardar el cursor de la próxima página si hay más
+        if (res.hasMore && pageIndex === history.length - 1) {
+          setHistory((prev) => [...prev, res.lastVisible]);
+        }
         setLoadingClientes(false);
+      })
+      .catch((err) => {
+        console.error(err);
+        if (mounted) setLoadingClientes(false);
       });
-    });
-    return () => unsubs();
-  }, []);
 
-  const filtered = useMemo(() => {
-    let result = clientes;
+    return () => {
+      mounted = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pageIndex, municipio, localidad]);
 
-    if (municipio) {
-      result = result.filter((c) => c.municipio === municipio);
+  // Al cambiar filtros, resetear paginación
+  const handleFilterChange = (type: "municipio" | "localidad", val: string) => {
+    if (type === "municipio") {
+      setMunicipio(val);
+      setLocalidad("");
+    } else {
+      setLocalidad(val);
     }
-    if (localidad) {
-      result = result.filter((c) => c.localidad === localidad);
-    }
-
-    if (search.trim()) {
-      const q = search.toLowerCase();
-      result = result.filter(
-        (c) =>
-          c.nombre.toLowerCase().includes(q) ||
-          c.id_wisp.toLowerCase().includes(q) ||
-          c.id_nap.toLowerCase().includes(q)
-      );
-    }
-    return result;
-  }, [clientes, search, municipio, localidad]);
-
-  const totalPages = Math.ceil(filtered.length / pageSize);
-  const paged = filtered.slice(page * pageSize, (page + 1) * pageSize);
+    setHistory([null]);
+    setPageIndex(0);
+  };
 
   return (
     <div className="space-y-4">
@@ -70,7 +83,7 @@ export default function ClientesTab({ naps, userRole = "instalador" }: { naps: N
             <svg className="w-4 h-4 text-(--hulux-text-muted)" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
             </svg>
-            Filtros y Búsqueda
+            Filtros
           </div>
           <svg className="w-4 h-4 transition-transform group-open:rotate-180 text-(--hulux-text-muted)" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -78,39 +91,11 @@ export default function ClientesTab({ naps, userRole = "instalador" }: { naps: N
         </summary>
         
         <div className="content p-4 pt-0 sm:pt-4 flex flex-wrap items-end gap-3 border-t border-(--hulux-border) sm:border-0">
-          <div className="relative flex-1 min-w-[200px]">
-            <label className="block text-xs text-(--hulux-text-muted) mb-1">Buscar</label>
-            <svg
-              className="absolute left-3 top-[34px] -translate-y-1/2 h-4 w-4 text-(--hulux-text-muted)"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-              />
-            </svg>
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => { setSearch(e.target.value); setPage(0); }}
-              placeholder="Buscar por nombre, ID WISP, NAP..."
-              className="w-full pl-10 pr-4 py-2 bg-(--hulux-surface-elevated) border border-(--hulux-border) rounded-lg text-sm text-(--hulux-text) placeholder-(--hulux-text-muted) focus:outline-none focus:ring-2 focus:ring-(--hulux-blue)"
-            />
-          </div>
-
           <div className="flex-1 min-w-[140px] sm:flex-none">
             <label className="block text-xs text-(--hulux-text-muted) mb-1">Municipio</label>
             <select
               value={municipio}
-              onChange={(e) => {
-                setMunicipio(e.target.value);
-                setLocalidad("");
-                setPage(0);
-              }}
+              onChange={(e) => handleFilterChange("municipio", e.target.value)}
               className="w-full sm:w-auto px-3 py-2 bg-(--hulux-surface-elevated) border border-(--hulux-border) rounded-lg text-sm text-(--hulux-text) focus:outline-none focus:ring-2 focus:ring-(--hulux-blue)"
             >
               <option value="">Todos</option>
@@ -124,10 +109,7 @@ export default function ClientesTab({ naps, userRole = "instalador" }: { naps: N
             <label className="block text-xs text-(--hulux-text-muted) mb-1">Localidad</label>
             <select
               value={localidad}
-              onChange={(e) => {
-                setLocalidad(e.target.value);
-                setPage(0);
-              }}
+              onChange={(e) => handleFilterChange("localidad", e.target.value)}
               disabled={!municipio}
               className="w-full sm:w-auto px-3 py-2 bg-(--hulux-surface-elevated) border border-(--hulux-border) rounded-lg text-sm text-(--hulux-text) disabled:opacity-40 focus:outline-none focus:ring-2 focus:ring-(--hulux-blue)"
             >
@@ -138,17 +120,17 @@ export default function ClientesTab({ naps, userRole = "instalador" }: { naps: N
             </select>
           </div>
 
-          <span className="text-xs text-(--hulux-text-muted) mb-3 whitespace-nowrap ml-auto">
-            {filtered.length} cliente{filtered.length !== 1 ? "s" : ""}
-          </span>
+          <div className="flex-1 min-w-[140px] sm:flex-none ml-auto text-right">
+             <span className="text-xs text-(--hulux-text-muted) block mb-1">Nota: Utiliza &quot;Buscar Cliente&quot; para buscar por nombre</span>
+          </div>
         </div>
       </details>
 
       {loadingClientes ? (
-        <div className="text-center py-12 text-(--hulux-text-muted)">Cargando lista de clientes...</div>
-      ) : paged.length === 0 ? (
+        <div className="text-center py-12 text-(--hulux-text-muted)">Cargando página de clientes...</div>
+      ) : clientes.length === 0 ? (
         <div className="text-center py-12 text-(--hulux-text-muted)">
-          {search ? "Sin resultados." : "No hay clientes registrados."}
+          No hay clientes registrados en este filtro.
         </div>
       ) : (
         <>
@@ -165,7 +147,7 @@ export default function ClientesTab({ naps, userRole = "instalador" }: { naps: N
               </tr>
             </thead>
             <tbody>
-              {paged.map((c) => {
+              {clientes.map((c) => {
                 const nap = naps.find((n) => n.id === c.id_nap);
                 return (
                   <tr
@@ -188,27 +170,25 @@ export default function ClientesTab({ naps, userRole = "instalador" }: { naps: N
           </div>
 
           {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="flex items-center justify-center gap-2">
-              <button
-                onClick={() => setPage((p) => Math.max(0, p - 1))}
-                disabled={page === 0}
-                className="px-3 py-1.5 text-xs bg-(--hulux-surface) hover:bg-[rgba(148,237,242,0.18)] disabled:opacity-30 rounded-lg text-(--hulux-text) border border-(--hulux-border) transition-colors"
-              >
-                Anterior
-              </button>
-              <span className="text-xs text-(--hulux-text-muted)">
-                {page + 1} / {totalPages}
-              </span>
-              <button
-                onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
-                disabled={page >= totalPages - 1}
-                className="px-3 py-1.5 text-xs bg-(--hulux-surface) hover:bg-[rgba(148,237,242,0.18)] disabled:opacity-30 rounded-lg text-(--hulux-text) border border-(--hulux-border) transition-colors"
-              >
-                Siguiente
-              </button>
-            </div>
-          )}
+          <div className="flex items-center justify-center gap-2 mt-4">
+            <button
+              onClick={() => setPageIndex((p) => Math.max(0, p - 1))}
+              disabled={pageIndex === 0}
+              className="px-3 py-1.5 text-xs bg-(--hulux-surface) hover:bg-[rgba(148,237,242,0.18)] disabled:opacity-30 rounded-lg text-(--hulux-text) border border-(--hulux-border) transition-colors"
+            >
+              Anterior
+            </button>
+            <span className="text-xs text-(--hulux-text-muted)">
+              Página {pageIndex + 1}
+            </span>
+            <button
+              onClick={() => setPageIndex((p) => p + 1)}
+              disabled={!hasMore}
+              className="px-3 py-1.5 text-xs bg-(--hulux-surface) hover:bg-[rgba(148,237,242,0.18)] disabled:opacity-30 rounded-lg text-(--hulux-text) border border-(--hulux-border) transition-colors"
+            >
+              Siguiente
+            </button>
+          </div>
         </>
       )}
     </div>
