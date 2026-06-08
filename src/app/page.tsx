@@ -47,10 +47,38 @@ function Dashboard() {
   const [totalClientesCount, setTotalClientesCount] = useState(0);
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState<Tab>("dashboard");
+  const [tab, setTab] = useState<Tab>("mapa");
   const [filteredNaps, setFilteredNaps] = useState<NAP[] | null>(null);
   const [reconciling, setReconciling] = useState(false);
   const [reconcileMsg, setReconcileMsg] = useState("");
+
+  let userRole = usuarios.find((u) => u.uid === user?.uid)?.rol || "instalador";
+  if (user?.email === "chemjmme@gmail.com") {
+    userRole = "admin";
+  }
+
+  const availableTabs = useMemo(() => {
+    return TABS.filter((t) => {
+      if (userRole === "admin") return true;
+      if (userRole === "sucursal") {
+        return ["registro", "clientes", "buscar", "mapa"].includes(t.key);
+      }
+      if (userRole === "infraestructura") {
+        return ["dashboard", "agregarNap", "clientes", "buscar", "mapa"].includes(t.key);
+      }
+      if (userRole === "administracion") {
+        return ["dashboard", "clientes", "buscar"].includes(t.key);
+      }
+      // instalador
+      return t.key === "mapa";
+    });
+  }, [userRole]);
+
+  useEffect(() => {
+    if (availableTabs.length > 0 && !availableTabs.find(t => t.key === tab)) {
+      setTab(availableTabs[0].key);
+    }
+  }, [availableTabs, tab]);
 
   useEffect(() => {
     let mounted = true;
@@ -191,7 +219,7 @@ function Dashboard() {
               onChange={(e) => setTab(e.target.value as Tab)}
               className="w-full appearance-none bg-(--hulux-surface) border border-(--hulux-border) text-(--hulux-text) font-semibold rounded-xl px-4 py-3 shadow-(--hulux-shadow) focus:outline-none focus:ring-2 focus:ring-(--hulux-blue)"
             >
-              {TABS.map((t) => (
+            {availableTabs.map((t) => (
                 <option key={t.key} value={t.key}>
                   {t.icon} {t.label}
                 </option>
@@ -206,7 +234,7 @@ function Dashboard() {
 
           {/* Desktop Tabs */}
           <div className="hidden sm:flex flex-wrap gap-1 bg-(--hulux-surface) rounded-xl p-1 border border-(--hulux-border) shadow-(--hulux-shadow)">
-            {TABS.map((t) => (
+            {availableTabs.map((t) => (
               <button
                 key={t.key}
                 onClick={() => setTab(t.key)}
@@ -225,7 +253,7 @@ function Dashboard() {
 
         {/* Tab content */}
         {tab === "dashboard" && (
-          <NAPTable naps={naps} onRefresh={emptyRefresh} onFilterChange={setFilteredNaps} />
+          <NAPTable naps={naps} onRefresh={emptyRefresh} onFilterChange={setFilteredNaps} userRole={userRole} />
         )}
 
         {tab === "registro" && (
@@ -235,15 +263,15 @@ function Dashboard() {
         )}
 
         {tab === "clientes" && (
-          <ClientesTab naps={naps} />
+          <ClientesTab naps={naps} userRole={userRole} />
         )}
 
         {tab === "buscar" && (
-          <BuscarClienteTab naps={naps} />
+          <BuscarClienteTab naps={naps} userRole={userRole} />
         )}
 
         {tab === "agregarNap" && (
-          <AgregarNapTab onSuccess={emptyRefresh} naps={naps} />
+          <AgregarNapTab onSuccess={emptyRefresh} naps={naps} userRole={userRole} />
         )}
 
         {tab === "usuarios" && (

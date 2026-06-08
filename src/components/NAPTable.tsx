@@ -12,6 +12,7 @@ interface Props {
   naps: NAP[];
   onRefresh: () => void;
   onFilterChange?: (filtered: NAP[]) => void;
+  userRole?: string;
 }
 
 const SEMAFORO_COLORS: Record<SemaforoState, string> = {
@@ -28,7 +29,7 @@ const SEMAFORO_LABELS: Record<SemaforoState, string> = {
   celeste: "Azul celeste (sobre-ocupación)",
 };
 
-export default function NAPTable({ naps, onRefresh, onFilterChange }: Props) {
+export default function NAPTable({ naps, onRefresh, onFilterChange, userRole = "instalador" }: Props) {
   // ── Filters ──
   const [search, setSearch] = useState("");
   const [municipio, setMunicipio] = useState("");
@@ -547,38 +548,40 @@ export default function NAPTable({ naps, onRefresh, onFilterChange }: Props) {
                       )}
                     </td>
                     <td className="p-3">
-                      {editingId === nap.id ? (
-                        <div className="flex gap-1">
-                          <button
-                            onClick={saveEdit}
-                            disabled={saving}
-                            className="px-2 py-1 text-xs bg-(--hulux-orange) hover:brightness-95 disabled:opacity-50 text-(--hulux-blue) rounded transition-colors"
-                          >
-                            {saving ? "..." : "Guardar"}
-                          </button>
-                          <button
-                            onClick={cancelEdit}
-                            className="px-2 py-1 text-xs bg-(--hulux-surface) hover:bg-[rgba(148,237,242,0.18)] text-(--hulux-text) border border-(--hulux-border) rounded transition-colors"
-                          >
-                            Cancelar
-                          </button>
-                        </div>
-                      ) : (
-                        <div className="flex gap-1">
-                          <button
-                            onClick={() => startEdit(nap)}
-                            className="px-2 py-1 text-xs bg-[rgba(148,237,242,0.22)] hover:bg-[rgba(148,237,242,0.32)] text-(--hulux-text) border border-[rgba(148,237,242,0.45)] rounded transition-colors font-bold"
-                          >
-                            Editar
-                          </button>
-                          <button
-                            onClick={() => handleDeleteNAP(nap.id)}
-                            disabled={deleting === nap.id}
-                            className="px-2 py-1 text-xs bg-transparent hover:bg-[rgba(112,0,63,0.12)] text-(--hulux-text) border border-[rgba(112,0,63,0.35)] rounded transition-colors disabled:opacity-50 font-bold"
-                          >
-                            {deleting === nap.id ? "..." : "Eliminar"}
-                          </button>
-                        </div>
+                      {(userRole === "admin" || userRole === "infraestructura") && (
+                        editingId === nap.id ? (
+                          <div className="flex gap-1">
+                            <button
+                              onClick={saveEdit}
+                              disabled={saving}
+                              className="px-2 py-1 text-xs bg-(--hulux-orange) hover:brightness-95 disabled:opacity-50 text-(--hulux-blue) rounded transition-colors"
+                            >
+                              {saving ? "..." : "Guardar"}
+                            </button>
+                            <button
+                              onClick={cancelEdit}
+                              className="px-2 py-1 text-xs bg-(--hulux-surface) hover:bg-[rgba(148,237,242,0.18)] text-(--hulux-text) border border-(--hulux-border) rounded transition-colors"
+                            >
+                              Cancelar
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="flex gap-1">
+                            <button
+                              onClick={() => startEdit(nap)}
+                              className="px-2 py-1 text-xs bg-[rgba(148,237,242,0.22)] hover:bg-[rgba(148,237,242,0.32)] text-(--hulux-text) border border-[rgba(148,237,242,0.45)] rounded transition-colors font-bold"
+                            >
+                              Editar
+                            </button>
+                            <button
+                              onClick={() => handleDeleteNAP(nap.id)}
+                              disabled={deleting === nap.id}
+                              className="px-2 py-1 text-xs bg-transparent hover:bg-[rgba(112,0,63,0.12)] text-(--hulux-text) border border-[rgba(112,0,63,0.35)] rounded transition-colors disabled:opacity-50 font-bold"
+                            >
+                              {deleting === nap.id ? "..." : "Eliminar"}
+                            </button>
+                          </div>
+                        )
                       )}
                     </td>
                     <td className="p-3 text-right">
@@ -629,13 +632,15 @@ export default function NAPTable({ naps, onRefresh, onFilterChange }: Props) {
                                   <span className="text-(--hulux-text-muted) text-xs bg-(--hulux-subtle) px-1.5 py-0.5 rounded">
                                     {c.id_wisp}
                                   </span>
-                                  <button
-                                    onClick={() => handleDelete(c.id, nap.id)}
-                                    className="text-(--hulux-maroon-light) hover:bg-[rgba(112,0,63,0.1)] p-1 rounded transition-colors ml-1"
-                                    title="Eliminar cliente"
-                                  >
-                                    ✕
-                                  </button>
+                                  {userRole === "admin" && (
+                                    <button
+                                      onClick={() => handleDelete(c.id, nap.id)}
+                                      className="text-(--hulux-maroon-light) hover:bg-[rgba(112,0,63,0.1)] p-1 rounded transition-colors ml-1"
+                                      title="Eliminar cliente"
+                                    >
+                                      ✕
+                                    </button>
+                                  )}
                                 </div>
                               ))}
                             </div>

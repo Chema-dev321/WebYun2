@@ -3,7 +3,7 @@
 import { useEffect, useState, useMemo } from "react";
 import type { NAP, Cliente } from "@/lib/types";
 
-export default function ClientesTab({ naps }: { naps: NAP[] }) {
+export default function ClientesTab({ naps, userRole = "instalador" }: { naps: NAP[]; userRole?: string }) {
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [loadingClientes, setLoadingClientes] = useState(true);
   const [search, setSearch] = useState("");

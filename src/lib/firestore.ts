@@ -131,9 +131,11 @@ export async function getClientesByNAP(napId: string): Promise<Cliente[]> {
 }
 
 export async function getClienteByWisp(id_wisp: string): Promise<Cliente | null> {
-  const snap = await getDoc(doc(db, CLIENTES_COL, id_wisp));
-  if (!snap.exists()) return null;
-  return { id: snap.id, ...(snap.data() as Omit<Cliente, "id">) };
+  const q = query(collection(db, CLIENTES_COL), where("id_wisp", "==", id_wisp), limit(1));
+  const snap = await getDocs(q);
+  if (snap.empty) return null;
+  const doc = snap.docs[0];
+  return { id: doc.id, ...(doc.data() as Omit<Cliente, "id">) };
 }
 
 export async function updateCliente(
@@ -397,11 +399,14 @@ export function getNAPColor(nap: NAP): SemaforoState {
 
 // ── Usuarios de plataforma ──
 
+export type Rol = "admin" | "sucursal" | "infraestructura" | "instalador" | "administracion";
+
 export interface Usuario {
   id: string;
   uid: string;
   email: string;
   creado: string;
+  rol: Rol;
 }
 
 const USUARIOS_COL = "usuarios";
@@ -412,11 +417,20 @@ export async function getUsuarios(): Promise<Usuario[]> {
 }
 
 export async function addUsuario(uid: string, email: string): Promise<void> {
+  const userDoc = await getDocs(query(collection(db, USUARIOS_COL), limit(1)));
+  // If it's the very first user in the DB, make them admin, otherwise instalador
+  const defaultRol: Rol = userDoc.empty ? "admin" : "instalador";
+
   await setDoc(doc(db, USUARIOS_COL, uid), {
     uid,
     email,
     creado: new Date().toISOString().split("T")[0],
+    rol: defaultRol,
   }, { merge: true });
+}
+
+export async function updateUsuarioRol(uid: string, nuevoRol: Rol): Promise<void> {
+  await updateDoc(doc(db, USUARIOS_COL, uid), { rol: nuevoRol });
 }
 
 // ── Optimizaciones (Suscripciones en tiempo real) ──

@@ -6,7 +6,13 @@ import { addNAP } from "@/lib/firestore";
 import { useAuth } from "@/lib/AuthContext";
 import { registrarLog } from "@/lib/audit";
 
-export default function AgregarNapTab({ onSuccess, naps }: { onSuccess: () => void; naps: NAP[] }) {
+interface Props {
+  onSuccess: () => void;
+  naps: NAP[];
+  userRole?: string;
+}
+
+export default function AgregarNapTab({ onSuccess, naps, userRole }: Props) {
   const { user } = useAuth();
   const [idNap, setIdNap] = useState("");
   const [nombre, setNombre] = useState("");

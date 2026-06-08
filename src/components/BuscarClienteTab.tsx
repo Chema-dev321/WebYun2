@@ -5,7 +5,7 @@ import type { NAP, Cliente } from "@/lib/types";
 import { getClienteByWisp, getNAPById, updateCliente, deleteCliente, updateClienteNAP, subscribeToNAPs } from "@/lib/firestore";
 import { useConfirm } from "@/components/ToastContext";
 
-export default function BuscarClienteTab({ naps }: { naps: NAP[] }) {
+export default function BuscarClienteTab({ naps, userRole = "instalador" }: { naps: NAP[]; userRole?: string }) {
   const [idWisp, setIdWisp] = useState("");
   const [cliente, setCliente] = useState<Cliente | null>(null);
   const [napInfo, setNapInfo] = useState<NAP | null>(null);
@@ -209,19 +209,23 @@ export default function BuscarClienteTab({ naps }: { naps: NAP[] }) {
             <h3 className="text-sm font-semibold text-(--hulux-text)">Cliente encontrado</h3>
             {!editando ? (
               <div className="flex gap-1.5">
-                <button
-                  onClick={eliminarCliente}
-                  disabled={deleting}
-                  className="px-3 py-1 text-xs bg-transparent hover:bg-[rgba(112,0,63,0.12)] text-(--hulux-maroon-light) border border-[rgba(112,0,63,0.35)] rounded-lg transition-colors disabled:opacity-50"
-                >
-                  {deleting ? "Eliminando..." : "Eliminar"}
-                </button>
-                <button
-                  onClick={iniciarEdicion}
-                  className="px-3 py-1 text-xs bg-[rgba(148,237,242,0.22)] hover:bg-[rgba(148,237,242,0.32)] text-(--hulux-blue) border border-[rgba(148,237,242,0.45)] rounded-lg transition-colors"
-                >
-                  Editar
-                </button>
+                {userRole === "admin" && (
+                  <button
+                    onClick={eliminarCliente}
+                    disabled={deleting}
+                    className="px-3 py-1 text-xs bg-transparent hover:bg-[rgba(112,0,63,0.12)] text-(--hulux-maroon-light) border border-[rgba(112,0,63,0.35)] rounded-lg transition-colors disabled:opacity-50"
+                  >
+                    {deleting ? "Eliminando..." : "Eliminar"}
+                  </button>
+                )}
+                {(userRole === "admin" || userRole === "sucursal") && (
+                  <button
+                    onClick={iniciarEdicion}
+                    className="px-3 py-1 text-xs bg-[rgba(148,237,242,0.22)] hover:bg-[rgba(148,237,242,0.32)] text-(--hulux-blue) border border-[rgba(148,237,242,0.45)] rounded-lg transition-colors"
+                  >
+                    Editar
+                  </button>
+                )}
               </div>
             ) : (
               <div className="flex gap-1.5">
