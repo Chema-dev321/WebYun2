@@ -5,7 +5,7 @@
  * Ejecutar con: npx tsx scripts/reconcile-naps.ts
  */
 import { initializeApp, getApps } from "firebase/app";
-import { getFirestore, collection, getDocs, doc, updateDoc, query, where } from "firebase/firestore";
+import { getFirestore, collection, getDocs, doc, updateDoc } from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,

@@ -3,10 +3,8 @@ import {
   doc,
   getDocs,
   getDoc,
-  addDoc,
   setDoc,
   updateDoc,
-  deleteDoc,
   query,
   where,
   orderBy,
@@ -424,7 +422,7 @@ export async function addUsuario(uid: string, email: string): Promise<void> {
 // ── Optimizaciones (Suscripciones en tiempo real) ──
 
 export function subscribeToNAPs(callback: (naps: NAP[]) => void) {
-  const q = query(collection(db, NAPS_COL), orderBy("nombre"), limit(200));
+  const q = query(collection(db, NAPS_COL), orderBy("nombre"), limit(3000));
   return onSnapshot(q, (snap) => {
     const napsData = snap.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<NAP, "id">) }));
     callback(napsData);
@@ -432,7 +430,7 @@ export function subscribeToNAPs(callback: (naps: NAP[]) => void) {
 }
 
 export function subscribeToClientes(callback: (clientes: Cliente[]) => void) {
-  const q = query(collection(db, CLIENTES_COL), orderBy("fecha_alta", "desc"), limit(200));
+  const q = query(collection(db, CLIENTES_COL), orderBy("fecha_alta", "desc"), limit(3000));
   return onSnapshot(q, (snap) => {
     const clientes = snap.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<Cliente, "id">) }));
     callback(clientes);

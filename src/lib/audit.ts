@@ -5,9 +5,6 @@ import {
   orderBy,
   limit,
   onSnapshot,
-  where,
-  startAfter,
-  getDocs,
   Timestamp,
 } from "firebase/firestore";
 import { db } from "./firebase";
@@ -87,73 +84,3 @@ export function subscribeToLogs(
   });
 }
 
-export async function getLogsByAccion(
-  accion: AccionLog,
-  maxEntries = 100
-): Promise<LogEntry[]> {
-  const q = query(
-    collection(db, LOGS_COL),
-    where("accion", "==", accion),
-    orderBy("timestamp", "desc"),
-    limit(maxEntries)
-  );
-  const snap = await getDocs(q);
-  return snap.docs.map((d) => {
-    const data = d.data();
-    return {
-      id: d.id,
-      accion: data.accion as AccionLog,
-      usuarioEmail: data.usuarioEmail ?? "–",
-      usuarioUid: data.usuarioUid ?? "",
-      descripcion: data.descripcion ?? "",
-      detalles: data.detalles ?? undefined,
-      timestamp:
-        data.timestamp instanceof Timestamp
-          ? data.timestamp.toDate().toISOString()
-          : String(data.timestamp),
-    };
-  });
-}
-
-export async function getLogsPage(
-  pageSize: number,
-  lastVisible?: unknown
-): Promise<{ data: LogEntry[]; lastVisible: unknown; hasMore: boolean }> {
-  let q = query(
-    collection(db, LOGS_COL),
-    orderBy("timestamp", "desc"),
-    limit(pageSize)
-  );
-
-  if (lastVisible) {
-    q = query(
-      collection(db, LOGS_COL),
-      orderBy("timestamp", "desc"),
-      startAfter(lastVisible),
-      limit(pageSize)
-    );
-  }
-
-  const snap = await getDocs(q);
-  const data: LogEntry[] = snap.docs.map((d) => {
-    const data = d.data();
-    return {
-      id: d.id,
-      accion: data.accion as AccionLog,
-      usuarioEmail: data.usuarioEmail ?? "–",
-      usuarioUid: data.usuarioUid ?? "",
-      descripcion: data.descripcion ?? "",
-      detalles: data.detalles ?? undefined,
-      timestamp:
-        data.timestamp instanceof Timestamp
-          ? data.timestamp.toDate().toISOString()
-          : String(data.timestamp),
-    };
-  });
-
-  return {
-    data,
-    lastVisible: snap.docs[snap.docs.length - 1] ?? null,
-    hasMore: snap.docs.length === pageSize,
-  };
-}

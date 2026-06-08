@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import "leaflet/dist/leaflet.css";
+import "leaflet.markercluster/dist/MarkerCluster.css";
+import "leaflet.markercluster/dist/MarkerCluster.Default.css";
 import { AuthProvider } from "@/lib/AuthContext";
 import { ToastProvider } from "@/components/ToastContext";
 

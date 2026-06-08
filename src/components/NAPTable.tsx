@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, useMemo, Fragment } from "react";
+import { useEffect, useState, useMemo, Fragment } from "react";
 import type { NAP, Cliente as ClienteType } from "@/lib/types";
 import { deleteCliente, getNAPColor, updateNAP, deleteNAP } from "@/lib/firestore";
 import type { SemaforoState } from "@/lib/firestore";
@@ -247,20 +247,20 @@ export default function NAPTable({ naps, onRefresh, onFilterChange }: Props) {
   return (
     <div className="space-y-4">
       {/* ── Filter bar (Collapsible on mobile) ── */}
-      <details className="group rounded-xl border border-[var(--hulux-border)] bg-[var(--hulux-surface)] shadow-[var(--hulux-shadow)] [&:not([open])_.content]:hidden sm:[&:not([open])_.content]:block" open>
-        <summary className="p-4 text-[13px] font-semibold text-[var(--hulux-text)] cursor-pointer sm:hidden flex items-center justify-between list-none">
+      <details className="group rounded-xl border border-(--hulux-border) bg-(--hulux-surface) shadow-(--hulux-shadow) [&:not([open])_.content]:hidden sm:[&:not([open])_.content]:block" open>
+        <summary className="p-4 text-[13px] font-semibold text-(--hulux-text) cursor-pointer sm:hidden flex items-center justify-between list-none">
           <div className="flex items-center gap-2">
-            <svg className="w-4 h-4 text-[var(--hulux-text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="w-4 h-4 text-(--hulux-text-muted)" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
             </svg>
             Filtros y Búsqueda
           </div>
-          <svg className="w-4 h-4 transition-transform group-open:rotate-180 text-[var(--hulux-text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg className="w-4 h-4 transition-transform group-open:rotate-180 text-(--hulux-text-muted)" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
           </svg>
         </summary>
         
-        <div className="content p-4 pt-0 sm:pt-4 space-y-3 border-t border-[var(--hulux-border)] sm:border-0">
+        <div className="content p-4 pt-0 sm:pt-4 space-y-3 border-t border-(--hulux-border) sm:border-0">
           {/* Row 1: Search + Municipio + Localidad + Disponibilidad */}
           <div className="flex flex-wrap gap-3 items-end">
             <div className="flex-1 min-w-[200px]">

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, useMemo } from "react";
-import type { NAP, Cliente } from "@/lib/types";
+import type { NAP } from "@/lib/types";
 import type { Usuario } from "@/lib/firestore";
 import NAPTable from "@/components/NAPTable";
 import ClientForm from "@/components/ClientForm";
@@ -16,7 +16,8 @@ import BuscarClienteTab from "@/components/BuscarClienteTab";
 import AgregarNapTab from "@/components/AgregarNapTab";
 import UsuariosTab from "@/components/UsuariosTab";
 import LogsTab from "@/components/LogsTab";
-import MapaTab from "@/components/MapaTab";
+import dynamic from "next/dynamic";
+const MapaTab = dynamic(() => import("@/components/MapaTab"), { ssr: false });
 import { registrarLog } from "@/lib/audit";
 
 type Tab = "dashboard" | "registro" | "clientes" | "buscar" | "agregarNap" | "usuarios" | "logs" | "mapa";
@@ -188,7 +189,7 @@ function Dashboard() {
             <select
               value={tab}
               onChange={(e) => setTab(e.target.value as Tab)}
-              className="w-full appearance-none bg-[var(--hulux-surface)] border border-[var(--hulux-border)] text-[var(--hulux-text)] font-semibold rounded-xl px-4 py-3 shadow-[var(--hulux-shadow)] focus:outline-none focus:ring-2 focus:ring-[var(--hulux-blue)]"
+              className="w-full appearance-none bg-(--hulux-surface) border border-(--hulux-border) text-(--hulux-text) font-semibold rounded-xl px-4 py-3 shadow-(--hulux-shadow) focus:outline-none focus:ring-2 focus:ring-(--hulux-blue)"
             >
               {TABS.map((t) => (
                 <option key={t.key} value={t.key}>
@@ -196,7 +197,7 @@ function Dashboard() {
                 </option>
               ))}
             </select>
-            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-[var(--hulux-text-muted)]">
+            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-(--hulux-text-muted)">
               <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
               </svg>
@@ -204,15 +205,15 @@ function Dashboard() {
           </div>
 
           {/* Desktop Tabs */}
-          <div className="hidden sm:flex flex-wrap gap-1 bg-[var(--hulux-surface)] rounded-xl p-1 border border-[var(--hulux-border)] shadow-[var(--hulux-shadow)]">
+          <div className="hidden sm:flex flex-wrap gap-1 bg-(--hulux-surface) rounded-xl p-1 border border-(--hulux-border) shadow-(--hulux-shadow)">
             {TABS.map((t) => (
               <button
                 key={t.key}
                 onClick={() => setTab(t.key)}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex-1 whitespace-nowrap text-center ${
                   tab === t.key
-                    ? "bg-[var(--hulux-blue)] text-white shadow dark:bg-[var(--hulux-cyan)] dark:text-[var(--hulux-blue)]"
-                    : "text-[var(--hulux-text-muted)] hover:text-[var(--hulux-text)] hover:bg-[rgba(148,237,242,0.18)]"
+                    ? "bg-(--hulux-blue) text-white shadow dark:bg-(--hulux-cyan) dark:text-(--hulux-blue)"
+                    : "text-(--hulux-text-muted) hover:text-(--hulux-text) hover:bg-[rgba(148,237,242,0.18)]"
                 }`}
               >
                 <span className="mr-1.5">{t.icon}</span>

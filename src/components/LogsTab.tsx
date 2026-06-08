@@ -17,15 +17,15 @@ const ACCION_LABELS: Record<AccionLog, string> = {
 };
 
 const ACCION_COLORS: Record<AccionLog, string> = {
-  CREAR_NAP: "bg-[rgba(205,219,0,0.18)] text-[var(--hulux-lime)] border border-[rgba(205,219,0,0.35)]",
-  EDITAR_NAP: "bg-[rgba(148,237,242,0.18)] text-[var(--hulux-cyan)] border border-[rgba(148,237,242,0.35)]",
-  ELIMINAR_NAP: "bg-[rgba(112,0,63,0.12)] text-[var(--hulux-maroon)] border border-[rgba(112,0,63,0.25)]",
-  CREAR_CLIENTE: "bg-[rgba(205,219,0,0.18)] text-[var(--hulux-lime)] border border-[rgba(205,219,0,0.35)]",
-  ELIMINAR_CLIENTE: "bg-[rgba(112,0,63,0.12)] text-[var(--hulux-maroon)] border border-[rgba(112,0,63,0.25)]",
-  REASIGNAR_CLIENTE: "bg-[rgba(255,165,0,0.15)] text-[var(--hulux-orange)] border border-[rgba(255,165,0,0.3)]",
-  EDITAR_CLIENTE: "bg-[rgba(148,237,242,0.18)] text-[var(--hulux-cyan)] border border-[rgba(148,237,242,0.35)]",
-  SINCRONIZAR_CONTADORES: "bg-[rgba(148,237,242,0.10)] text-[var(--hulux-text-muted)] border border-[var(--hulux-border)]",
-  LOGIN: "bg-[rgba(17,41,62,0.08)] text-[var(--hulux-text-muted)] border border-[var(--hulux-border)]",
+  CREAR_NAP: "bg-[rgba(205,219,0,0.18)] text-(--hulux-lime) border border-[rgba(205,219,0,0.35)]",
+  EDITAR_NAP: "bg-[rgba(148,237,242,0.18)] text-(--hulux-cyan) border border-[rgba(148,237,242,0.35)]",
+  ELIMINAR_NAP: "bg-[rgba(112,0,63,0.12)] text-(--hulux-maroon) border border-[rgba(112,0,63,0.25)]",
+  CREAR_CLIENTE: "bg-[rgba(205,219,0,0.18)] text-(--hulux-lime) border border-[rgba(205,219,0,0.35)]",
+  ELIMINAR_CLIENTE: "bg-[rgba(112,0,63,0.12)] text-(--hulux-maroon) border border-[rgba(112,0,63,0.25)]",
+  REASIGNAR_CLIENTE: "bg-[rgba(255,165,0,0.15)] text-(--hulux-orange) border border-[rgba(255,165,0,0.3)]",
+  EDITAR_CLIENTE: "bg-[rgba(148,237,242,0.18)] text-(--hulux-cyan) border border-[rgba(148,237,242,0.35)]",
+  SINCRONIZAR_CONTADORES: "bg-[rgba(148,237,242,0.10)] text-(--hulux-text-muted) border border-(--hulux-border)",
+  LOGIN: "bg-[rgba(17,41,62,0.08)] text-(--hulux-text-muted) border border-(--hulux-border)",
 };
 
 const ACCION_ICONS: Record<AccionLog, string> = {
@@ -128,38 +128,38 @@ export default function LogsTab() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-bold text-[var(--hulux-text)]">Registro de Actividad</h2>
-          <p className="text-xs text-[var(--hulux-text-muted)] mt-0.5">
+          <h2 className="text-lg font-bold text-(--hulux-text)">Registro de Actividad</h2>
+          <p className="text-xs text-(--hulux-text-muted) mt-0.5">
             Historial completo de cambios realizados por los administradores
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-[rgba(148,237,242,0.15)] text-[var(--hulux-cyan)] border border-[rgba(148,237,242,0.3)]">
+          <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-[rgba(148,237,242,0.15)] text-(--hulux-cyan) border border-[rgba(148,237,242,0.3)]">
             {filtered.length} registros
           </span>
         </div>
       </div>
 
       {/* Filters (Collapsible on mobile) */}
-      <details className="group bg-[var(--hulux-surface)] border border-[var(--hulux-border)] rounded-xl shadow-[var(--hulux-shadow)] [&:not([open])_.content]:hidden sm:[&:not([open])_.content]:block" open>
-        <summary className="p-4 text-[13px] font-semibold text-[var(--hulux-text)] cursor-pointer sm:hidden flex items-center justify-between list-none">
+      <details className="group bg-(--hulux-surface) border border-(--hulux-border) rounded-xl shadow-(--hulux-shadow) [&:not([open])_.content]:hidden sm:[&:not([open])_.content]:block" open>
+        <summary className="p-4 text-[13px] font-semibold text-(--hulux-text) cursor-pointer sm:hidden flex items-center justify-between list-none">
           <div className="flex items-center gap-2">
-            <svg className="w-4 h-4 text-[var(--hulux-text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="w-4 h-4 text-(--hulux-text-muted)" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
             </svg>
             Filtros
           </div>
-          <svg className="w-4 h-4 transition-transform group-open:rotate-180 text-[var(--hulux-text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg className="w-4 h-4 transition-transform group-open:rotate-180 text-(--hulux-text-muted)" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
           </svg>
         </summary>
         
-        <div className="content p-4 pt-0 sm:pt-4 flex flex-wrap items-end gap-3 border-t border-[var(--hulux-border)] sm:border-0">
+        <div className="content p-4 pt-0 sm:pt-4 flex flex-wrap items-end gap-3 border-t border-(--hulux-border) sm:border-0">
           {/* Search */}
           <div className="relative flex-1 min-w-[200px]">
-            <label className="block text-xs text-[var(--hulux-text-muted)] mb-1">Buscar</label>
+            <label className="block text-xs text-(--hulux-text-muted) mb-1">Buscar</label>
             <svg
-              className="absolute left-3 top-[34px] -translate-y-1/2 h-4 w-4 text-[var(--hulux-text-muted)]"
+              className="absolute left-3 top-[34px] -translate-y-1/2 h-4 w-4 text-(--hulux-text-muted)"
               fill="none" viewBox="0 0 24 24" stroke="currentColor"
             >
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -170,17 +170,17 @@ export default function LogsTab() {
               value={search}
               onChange={(e) => { setSearch(e.target.value); setPage(0); }}
               placeholder="Buscar en descripción, usuario..."
-              className="w-full pl-10 pr-4 py-2 bg-[var(--hulux-surface-elevated)] border border-[var(--hulux-border)] rounded-lg text-sm text-[var(--hulux-text)] placeholder-[var(--hulux-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--hulux-blue)]"
+              className="w-full pl-10 pr-4 py-2 bg-(--hulux-surface-elevated) border border-(--hulux-border) rounded-lg text-sm text-(--hulux-text) placeholder-(--hulux-text-muted) focus:outline-none focus:ring-2 focus:ring-(--hulux-blue)"
             />
           </div>
 
           {/* Accion filter */}
           <div className="flex-1 min-w-[140px] sm:flex-none">
-            <label className="block text-xs text-[var(--hulux-text-muted)] mb-1">Tipo de acción</label>
+            <label className="block text-xs text-(--hulux-text-muted) mb-1">Tipo de acción</label>
             <select
               value={filtroAccion}
               onChange={(e) => { setFiltroAccion(e.target.value as AccionLog | ""); setPage(0); }}
-              className="w-full sm:w-auto px-3 py-2 bg-[var(--hulux-surface-elevated)] border border-[var(--hulux-border)] rounded-lg text-sm text-[var(--hulux-text)] focus:outline-none focus:ring-2 focus:ring-[var(--hulux-blue)]"
+              className="w-full sm:w-auto px-3 py-2 bg-(--hulux-surface-elevated) border border-(--hulux-border) rounded-lg text-sm text-(--hulux-text) focus:outline-none focus:ring-2 focus:ring-(--hulux-blue)"
             >
               <option value="">Todas las acciones</option>
               {(Object.keys(ACCION_LABELS) as AccionLog[]).map((a) => (
@@ -191,11 +191,11 @@ export default function LogsTab() {
 
           {/* User filter */}
           <div className="flex-1 min-w-[140px] sm:flex-none">
-            <label className="block text-xs text-[var(--hulux-text-muted)] mb-1">Usuario</label>
+            <label className="block text-xs text-(--hulux-text-muted) mb-1">Usuario</label>
             <select
               value={filtroUsuario}
               onChange={(e) => { setFiltroUsuario(e.target.value); setPage(0); }}
-              className="w-full sm:w-auto px-3 py-2 bg-[var(--hulux-surface-elevated)] border border-[var(--hulux-border)] rounded-lg text-sm text-[var(--hulux-text)] focus:outline-none focus:ring-2 focus:ring-[var(--hulux-blue)]"
+              className="w-full sm:w-auto px-3 py-2 bg-(--hulux-surface-elevated) border border-(--hulux-border) rounded-lg text-sm text-(--hulux-text) focus:outline-none focus:ring-2 focus:ring-(--hulux-blue)"
             >
               <option value="">Todos los usuarios</option>
               {usuarios.map((u) => (
@@ -208,7 +208,7 @@ export default function LogsTab() {
           {hasFilters && (
             <button
               onClick={clearFilters}
-              className="px-3 py-2 text-xs text-[var(--hulux-maroon)] hover:underline whitespace-nowrap ml-auto"
+              className="px-3 py-2 text-xs text-(--hulux-maroon) hover:underline whitespace-nowrap ml-auto"
             >
               Limpiar filtros
             </button>
@@ -218,7 +218,7 @@ export default function LogsTab() {
 
       {/* Table */}
       {loading ? (
-        <div className="text-center py-16 text-[var(--hulux-text-muted)]">
+        <div className="text-center py-16 text-(--hulux-text-muted)">
           <svg className="animate-spin h-6 w-6 mx-auto mb-3" viewBox="0 0 24 24" fill="none">
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
@@ -226,16 +226,16 @@ export default function LogsTab() {
           Cargando logs...
         </div>
       ) : paged.length === 0 ? (
-        <div className="text-center py-16 text-[var(--hulux-text-muted)]">
+        <div className="text-center py-16 text-(--hulux-text-muted)">
           <p className="text-4xl mb-3">📋</p>
           <p className="font-medium">{hasFilters ? "Sin resultados con esos filtros." : "Aún no hay registros de actividad."}</p>
           <p className="text-xs mt-1">Las acciones aparecerán aquí automáticamente</p>
         </div>
       ) : (
         <>
-          <div className="overflow-x-auto rounded-xl border border-[var(--hulux-border)] bg-[var(--hulux-surface)] shadow-[var(--hulux-shadow)]">
+          <div className="overflow-x-auto rounded-xl border border-(--hulux-border) bg-(--hulux-surface) shadow-(--hulux-shadow)">
             <table className="w-full text-left text-sm">
-              <thead className="bg-[var(--hulux-subtle)] text-[var(--hulux-text)] text-xs uppercase tracking-wider">
+              <thead className="bg-(--hulux-subtle) text-(--hulux-text) text-xs uppercase tracking-wider">
                 <tr>
                   <th className="p-3 w-8"></th>
                   <th className="p-3">Fecha y hora</th>
@@ -249,7 +249,7 @@ export default function LogsTab() {
                 {paged.map((log) => (
                   <Fragment key={log.id}>
                     <tr
-                      className="border-t border-[var(--hulux-border)] hover:bg-[rgba(148,237,242,0.07)] transition-colors cursor-pointer"
+                      className="border-t border-(--hulux-border) hover:bg-[rgba(148,237,242,0.07)] transition-colors cursor-pointer"
                       onClick={() => setExpandedId(expandedId === log.id ? null : log.id)}
                     >
                       {/* Icon */}
@@ -259,10 +259,10 @@ export default function LogsTab() {
 
                       {/* Date */}
                       <td className="p-3">
-                        <div className="font-mono text-xs text-[var(--hulux-text)]">
+                        <div className="font-mono text-xs text-(--hulux-text)">
                           {formatDate(log.timestamp)}
                         </div>
-                        <div className="text-[10px] text-[var(--hulux-text-muted)] mt-0.5">
+                        <div className="text-[10px] text-(--hulux-text-muted) mt-0.5">
                           {timeAgo(log.timestamp)}
                         </div>
                       </td>
@@ -270,10 +270,10 @@ export default function LogsTab() {
                       {/* User */}
                       <td className="p-3">
                         <div className="flex items-center gap-2">
-                          <div className="w-6 h-6 rounded-full bg-[var(--hulux-blue)] dark:bg-[var(--hulux-cyan)] flex items-center justify-center text-[10px] font-bold text-white dark:text-[var(--hulux-blue)] shrink-0">
+                          <div className="w-6 h-6 rounded-full bg-(--hulux-blue) dark:bg-(--hulux-cyan) flex items-center justify-center text-[10px] font-bold text-white dark:text-(--hulux-blue) shrink-0">
                             {log.usuarioEmail.charAt(0).toUpperCase()}
                           </div>
-                          <span className="text-xs text-[var(--hulux-text)] truncate max-w-[140px]">
+                          <span className="text-xs text-(--hulux-text) truncate max-w-[140px]">
                             {log.usuarioEmail}
                           </span>
                         </div>
@@ -287,7 +287,7 @@ export default function LogsTab() {
                       </td>
 
                       {/* Description */}
-                      <td className="p-3 text-xs text-[var(--hulux-text)] max-w-xs">
+                      <td className="p-3 text-xs text-(--hulux-text) max-w-xs">
                         <span className="line-clamp-2">{log.descripcion}</span>
                       </td>
 
@@ -295,7 +295,7 @@ export default function LogsTab() {
                       <td className="p-3 text-center">
                         {log.detalles && (
                           <svg
-                            className={`h-4 w-4 text-[var(--hulux-text-muted)] transition-transform mx-auto ${expandedId === log.id ? "rotate-180" : ""}`}
+                            className={`h-4 w-4 text-(--hulux-text-muted) transition-transform mx-auto ${expandedId === log.id ? "rotate-180" : ""}`}
                             fill="none" viewBox="0 0 24 24" stroke="currentColor"
                           >
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -306,13 +306,13 @@ export default function LogsTab() {
 
                     {/* Expanded details */}
                     {expandedId === log.id && log.detalles && (
-                      <tr key={`${log.id}-details`} className="border-t border-[var(--hulux-border)] bg-[rgba(148,237,242,0.04)]">
+                      <tr key={`${log.id}-details`} className="border-t border-(--hulux-border) bg-[rgba(148,237,242,0.04)]">
                         <td colSpan={6} className="px-6 py-4">
-                          <div className="bg-[var(--hulux-surface-elevated)] rounded-lg p-3 border border-[var(--hulux-border)]">
-                            <p className="text-[10px] uppercase tracking-wider font-semibold text-[var(--hulux-text-muted)] mb-2">
+                          <div className="bg-(--hulux-surface-elevated) rounded-lg p-3 border border-(--hulux-border)">
+                            <p className="text-[10px] uppercase tracking-wider font-semibold text-(--hulux-text-muted) mb-2">
                               Detalles del cambio
                             </p>
-                            <pre className="text-xs text-[var(--hulux-text)] overflow-x-auto whitespace-pre-wrap break-words font-mono">
+                            <pre className="text-xs text-(--hulux-text) overflow-x-auto whitespace-pre-wrap break-words font-mono">
                               {JSON.stringify(log.detalles, null, 2)}
                             </pre>
                           </div>
@@ -331,17 +331,17 @@ export default function LogsTab() {
               <button
                 onClick={() => setPage((p) => Math.max(0, p - 1))}
                 disabled={page === 0}
-                className="px-3 py-1.5 text-xs bg-[var(--hulux-surface)] hover:bg-[rgba(148,237,242,0.18)] disabled:opacity-30 rounded-lg text-[var(--hulux-text)] border border-[var(--hulux-border)] transition-colors"
+                className="px-3 py-1.5 text-xs bg-(--hulux-surface) hover:bg-[rgba(148,237,242,0.18)] disabled:opacity-30 rounded-lg text-(--hulux-text) border border-(--hulux-border) transition-colors"
               >
                 Anterior
               </button>
-              <span className="text-xs text-[var(--hulux-text-muted)]">
+              <span className="text-xs text-(--hulux-text-muted)">
                 {page + 1} / {totalPages}
               </span>
               <button
                 onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
                 disabled={page >= totalPages - 1}
-                className="px-3 py-1.5 text-xs bg-[var(--hulux-surface)] hover:bg-[rgba(148,237,242,0.18)] disabled:opacity-30 rounded-lg text-[var(--hulux-text)] border border-[var(--hulux-border)] transition-colors"
+                className="px-3 py-1.5 text-xs bg-(--hulux-surface) hover:bg-[rgba(148,237,242,0.18)] disabled:opacity-30 rounded-lg text-(--hulux-text) border border-(--hulux-border) transition-colors"
               >
                 Siguiente
               </button>
