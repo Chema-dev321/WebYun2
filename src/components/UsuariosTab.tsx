@@ -54,9 +54,10 @@ export default function UsuariosTab({ usuarios }: { usuarios: Usuario[] }) {
                         className="bg-(--hulux-bg) border border-(--hulux-border) text-(--hulux-text) text-sm rounded-lg focus:ring-(--hulux-cyan) focus:border-(--hulux-cyan) block w-full p-1.5"
                       >
                         <option value="admin">Admin</option>
-                        <option value="sucursal">Sucursal</option>
-                        <option value="infraestructura">Infraestructura</option>
                         <option value="administracion">Administración</option>
+                        <option value="sucursal">Sucursal</option>
+                        <option value="soporte">Soporte</option>
+                        <option value="infraestructura">Infraestructura</option>
                         <option value="instalador">Instalador</option>
                       </select>
                     </td>

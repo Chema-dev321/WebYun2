@@ -60,7 +60,10 @@ function Dashboard() {
     return TABS.filter((t) => {
       if (userRole === "admin") return true;
       if (userRole === "sucursal") {
-        return ["registro", "clientes", "buscar", "mapa"].includes(t.key);
+        return ["dashboard", "registro", "clientes", "buscar", "mapa"].includes(t.key);
+      }
+      if (userRole === "soporte") {
+        return ["dashboard", "clientes", "buscar"].includes(t.key);
       }
       if (userRole === "infraestructura") {
         return ["dashboard", "agregarNap", "clientes", "buscar", "mapa"].includes(t.key);
@@ -169,8 +172,9 @@ function Dashboard() {
         </div>
 
         {/* Reconcile */}
-        <div className="flex items-center gap-3 mb-6">
-          <button
+        {(userRole === "admin" || userRole === "infraestructura" || userRole === "administracion") && (
+          <div className="flex items-center gap-3 mb-6">
+            <button
             onClick={async () => {
               setReconciling(true);
               setReconcileMsg("");
@@ -208,7 +212,8 @@ function Dashboard() {
           {reconcileMsg && (
             <span className="text-xs text-(--hulux-text-muted)">{reconcileMsg}</span>
           )}
-        </div>
+          </div>
+        )}
 
         {/* Tabs */}
         <div className="mb-6">

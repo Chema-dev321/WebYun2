@@ -7,6 +7,7 @@ import type { SemaforoState } from "@/lib/firestore";
 import { useToast, useConfirm } from "@/components/ToastContext";
 import { useAuth } from "@/lib/AuthContext";
 import { registrarLog } from "@/lib/audit";
+import ClientForm from "@/components/ClientForm";
 
 interface Props {
   naps: NAP[];
@@ -49,6 +50,7 @@ export default function NAPTable({ naps, onRefresh, onFilterChange, userRole = "
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [expandedClientes, setExpandedClientes] = useState<ClienteType[]>([]);
   const [loadingClientes, setLoadingClientes] = useState(false);
+  const [addingClientToNap, setAddingClientToNap] = useState<string | null>(null);
 
   const { showToast } = useToast();
   const { confirm } = useConfirm();
@@ -158,8 +160,10 @@ export default function NAPTable({ naps, onRefresh, onFilterChange, userRole = "
     if (expandedId === napId) {
       setExpandedId(null);
       setExpandedClientes([]);
+      setAddingClientToNap(null);
     } else {
       setExpandedId(napId);
+      setAddingClientToNap(null);
       setLoadingClientes(true);
       try {
         const { getClientesByNAP } = await import("@/lib/firestore");
@@ -606,9 +610,40 @@ export default function NAPTable({ naps, onRefresh, onFilterChange, userRole = "
                     <tr className="bg-[rgba(17,41,62,0.02)] dark:bg-[rgba(148,237,242,0.03)] border-b border-(--hulux-border)">
                       <td colSpan={11} className="p-4">
                         <div className="bg-(--hulux-surface-elevated) border border-(--hulux-border) rounded-xl p-4 shadow-inner">
-                          <h3 className="text-sm font-semibold mb-3 text-(--hulux-blue) dark:text-(--hulux-cyan)">
-                            Clientes en {nap.id_nap}
-                          </h3>
+                          <div className="flex items-center justify-between mb-3">
+                            <h3 className="text-sm font-semibold text-(--hulux-blue) dark:text-(--hulux-cyan)">
+                              Clientes en {nap.id_nap}
+                            </h3>
+                            {addingClientToNap !== nap.id && (
+                              <button
+                                onClick={() => setAddingClientToNap(nap.id)}
+                                className="px-2 py-1 text-xs bg-(--hulux-orange) hover:brightness-95 text-(--hulux-blue) font-bold rounded flex items-center gap-1 transition-colors"
+                              >
+                                <span>+</span>
+                                <span>Añadir</span>
+                              </button>
+                            )}
+                          </div>
+                          
+                          {addingClientToNap === nap.id && (
+                            <div className="mb-4 bg-[rgba(148,237,242,0.05)] border border-[rgba(148,237,242,0.15)] rounded-lg p-4">
+                              <h4 className="text-xs font-semibold text-(--hulux-text) mb-2">Nuevo cliente en {nap.id_nap}</h4>
+                              <ClientForm
+                                initialNap={nap}
+                                onSuccess={() => {
+                                  setAddingClientToNap(null);
+                                  // Refresh clients for this NAP
+                                  setLoadingClientes(true);
+                                  import("@/lib/firestore").then(({ getClientesByNAP }) => {
+                                    getClientesByNAP(nap.id).then(setExpandedClientes).finally(() => setLoadingClientes(false));
+                                  });
+                                  onRefresh(); // Refresh the NAP table to update occupation numbers
+                                }}
+                                onCancel={() => setAddingClientToNap(null)}
+                              />
+                            </div>
+                          )}
+
                           {loadingClientes ? (
                             <p className="text-(--hulux-text-muted) text-sm flex items-center gap-2">
                               <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">

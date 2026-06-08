@@ -11,6 +11,7 @@ export default function ClientesTab({ naps, userRole = "instalador" }: { naps: N
   // Filtros
   const [municipio, setMunicipio] = useState("");
   const [localidad, setLocalidad] = useState("");
+  const [idNapFilter, setIdNapFilter] = useState("");
 
   // Paginación de servidor
   const pageSize = 25;
@@ -32,6 +33,14 @@ export default function ClientesTab({ naps, userRole = "instalador" }: { naps: N
     return Array.from(set).sort();
   }, [naps, municipio]);
 
+  const napsDisponibles = useMemo(() => {
+    let list = naps;
+    if (municipio) list = list.filter((n) => n.municipio === municipio);
+    if (localidad) list = list.filter((n) => n.localidad === localidad);
+    const set = new Set(list.map((n) => n.id_nap));
+    return Array.from(set).sort();
+  }, [naps, municipio, localidad]);
+
   // Cargar clientes desde el servidor (paginado)
   useEffect(() => {
     let mounted = true;
@@ -39,7 +48,7 @@ export default function ClientesTab({ naps, userRole = "instalador" }: { naps: N
     
     const lastVisible = history[pageIndex];
 
-    getClientes(pageSize, lastVisible, municipio, localidad)
+    getClientes(pageSize, lastVisible, municipio, localidad, idNapFilter)
       .then((res) => {
         if (!mounted) return;
         setClientes(res.data);
@@ -60,15 +69,19 @@ export default function ClientesTab({ naps, userRole = "instalador" }: { naps: N
       mounted = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pageIndex, municipio, localidad]);
+  }, [pageIndex, municipio, localidad, idNapFilter]);
 
   // Al cambiar filtros, resetear paginación
-  const handleFilterChange = (type: "municipio" | "localidad", val: string) => {
+  const handleFilterChange = (type: "municipio" | "localidad" | "idNap", val: string) => {
     if (type === "municipio") {
       setMunicipio(val);
       setLocalidad("");
-    } else {
+      setIdNapFilter("");
+    } else if (type === "localidad") {
       setLocalidad(val);
+      setIdNapFilter("");
+    } else {
+      setIdNapFilter(val);
     }
     setHistory([null]);
     setPageIndex(0);
@@ -116,6 +129,20 @@ export default function ClientesTab({ naps, userRole = "instalador" }: { naps: N
               <option value="">Todas</option>
               {localidades.map((l) => (
                 <option key={l} value={l}>{l}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex-1 min-w-[140px] sm:flex-none">
+            <label className="block text-xs text-(--hulux-text-muted) mb-1">ID NAP</label>
+            <select
+              value={idNapFilter}
+              onChange={(e) => handleFilterChange("idNap", e.target.value)}
+              className="w-full sm:w-auto px-3 py-2 bg-(--hulux-surface-elevated) border border-(--hulux-border) rounded-lg text-sm text-(--hulux-text) focus:outline-none focus:ring-2 focus:ring-(--hulux-blue)"
+            >
+              <option value="">Todas</option>
+              {napsDisponibles.map((id) => (
+                <option key={id} value={id}>{id}</option>
               ))}
             </select>
           </div>

@@ -13,17 +13,19 @@ import { registrarLog } from "@/lib/audit";
 
 interface Props {
   onSuccess: () => void;
+  initialNap?: NAP;
+  onCancel?: () => void;
 }
 
-export default function ClientForm({ onSuccess }: Props) {
+export default function ClientForm({ onSuccess, initialNap, onCancel }: Props) {
   const { user } = useAuth();
   const [municipios, setMunicipios] = useState<string[]>([]);
   const [localidades, setLocalidades] = useState<string[]>([]);
   const [todasLasNaps, setTodasLasNaps] = useState<NAP[]>([]);
 
-  const [municipio, setMunicipio] = useState("");
-  const [localidad, setLocalidad] = useState("");
-  const [idNap, setIdNap] = useState("");
+  const [municipio, setMunicipio] = useState(initialNap?.municipio || "");
+  const [localidad, setLocalidad] = useState(initialNap?.localidad || "");
+  const [idNap, setIdNap] = useState(initialNap?.id || "");
   const [nombre, setNombre] = useState("");
   const [idWisp, setIdWisp] = useState("");
 
@@ -39,14 +41,17 @@ export default function ClientForm({ onSuccess }: Props) {
     if (municipio) {
       getLocalidadesByMunicipio(municipio).then((l) => {
         setLocalidades(l);
-        setLocalidad("");
-        setIdNap("");
+        // Do not reset if we have an initialNap
+        if (!initialNap) {
+          setLocalidad("");
+          setIdNap("");
+        }
       });
     } else {
       setLocalidades([]);
-      setLocalidad("");
+      if (!initialNap) setLocalidad("");
     }
-  }, [municipio]);
+  }, [municipio, initialNap]);
 
   // NAPs filtradas por municipio y/o localidad seleccionados
   const napsFiltradas = useMemo(() => {
@@ -215,13 +220,25 @@ export default function ClientForm({ onSuccess }: Props) {
         </div>
       )}
 
-      <button
-        type="submit"
-        disabled={loading}
-        className="w-full rounded-lg bg-(--hulux-orange) hover:brightness-95 disabled:opacity-50 p-2.5 text-sm font-semibold text-(--hulux-blue) transition-colors"
-      >
-        {loading ? "Registrando..." : "Registrar Cliente"}
-      </button>
+      <div className="flex gap-2">
+        {onCancel && (
+          <button
+            type="button"
+            onClick={onCancel}
+            disabled={loading}
+            className="w-1/3 rounded-lg bg-(--hulux-surface) hover:bg-[rgba(148,237,242,0.18)] disabled:opacity-50 p-2.5 text-sm font-semibold text-(--hulux-text) border border-(--hulux-border) transition-colors"
+          >
+            Cancelar
+          </button>
+        )}
+        <button
+          type="submit"
+          disabled={loading}
+          className="flex-1 rounded-lg bg-(--hulux-orange) hover:brightness-95 disabled:opacity-50 p-2.5 text-sm font-semibold text-(--hulux-blue) transition-colors"
+        >
+          {loading ? "Registrando..." : "Registrar Cliente"}
+        </button>
+      </div>
     </form>
   );
 }

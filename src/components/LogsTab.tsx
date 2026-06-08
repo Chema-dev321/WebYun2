@@ -312,7 +312,7 @@ export default function LogsTab() {
                             <p className="text-[10px] uppercase tracking-wider font-semibold text-(--hulux-text-muted) mb-2">
                               Detalles del cambio
                             </p>
-                            <pre className="text-xs text-(--hulux-text) overflow-x-auto whitespace-pre-wrap break-words font-mono">
+                            <pre className="text-xs text-(--hulux-text) overflow-x-auto whitespace-pre-wrap wrap-break-word font-mono">
                               {JSON.stringify(log.detalles, null, 2)}
                             </pre>
                           </div>

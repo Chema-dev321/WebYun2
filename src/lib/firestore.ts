@@ -97,16 +97,18 @@ export async function getClientes(
   pageSize: number = 25,
   lastVisible?: unknown,
   municipio?: string,
-  localidad?: string
+  localidad?: string,
+  id_nap?: string
 ): Promise<PaginatedResult<Cliente>> {
   const colRef = collection(db, CLIENTES_COL);
   const constraints: any[] = [];
 
   if (municipio) constraints.push(where("municipio", "==", municipio));
   if (localidad) constraints.push(where("localidad", "==", localidad));
+  if (id_nap) constraints.push(where("id_nap", "==", id_nap));
 
   // Solo ordenamos por fecha_alta si NO hay filtros, para no requerir un composite index
-  if (!municipio && !localidad) {
+  if (!municipio && !localidad && !id_nap) {
     constraints.push(orderBy("fecha_alta", "desc"));
   }
 
@@ -449,7 +451,7 @@ export function getNAPColor(nap: NAP): SemaforoState {
 
 // ── Usuarios de plataforma ──
 
-export type Rol = "admin" | "sucursal" | "infraestructura" | "instalador" | "administracion";
+export type Rol = "admin" | "sucursal" | "infraestructura" | "instalador" | "administracion" | "soporte";
 
 export interface Usuario {
   id: string;

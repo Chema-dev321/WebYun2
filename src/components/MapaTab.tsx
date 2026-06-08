@@ -109,6 +109,7 @@ export default function MapaTab({ naps }: Props) {
   const [tomodatFiltro, setTomodatFiltro] = useState<"todos" | "Activo" | "Rojo">("todos");
   const [selectedNap, setSelectedNap] = useState<NAP | null>(null);
   const [mounted, setMounted] = useState(false);
+  const mapCenteredRef = useRef(false);
 
 
   // NAPs with coords
@@ -281,11 +282,12 @@ export default function MapaTab({ naps }: Props) {
     clusterGroupRef.current = clusterGroup;
 
     // Auto-fit bounds if markers exist and no user pos
-    if (napsFiltradas.length > 0 && !userPos) {
+    if (napsFiltradas.length > 0 && !userPos && !mapCenteredRef.current) {
       const bounds = L.latLngBounds(
         napsFiltradas.map((n) => [n.latitud!, n.longitud!] as [number, number])
       );
       map.fitBounds(bounds, { padding: [40, 40], maxZoom: 14 });
+      mapCenteredRef.current = true;
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [napsFiltradas, mounted]);
