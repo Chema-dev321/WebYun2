@@ -7,8 +7,8 @@ import { AuthProvider } from "@/lib/AuthContext";
 import { ToastProvider } from "@/components/ToastContext";
 
 export const metadata: Metadata = {
-  title: "WebYun - Gestión de NAPs",
-  description: "Sistema de gestión de fibra óptica",
+  title: "OptiCore - Network Management",
+  description: "Sistema avanzado de gestión de fibra óptica",
 };
 
 export default function RootLayout({

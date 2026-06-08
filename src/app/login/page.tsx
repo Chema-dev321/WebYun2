@@ -101,7 +101,7 @@ export default function LoginPage() {
             <ThemeToggle />
           </div>
           <div className="text-center mb-8">
-            <h1 className="text-2xl font-bold text-(--hulux-text)">WebYun</h1>
+            <h1 className="text-2xl font-bold text-(--hulux-text)">OptiCore</h1>
             <p className="text-(--hulux-text-muted) text-sm mt-1">
               {isRegister ? "Crea tu cuenta" : "Inicia sesión para continuar"}
             </p>
