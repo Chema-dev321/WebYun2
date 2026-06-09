@@ -87,6 +87,14 @@ export default function ClientesTab({ naps, userRole = "instalador" }: { naps: N
     setPageIndex(0);
   };
 
+  const clearFilters = () => {
+    setMunicipio("");
+    setLocalidad("");
+    setIdNapFilter("");
+    setHistory([null]);
+    setPageIndex(0);
+  };
+
   return (
     <div className="space-y-4">
       {/* ── Filter bar (Collapsible on mobile) ── */}
@@ -147,8 +155,16 @@ export default function ClientesTab({ naps, userRole = "instalador" }: { naps: N
             </select>
           </div>
 
-          <div className="flex-1 min-w-[140px] sm:flex-none ml-auto text-right">
-             <span className="text-xs text-(--hulux-text-muted) block mb-1">Nota: Utiliza &quot;Buscar Cliente&quot; para buscar por nombre</span>
+          <div className="flex-1 min-w-[140px] sm:flex-none ml-auto text-right flex flex-col items-end gap-2">
+            {(municipio || localidad || idNapFilter) && (
+              <button
+                onClick={clearFilters}
+                className="text-xs px-3 py-1.5 bg-(--hulux-maroon-light) hover:brightness-95 text-white font-medium rounded-lg transition-colors"
+              >
+                Limpiar filtros
+              </button>
+            )}
+            <span className="text-xs text-(--hulux-text-muted) block mb-1">Nota: Utiliza &quot;Buscar Cliente&quot; para buscar por nombre</span>
           </div>
         </div>
       </details>

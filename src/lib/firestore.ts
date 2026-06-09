@@ -228,21 +228,28 @@ export async function updateClienteNAP(
           return { success: false, error: "La NAP destino está llena." };
         }
 
+        let oldNapData: Omit<NAP, "id"> | null = null;
+        let oldNapWasFull = false;
+        let oldNapNewOcupados = 0;
+
         // Decrement old NAP
         if (oldNapId) {
           const oldNapRef = doc(db, NAPS_COL, oldNapId);
           const oldNapSnap = await tx.get(oldNapRef);
           if (oldNapSnap.exists()) {
-            const oldData = oldNapSnap.data() as Omit<NAP, "id">;
+            oldNapData = oldNapSnap.data() as Omit<NAP, "id">;
+            oldNapWasFull = oldNapData.puertos_ocupados >= oldNapData.capacidad_total;
+            oldNapNewOcupados = Math.max(0, oldNapData.puertos_ocupados - 1);
             tx.update(oldNapRef, {
-              puertos_ocupados: Math.max(0, oldData.puertos_ocupados - 1),
+              puertos_ocupados: oldNapNewOcupados,
             });
           }
         }
 
         // Increment new NAP
+        const newNapNewOcupados = newNapData.puertos_ocupados + 1;
         tx.update(newNapRef, {
-          puertos_ocupados: newNapData.puertos_ocupados + 1,
+          puertos_ocupados: newNapNewOcupados,
         });
 
         // Update cliente
@@ -251,12 +258,49 @@ export async function updateClienteNAP(
           municipio: newNapData.municipio,
           localidad: newNapData.localidad,
         } as Record<string, unknown>);
+
+        return { 
+          success: true,
+          oldNapId,
+          oldNapData,
+          oldNapWasFull,
+          oldNapNewOcupados,
+          newNapData,
+          newNapNewOcupados,
+        };
       }
 
       return { success: true };
     });
 
-    // Propagar correctamente el resultado de la transacción (éxito o fallo)
+    if (result.success && "newNapData" in result) {
+      const data = result as any;
+      // Notificar si la NAP nueva se llenó
+      if (data.newNapNewOcupados >= data.newNapData.capacidad_total) {
+        notifyNapEvent({
+          tipoEvento: "LLENA",
+          idNap: newNapId,
+          nombre: data.newNapData.nombre,
+          municipio: data.newNapData.municipio,
+          localidad: data.newNapData.localidad,
+          ocupados: data.newNapNewOcupados,
+          capacidad: data.newNapData.capacidad_total,
+        });
+      }
+      // Notificar si la NAP antigua se liberó
+      if (data.oldNapId && data.oldNapWasFull && data.oldNapData) {
+        notifyNapEvent({
+          tipoEvento: "LIBERADA",
+          idNap: data.oldNapId,
+          nombre: data.oldNapData.nombre,
+          municipio: data.oldNapData.municipio,
+          localidad: data.oldNapData.localidad,
+          ocupados: data.oldNapNewOcupados,
+          capacidad: data.oldNapData.capacidad_total,
+        });
+      }
+    }
+
     return result;
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Error al reasignar cliente.";
