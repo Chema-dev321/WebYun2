@@ -263,7 +263,7 @@ function Dashboard() {
 
         {tab === "registro" && (
           <div className="max-w-2xl mx-auto">
-            <ClientForm onSuccess={emptyRefresh} />
+            <ClientForm onSuccess={emptyRefresh} naps={naps} />
           </div>
         )}
 

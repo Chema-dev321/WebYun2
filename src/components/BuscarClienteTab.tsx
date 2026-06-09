@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect } from "react";
 import type { NAP, Cliente } from "@/lib/types";
-import { getClienteByWisp, getNAPById, updateCliente, deleteCliente, updateClienteNAP, subscribeToNAPs } from "@/lib/firestore";
+import { getClienteByWisp, getNAPById, updateCliente, deleteCliente, updateClienteNAP } from "@/lib/firestore";
 import { useConfirm } from "@/components/ToastContext";
 
 export default function BuscarClienteTab({ naps, userRole = "instalador" }: { naps: NAP[]; userRole?: string }) {
@@ -40,17 +40,15 @@ export default function BuscarClienteTab({ naps, userRole = "instalador" }: { na
     return Array.from(set).sort();
   }, [naps, editMunicipio]);
 
-  // Subscribe to NAP updates when a client is loaded
+  // Derived NAP info from props instead of subscribing again
   useEffect(() => {
-    if (!cliente) return;
-    const unsub = subscribeToNAPs((allNaps) => {
-      const updated = allNaps.find((n) => n.id_nap === cliente.id_nap || n.id === cliente.id_nap);
-      if (updated) {
-        setNapInfo(updated);
-      }
-    });
-    return () => unsub();
-  }, [cliente]);
+    if (cliente) {
+      const updated = naps.find((n) => n.id_nap === cliente.id_nap || n.id === cliente.id_nap);
+      setNapInfo(updated || null);
+    } else {
+      setNapInfo(null);
+    }
+  }, [cliente, naps]);
 
   const limpiarBusqueda = () => {
     setIdWisp("");

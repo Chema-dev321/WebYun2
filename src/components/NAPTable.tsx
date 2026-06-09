@@ -268,7 +268,7 @@ export default function NAPTable({ naps, onRefresh, onFilterChange, userRole = "
         <div className="content p-4 pt-0 sm:pt-4 space-y-3 border-t border-(--hulux-border) sm:border-0">
           {/* Row 1: Search + Municipio + Localidad + Disponibilidad */}
           <div className="flex flex-wrap gap-3 items-end">
-            <div className="flex-1 min-w-[200px]">
+            <div className="flex-1 min-w-50">
               <label className="block text-xs text-(--hulux-text-muted) mb-1">Buscar</label>
               <div className="relative">
                 <svg
@@ -288,7 +288,7 @@ export default function NAPTable({ naps, onRefresh, onFilterChange, userRole = "
               </div>
             </div>
 
-            <div className="flex-1 min-w-[140px] sm:flex-none">
+            <div className="flex-1 min-w-35 sm:flex-none">
               <label className="block text-xs text-(--hulux-text-muted) mb-1">Municipio</label>
               <select
                 value={municipio}
@@ -302,7 +302,7 @@ export default function NAPTable({ naps, onRefresh, onFilterChange, userRole = "
               </select>
             </div>
 
-            <div className="flex-1 min-w-[140px] sm:flex-none">
+            <div className="flex-1 min-w-35 sm:flex-none">
               <label className="block text-xs text-(--hulux-text-muted) mb-1">Localidad</label>
               <select
                 value={localidad}
@@ -630,6 +630,7 @@ export default function NAPTable({ naps, onRefresh, onFilterChange, userRole = "
                               <h4 className="text-xs font-semibold text-(--hulux-text) mb-2">Nuevo cliente en {nap.id_nap}</h4>
                               <ClientForm
                                 initialNap={nap}
+                                naps={naps}
                                 onSuccess={() => {
                                   setAddingClientToNap(null);
                                   // Refresh clients for this NAP

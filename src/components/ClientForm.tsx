@@ -5,24 +5,22 @@ import type { NAP } from "@/lib/types";
 import {
   getMunicipios,
   getLocalidadesByMunicipio,
-  getNAPs,
   registerCliente,
 } from "@/lib/firestore";
 import { useAuth } from "@/lib/AuthContext";
 import { registrarLog } from "@/lib/audit";
 
 interface Props {
+  naps: NAP[];
   onSuccess: () => void;
   initialNap?: NAP;
   onCancel?: () => void;
 }
 
-export default function ClientForm({ onSuccess, initialNap, onCancel }: Props) {
+export default function ClientForm({ naps, onSuccess, initialNap, onCancel }: Props) {
   const { user } = useAuth();
   const [municipios, setMunicipios] = useState<string[]>([]);
   const [localidades, setLocalidades] = useState<string[]>([]);
-  const [todasLasNaps, setTodasLasNaps] = useState<NAP[]>([]);
-
   const [municipio, setMunicipio] = useState(initialNap?.municipio || "");
   const [localidad, setLocalidad] = useState(initialNap?.localidad || "");
   const [idNap, setIdNap] = useState(initialNap?.id || "");
@@ -34,7 +32,6 @@ export default function ClientForm({ onSuccess, initialNap, onCancel }: Props) {
 
   useEffect(() => {
     getMunicipios().then(setMunicipios);
-    getNAPs(3000).then((result) => setTodasLasNaps(result.data));
   }, []);
 
   useEffect(() => {
@@ -55,14 +52,14 @@ export default function ClientForm({ onSuccess, initialNap, onCancel }: Props) {
 
   // NAPs filtradas por municipio y/o localidad seleccionados
   const napsFiltradas = useMemo(() => {
-    return todasLasNaps.filter((n) => {
+    return naps.filter((n) => {
       if (municipio && n.municipio !== municipio) return false;
       if (localidad && n.localidad !== localidad) return false;
       return true;
     });
-  }, [todasLasNaps, municipio, localidad]);
+  }, [naps, municipio, localidad]);
 
-  const selectedNap = todasLasNaps.find((n) => n.id === idNap);
+  const selectedNap = naps.find((n) => n.id === idNap);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -73,7 +70,7 @@ export default function ClientForm({ onSuccess, initialNap, onCancel }: Props) {
       return;
     }
 
-    const napSeleccionada = todasLasNaps.find((n) => n.id === idNap);
+    const napSeleccionada = naps.find((n) => n.id === idNap);
     if (!napSeleccionada) {
       setMsg({ type: "error", text: "NAP no encontrada." });
       return;
