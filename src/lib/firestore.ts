@@ -277,7 +277,7 @@ export async function updateClienteNAP(
       const data = result as any;
       // Notificar si la NAP nueva se llenó
       if (data.newNapNewOcupados >= data.newNapData.capacidad_total) {
-        notifyNapEvent({
+        await notifyNapEvent({
           tipoEvento: "LLENA",
           idNap: newNapId,
           nombre: data.newNapData.nombre,
@@ -289,7 +289,7 @@ export async function updateClienteNAP(
       }
       // Notificar si la NAP antigua se liberó
       if (data.oldNapId && data.oldNapWasFull && data.oldNapData) {
-        notifyNapEvent({
+        await notifyNapEvent({
           tipoEvento: "LIBERADA",
           idNap: data.oldNapId,
           nombre: data.oldNapData.nombre,
@@ -374,7 +374,7 @@ export async function registerCliente(
     if (result.success && "newOcupados" in result && "napData" in result) {
       const { napData, newOcupados } = result as { napData: Omit<NAP, "id">; newOcupados: number };
       if (newOcupados >= napData.capacidad_total) {
-        notifyNapEvent({
+        await notifyNapEvent({
           tipoEvento: "LLENA",
           idNap: data.id_nap,
           nombre: napData.nombre,
@@ -433,7 +433,7 @@ export async function deleteCliente(clienteId: string): Promise<{ success: boole
     // Enviar correo solo si la NAP estaba LLENA y se libero un puerto
     if (result.success && result.wasFull && "napData" in result && result.napData && result.idNap) {
       const { napData, newOcupados, idNap } = result as { napData: Omit<NAP, "id">; newOcupados: number; idNap: string };
-      notifyNapEvent({
+      await notifyNapEvent({
         tipoEvento: "LIBERADA",
         idNap: String(idNap),
         nombre: napData.nombre,
