@@ -519,6 +519,13 @@ export default function NAPTable({ naps, onRefresh, onFilterChange, userRole = "
                           } else {
                             try {
                               await updateNAP(nap.id, { verificacion: val, fecha_verificacion: hoy });
+                              await registrarLog(
+                                "VERIFICAR_NAP",
+                                user?.email ?? "desconocido",
+                                user?.uid ?? "",
+                                `Marcó NAP ${nap.id_nap} como ${val ? "verificada (Sí)" : "no verificada (No)"} — ${hoy}`,
+                                { napId: nap.id, id_nap: nap.id_nap, verificacion: val, fecha_verificacion: hoy }
+                              );
                               onRefresh();
                             } catch (err) {
                               showToast("Error al actualizar verificación", "error");

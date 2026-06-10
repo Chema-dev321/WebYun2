@@ -13,6 +13,7 @@ export type AccionLog =
   | "CREAR_NAP"
   | "EDITAR_NAP"
   | "ELIMINAR_NAP"
+  | "VERIFICAR_NAP"
   | "CREAR_CLIENTE"
   | "ELIMINAR_CLIENTE"
   | "REASIGNAR_CLIENTE"
