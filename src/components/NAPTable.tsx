@@ -626,15 +626,6 @@ export default function NAPTable({ naps, onRefresh, onFilterChange, userRole = "
                           </div>
                         )
                       )}
-                      {userRole === "soporte" && editingId !== nap.id && (
-                        <button
-                          onClick={() => handleDeleteNAP(nap.id)}
-                          disabled={deleting === nap.id}
-                          className="px-2 py-1 text-xs bg-transparent hover:bg-[rgba(112,0,63,0.12)] text-(--hulux-text) border border-[rgba(112,0,63,0.35)] rounded transition-colors disabled:opacity-50 font-bold"
-                        >
-                          {deleting === nap.id ? "..." : "Eliminar"}
-                        </button>
-                      )}
                     </td>
                     <td className="p-3 text-right">
                       <div className="group relative inline-flex justify-center items-center">
@@ -716,7 +707,7 @@ export default function NAPTable({ naps, onRefresh, onFilterChange, userRole = "
                                   <span className="text-(--hulux-text-muted) text-xs bg-(--hulux-subtle) px-1.5 py-0.5 rounded">
                                     {c.id_wisp}
                                   </span>
-                                  {userRole === "admin" && (
+                                  {(userRole === "admin" || userRole === "soporte") && (
                                     <button
                                       onClick={() => handleDelete(c.id, nap.id)}
                                       className="text-(--hulux-maroon-light) hover:bg-[rgba(112,0,63,0.1)] p-1 rounded transition-colors ml-1"
