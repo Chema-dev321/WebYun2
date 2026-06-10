@@ -31,15 +31,46 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-      setUser(firebaseUser);
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
+        // Verificar si el usuario está inhabilitado en Firestore
+        try {
+          const { db } = await import("./firebase");
+          const { getDoc, doc } = await import("firebase/firestore");
+          const snap = await getDoc(doc(db, "usuarios", firebaseUser.uid));
+          if (snap.exists() && snap.data()?.deshabilitado === true) {
+            // Cerrar sesión automáticamente si está inhabilitado
+            await signOut(auth);
+            setUser(null);
+            setLoading(false);
+            return;
+          }
+        } catch {
+          // Si falla la comprobación, dejamos pasar (no bloquear por error de red)
+        }
+        setUser(firebaseUser);
+      } else {
+        setUser(null);
+      }
       setLoading(false);
     });
     return () => unsubscribe();
   }, []);
 
   const login = async (email: string, password: string) => {
-    await signInWithEmailAndPassword(auth, email, password);
+    const cred = await signInWithEmailAndPassword(auth, email, password);
+    // Verificar inhabilitado justo después del login
+    try {
+      const { db } = await import("./firebase");
+      const { getDoc, doc } = await import("firebase/firestore");
+      const snap = await getDoc(doc(db, "usuarios", cred.user.uid));
+      if (snap.exists() && snap.data()?.deshabilitado === true) {
+        await signOut(auth);
+        throw new Error("Esta cuenta ha sido inhabilitada. Contacta al administrador.");
+      }
+    } catch (err) {
+      if (err instanceof Error && err.message.includes("inhabilitada")) throw err;
+    }
   };
 
   const register = async (email: string, password: string) => {
@@ -49,6 +80,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const loginWithGoogle = async () => {
     const result = await signInWithPopup(auth, googleProvider);
+    // Verificar inhabilitado
+    try {
+      const { db } = await import("./firebase");
+      const { getDoc, doc } = await import("firebase/firestore");
+      const snap = await getDoc(doc(db, "usuarios", result.user.uid));
+      if (snap.exists() && snap.data()?.deshabilitado === true) {
+        await signOut(auth);
+        throw new Error("Esta cuenta ha sido inhabilitada. Contacta al administrador.");
+      }
+    } catch (err) {
+      if (err instanceof Error && err.message.includes("inhabilitada")) throw err;
+    }
     try {
       await addUsuario(result.user.uid, result.user.email || "");
     } catch {

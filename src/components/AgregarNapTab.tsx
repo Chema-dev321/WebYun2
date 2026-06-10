@@ -21,6 +21,7 @@ export default function AgregarNapTab({ onSuccess, naps, userRole }: Props) {
   const [capacidad, setCapacidad] = useState("8");
   const [estadoTomodat, setEstadoTomodat] = useState("Activo");
   const [verificacion, setVerificacion] = useState("0");
+  const [fechaVerificacion, setFechaVerificacion] = useState("");
   const [latitud, setLatitud] = useState("");
   const [longitud, setLongitud] = useState("");
   const [loading, setLoading] = useState(false);
@@ -181,6 +182,7 @@ export default function AgregarNapTab({ onSuccess, naps, userRole }: Props) {
         setCapacidad(String(nap.capacidad_total));
         setEstadoTomodat(nap.estado_tomodat);
         setVerificacion(String(nap.verificacion || 0));
+        setFechaVerificacion(nap.fecha_verificacion || "");
         setLatitud(nap.latitud != null ? String(nap.latitud) : "");
         setLongitud(nap.longitud != null ? String(nap.longitud) : "");
         setMsg({ type: "info", text: `NAP "${idNap}" ya existe. Puedes modificar sus datos.` });
@@ -212,6 +214,7 @@ export default function AgregarNapTab({ onSuccess, naps, userRole }: Props) {
         puertos_ocupados: 0,
         estado_tomodat: estadoTomodat,
         verificacion: parseInt(verificacion) || 0,
+        fecha_verificacion: fechaVerificacion || undefined,
         latitud: latitud ? parseFloat(latitud) : undefined,
         longitud: longitud ? parseFloat(longitud) : undefined,
       });
@@ -376,11 +379,21 @@ export default function AgregarNapTab({ onSuccess, naps, userRole }: Props) {
           </div>
           <div>
             <label className="block text-xs text-(--hulux-text-muted) mb-1">Verificación</label>
-            <input
-              type="number"
+            <select
               value={verificacion}
               onChange={(e) => setVerificacion(e.target.value)}
-              min="0"
+              className="w-full rounded-lg bg-(--hulux-surface) border border-(--hulux-border) p-2 text-sm text-(--hulux-text) focus:outline-none focus:ring-2 focus:ring-(--hulux-blue)"
+            >
+              <option value="0">No</option>
+              <option value="1">Sí</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs text-(--hulux-text-muted) mb-1">Fecha de verificación</label>
+            <input
+              type="date"
+              value={fechaVerificacion}
+              onChange={(e) => setFechaVerificacion(e.target.value)}
               className="w-full rounded-lg bg-(--hulux-surface) border border-(--hulux-border) p-2 text-sm text-(--hulux-text) focus:outline-none focus:ring-2 focus:ring-(--hulux-blue)"
             />
           </div>

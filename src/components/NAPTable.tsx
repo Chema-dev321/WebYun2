@@ -185,6 +185,7 @@ export default function NAPTable({ naps, onRefresh, onFilterChange, userRole = "
       capacidad_total: nap.capacidad_total,
       estado_tomodat: nap.estado_tomodat,
       verificacion: nap.verificacion,
+      fecha_verificacion: nap.fecha_verificacion,
       latitud: nap.latitud,
       longitud: nap.longitud,
     });
@@ -402,6 +403,7 @@ export default function NAPTable({ naps, onRefresh, onFilterChange, userRole = "
                 <th className="p-3">Localidad</th>
                 <th className="p-3">Ocupación</th>
                 <th className="p-3">%</th>
+                <th className="p-3">Últ. Verificación</th>
                 <th className="p-3">Verif.</th>
                 <th className="p-3">Coords</th>
                 <th className="p-3">Tomodat</th>
@@ -490,18 +492,48 @@ export default function NAPTable({ naps, onRefresh, onFilterChange, userRole = "
                         <span className="text-xs text-(--hulux-text) font-bold">{pct}%</span>
                       </div>
                     </td>
-                    <td className="p-3 text-(--hulux-text-muted) text-center">
+                    {/* Últ. Verificación */}
+                    <td className="p-3 text-xs text-(--hulux-text-muted) whitespace-nowrap">
                       {editingId === nap.id ? (
                         <input
-                          type="number"
-                          value={editFields.verificacion ?? 0}
-                          onChange={(e) => setEditFields((f) => ({ ...f, verificacion: parseInt(e.target.value) || 0 }))}
-                          min="0"
-                          className="w-16 rounded bg-(--hulux-surface) border border-(--hulux-border) p-1 text-sm text-(--hulux-text) text-center focus:outline-none focus:ring-2 focus:ring-(--hulux-blue)"
+                          type="date"
+                          value={editFields.fecha_verificacion ?? ""}
+                          onChange={(e) => setEditFields((f) => ({ ...f, fecha_verificacion: e.target.value }))}
+                          className="rounded bg-(--hulux-surface) border border-(--hulux-border) p-1 text-xs text-(--hulux-text) focus:outline-none focus:ring-2 focus:ring-(--hulux-blue)"
                         />
+                      ) : nap.fecha_verificacion ? (
+                        <span>{new Date(nap.fecha_verificacion + "T12:00:00").toLocaleDateString("es-MX", { day: "2-digit", month: "short", year: "numeric" })}</span>
                       ) : (
-                        nap.verificacion || "—"
+                        <span>—</span>
                       )}
+                    </td>
+                    {/* Verificación Sí/No — inline select */}
+                    <td className="p-3 text-center">
+                      <select
+                        value={editingId === nap.id ? (editFields.verificacion ?? nap.verificacion) : nap.verificacion}
+                        onChange={async (e) => {
+                          const val = parseInt(e.target.value);
+                          const hoy = new Date().toISOString().split("T")[0];
+                          if (editingId === nap.id) {
+                            setEditFields((f) => ({ ...f, verificacion: val, fecha_verificacion: hoy }));
+                          } else {
+                            try {
+                              await updateNAP(nap.id, { verificacion: val, fecha_verificacion: hoy });
+                              onRefresh();
+                            } catch (err) {
+                              showToast("Error al actualizar verificación", "error");
+                            }
+                          }
+                        }}
+                        className={`px-2 py-1 rounded-lg text-xs font-bold border cursor-pointer focus:outline-none focus:ring-2 focus:ring-(--hulux-blue) transition-colors ${
+                          (editingId === nap.id ? (editFields.verificacion ?? nap.verificacion) : nap.verificacion)
+                            ? "bg-[rgba(205,219,0,0.18)] text-(--hulux-text) border-[rgba(205,219,0,0.35)]"
+                            : "bg-[rgba(112,0,63,0.10)] text-(--hulux-text-muted) border-[rgba(112,0,63,0.25)]"
+                        }`}
+                      >
+                        <option value={1}>✓ Sí</option>
+                        <option value={0}>✗ No</option>
+                      </select>
                     </td>
                     <td className="p-3 text-xs text-(--hulux-text-muted)">
                       {editingId === nap.id ? (
@@ -586,6 +618,15 @@ export default function NAPTable({ naps, onRefresh, onFilterChange, userRole = "
                             </button>
                           </div>
                         )
+                      )}
+                      {userRole === "soporte" && editingId !== nap.id && (
+                        <button
+                          onClick={() => handleDeleteNAP(nap.id)}
+                          disabled={deleting === nap.id}
+                          className="px-2 py-1 text-xs bg-transparent hover:bg-[rgba(112,0,63,0.12)] text-(--hulux-text) border border-[rgba(112,0,63,0.35)] rounded transition-colors disabled:opacity-50 font-bold"
+                        >
+                          {deleting === nap.id ? "..." : "Eliminar"}
+                        </button>
                       )}
                     </td>
                     <td className="p-3 text-right">

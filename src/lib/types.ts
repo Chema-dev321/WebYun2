@@ -8,6 +8,7 @@ export interface NAP {
   puertos_ocupados: number;
   estado_tomodat: string;
   verificacion: number;
+  fecha_verificacion?: string;
   latitud?: number;
   longitud?: number;
 }

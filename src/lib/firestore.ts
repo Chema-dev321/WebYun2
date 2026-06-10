@@ -503,6 +503,7 @@ export interface Usuario {
   email: string;
   creado: string;
   rol: Rol;
+  deshabilitado?: boolean;
 }
 
 const USUARIOS_COL = "usuarios";
@@ -532,6 +533,10 @@ export async function addUsuario(uid: string, email: string): Promise<void> {
 
 export async function updateUsuarioRol(uid: string, nuevoRol: Rol): Promise<void> {
   await updateDoc(doc(db, USUARIOS_COL, uid), { rol: nuevoRol });
+}
+
+export async function toggleUsuarioHabilitado(uid: string, deshabilitado: boolean): Promise<void> {
+  await updateDoc(doc(db, USUARIOS_COL, uid), { deshabilitado });
 }
 
 // ── Optimizaciones (Suscripciones en tiempo real) ──

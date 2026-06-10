@@ -69,7 +69,7 @@ function Dashboard() {
         return ["dashboard", "agregarNap", "clientes", "buscar", "mapa"].includes(t.key);
       }
       if (userRole === "administracion") {
-        return ["dashboard", "clientes", "buscar"].includes(t.key);
+        return ["dashboard", "clientes", "buscar", "mapa"].includes(t.key);
       }
       // instalador
       return t.key === "mapa";
