@@ -9,6 +9,7 @@ export default function LoginPage() {
   const { login, register, loginWithGoogle } = useAuth();
   const router = useRouter();
   const [email, setEmail] = useState("");
+  const [nombre, setNombre] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isRegister, setIsRegister] = useState(false);
@@ -59,7 +60,7 @@ export default function LoginPage() {
 
     try {
       if (isRegister) {
-        await register(email, password);
+        await register(email, password, nombre.trim());
       } else {
         await login(email, password);
       }
@@ -108,6 +109,22 @@ export default function LoginPage() {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
+            {isRegister && (
+              <div>
+                <label className="block text-sm font-medium text-(--hulux-text) mb-1.5">
+                  Nombre completo
+                </label>
+                <input
+                  type="text"
+                  value={nombre}
+                  onChange={(e) => setNombre(e.target.value)}
+                  required={isRegister}
+                  className="w-full px-4 py-2.5 bg-(--hulux-surface) border border-(--hulux-border) rounded-lg text-(--hulux-text) placeholder-(--hulux-text-muted) focus:outline-none focus:ring-2 focus:ring-(--hulux-blue) focus:border-transparent"
+                  placeholder="Tu nombre y apellido"
+                />
+              </div>
+            )}
+
             <div>
               <label className="block text-sm font-medium text-(--hulux-text) mb-1.5">
                 Correo electrónico

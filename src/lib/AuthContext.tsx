@@ -19,7 +19,7 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string) => Promise<void>;
+  register: (email: string, password: string, nombre?: string) => Promise<void>;
   loginWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
 }
@@ -73,9 +73,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const register = async (email: string, password: string) => {
+  const register = async (email: string, password: string, nombre?: string) => {
     const cred = await createUserWithEmailAndPassword(auth, email, password);
-    await addUsuario(cred.user.uid, email);
+    if (nombre) {
+      const { updateProfile } = await import("firebase/auth");
+      await updateProfile(cred.user, { displayName: nombre });
+    }
+    await addUsuario(cred.user.uid, email, nombre);
   };
 
   const loginWithGoogle = async () => {
@@ -93,7 +97,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (err instanceof Error && err.message.includes("inhabilitada")) throw err;
     }
     try {
-      await addUsuario(result.user.uid, result.user.email || "");
+      await addUsuario(result.user.uid, result.user.email || "", result.user.displayName || undefined);
     } catch {
       // Firestore write can fail silently — user is already signed in
     }

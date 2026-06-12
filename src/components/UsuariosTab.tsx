@@ -64,7 +64,7 @@ export default function UsuariosTab({ usuarios }: { usuarios: Usuario[] }) {
             <table className="w-full text-left text-sm table-zebra">
               <thead className="bg-(--hulux-subtle) text-(--hulux-text) text-xs uppercase tracking-wider">
                 <tr>
-                  <th className="p-3">Email</th>
+                  <th className="p-3">Usuario</th>
                   <th className="p-3">Rol</th>
                   <th className="p-3">Estado</th>
                   <th className="p-3">Creado</th>
@@ -84,15 +84,22 @@ export default function UsuariosTab({ usuarios }: { usuarios: Usuario[] }) {
                           : "hover:bg-[rgba(148,237,242,0.12)]"
                       }`}
                     >
-                      {/* Email */}
-                      <td className="p-3 font-semibold text-(--hulux-text)">
-                        <div className="flex items-center gap-2">
+                      {/* Usuario (Nombre + Email) */}
+                      <td className="p-3">
+                        <div className="flex items-center gap-3">
                           <span
-                            className={`w-2 h-2 rounded-full shrink-0 ${
+                            className={`w-2.5 h-2.5 rounded-full shrink-0 shadow-sm ${
                               isDisabled ? "bg-(--hulux-maroon)" : "bg-(--hulux-lime)"
                             }`}
                           />
-                          {u.email}
+                          <div>
+                            <p className="font-semibold text-(--hulux-text)">
+                              {u.nombre || "Sin nombre"}
+                            </p>
+                            <p className="text-xs text-(--hulux-text-muted)">
+                              {u.email}
+                            </p>
+                          </div>
                         </div>
                       </td>
 
@@ -107,6 +114,7 @@ export default function UsuariosTab({ usuarios }: { usuarios: Usuario[] }) {
                           <option value="admin">Admin</option>
                           <option value="administracion">Administración</option>
                           <option value="sucursal">Sucursal</option>
+                          <option value="supervisor">Supervisor</option>
                           <option value="soporte">Soporte</option>
                           <option value="infraestructura">Infraestructura</option>
                           <option value="instalador">Instalador</option>

@@ -495,12 +495,13 @@ export function getNAPColor(nap: NAP): SemaforoState {
 
 // ── Usuarios de plataforma ──
 
-export type Rol = "admin" | "sucursal" | "infraestructura" | "instalador" | "administracion" | "soporte";
+export type Rol = "admin" | "sucursal" | "supervisor" | "infraestructura" | "instalador" | "administracion" | "soporte";
 
 export interface Usuario {
   id: string;
   uid: string;
   email: string;
+  nombre?: string;
   creado: string;
   rol: Rol;
   deshabilitado?: boolean;
@@ -513,11 +514,10 @@ export async function getUsuarios(): Promise<Usuario[]> {
   return snap.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<Usuario, "id">) }));
 }
 
-export async function addUsuario(uid: string, email: string): Promise<void> {
+export async function addUsuario(uid: string, email: string, nombre?: string): Promise<void> {
   const userRef = doc(db, USUARIOS_COL, uid);
   const userSnap = await getDoc(userRef);
 
-  // Solo creamos el documento si no existe, para NO sobrescribir su rol
   if (!userSnap.exists()) {
     const allUsersSnap = await getDocs(query(collection(db, USUARIOS_COL), limit(1)));
     const defaultRol: Rol = allUsersSnap.empty ? "admin" : "instalador";
@@ -525,9 +525,13 @@ export async function addUsuario(uid: string, email: string): Promise<void> {
     await setDoc(userRef, {
       uid,
       email,
+      nombre: nombre || "",
       creado: new Date().toISOString().split("T")[0],
       rol: defaultRol,
     });
+  } else if (nombre && !userSnap.data().nombre) {
+    // Si ya existe pero no tenía nombre, se lo actualizamos
+    await updateDoc(userRef, { nombre });
   }
 }
 
@@ -537,6 +541,10 @@ export async function updateUsuarioRol(uid: string, nuevoRol: Rol): Promise<void
 
 export async function toggleUsuarioHabilitado(uid: string, deshabilitado: boolean): Promise<void> {
   await updateDoc(doc(db, USUARIOS_COL, uid), { deshabilitado });
+}
+
+export async function updateUsuarioNombre(uid: string, nombre: string): Promise<void> {
+  await updateDoc(doc(db, USUARIOS_COL, uid), { nombre });
 }
 
 // ── Optimizaciones (Suscripciones en tiempo real) ──

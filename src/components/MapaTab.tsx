@@ -436,7 +436,7 @@ export default function MapaTab({ naps }: Props) {
 
 
       {/* ── Map ── fills available vertical space on mobile */}
-      <div className="relative rounded-xl overflow-hidden border border-(--hulux-border) shadow-(--hulux-shadow)"
+      <div className="relative z-0 rounded-xl overflow-hidden border border-(--hulux-border) shadow-(--hulux-shadow)"
         style={{ height: "clamp(360px, 65vh, 620px)" }}>
         <div ref={mapRef} style={{ height: "100%", width: "100%" }} />
 

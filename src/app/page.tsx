@@ -18,6 +18,7 @@ import UsuariosTab from "@/components/UsuariosTab";
 import LogsTab from "@/components/LogsTab";
 import dynamic from "next/dynamic";
 const MapaTab = dynamic(() => import("@/components/MapaTab"), { ssr: false });
+import PerfilModal from "@/components/PerfilModal";
 import { registrarLog } from "@/lib/audit";
 
 type Tab = "dashboard" | "registro" | "clientes" | "buscar" | "agregarNap" | "usuarios" | "logs" | "mapa";
@@ -48,6 +49,7 @@ function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<Tab>("mapa");
   const [filteredNaps, setFilteredNaps] = useState<NAP[] | null>(null);
+  const [perfilOpen, setPerfilOpen] = useState(false);
   const [reconciling, setReconciling] = useState(false);
   const [reconcileMsg, setReconcileMsg] = useState("");
 
@@ -61,6 +63,9 @@ function Dashboard() {
       if (userRole === "admin") return true;
       if (userRole === "sucursal") {
         return ["dashboard", "registro", "clientes", "buscar", "mapa"].includes(t.key);
+      }
+      if (userRole === "supervisor") {
+        return ["dashboard", "registro", "clientes", "buscar", "mapa", "logs"].includes(t.key);
       }
       if (userRole === "soporte") {
         return ["dashboard", "clientes", "buscar"].includes(t.key);
@@ -149,6 +154,14 @@ function Dashboard() {
             <p className="text-(--hulux-text-muted) text-xs">Gestión de fibra óptica</p>
           </div>
           <div className="flex items-center gap-4">
+            {/* Botón de perfil */}
+            <button
+              onClick={() => setPerfilOpen(true)}
+              title="Mi perfil"
+              className="w-8 h-8 rounded-full bg-gradient-to-br from-[var(--hulux-blue)] to-[var(--hulux-cyan)] flex items-center justify-center text-white text-sm font-bold shadow hover:brightness-110 transition-all"
+            >
+              {(user?.displayName || user?.email || "?")[0].toUpperCase()}
+            </button>
             <span className="text-(--hulux-text-muted) text-xs hidden sm:inline">{user?.email}</span>
             <ThemeToggle />
             <button
@@ -291,6 +304,9 @@ function Dashboard() {
           <MapaTab naps={naps} />
         )}
       </div>
+
+      {/* Modal de perfil */}
+      {perfilOpen && <PerfilModal onClose={() => setPerfilOpen(false)} />}
     </main>
   );
 }
