@@ -78,11 +78,14 @@ export default function PerfilModal({ onClose }: Props) {
       setPasswordNueva("");
       setPasswordConfirm("");
     } catch (err: unknown) {
+      console.error("Password update error:", err);
       const msg =
         err instanceof Error && err.message.includes("wrong-password")
           ? "La contraseña actual es incorrecta."
           : err instanceof Error && err.message.includes("invalid-credential")
           ? "La contraseña actual es incorrecta."
+          : err instanceof Error && err.message.includes("requires-recent-login")
+          ? "Por seguridad, cierra sesión y vuelve a entrar para cambiar tu contraseña."
           : "Error al cambiar la contraseña.";
       showToast(msg, "error");
     } finally {
@@ -160,96 +163,104 @@ export default function PerfilModal({ onClose }: Props) {
 
           {/* ── Sección: Contraseña ── */}
           <section>
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-xs font-semibold uppercase tracking-wider text-(--hulux-text-muted)">
-                Cambiar contraseña
-              </h3>
-              <button
-                onClick={() => setShowPass((v) => !v)}
-                className="text-xs text-(--hulux-text-muted) hover:text-(--hulux-text) transition-colors"
-              >
-                {showPass ? "Ocultar" : "Mostrar"}
-              </button>
-            </div>
-            <div className="space-y-3">
-              <div>
-                <label className="block text-xs text-(--hulux-text-muted) mb-1">
-                  Contraseña actual
-                </label>
-                <input
-                  type={showPass ? "text" : "password"}
-                  value={passwordActual}
-                  onChange={(e) => setPasswordActual(e.target.value)}
-                  placeholder="••••••••"
-                  className="w-full rounded-lg bg-(--hulux-surface-elevated) border border-(--hulux-border) px-3 py-2 text-sm text-(--hulux-text) placeholder-(--hulux-text-muted) focus:outline-none focus:ring-2 focus:ring-(--hulux-blue)"
-                />
+            {user?.providerData.some(p => p.providerId === "google.com") ? (
+              <div className="bg-[rgba(148,237,242,0.1)] border border-[rgba(148,237,242,0.2)] rounded-lg p-4 text-sm text-(--hulux-text-muted)">
+                Iniciaste sesión con Google. No puedes cambiar tu contraseña desde aquí; hazlo directamente en tu cuenta de Google.
               </div>
-              <div>
-                <label className="block text-xs text-(--hulux-text-muted) mb-1">
-                  Nueva contraseña
-                </label>
-                <input
-                  type={showPass ? "text" : "password"}
-                  value={passwordNueva}
-                  onChange={(e) => setPasswordNueva(e.target.value)}
-                  placeholder="Mínimo 6 caracteres"
-                  className="w-full rounded-lg bg-(--hulux-surface-elevated) border border-(--hulux-border) px-3 py-2 text-sm text-(--hulux-text) placeholder-(--hulux-text-muted) focus:outline-none focus:ring-2 focus:ring-(--hulux-blue)"
-                />
-              </div>
-              <div>
-                <label className="block text-xs text-(--hulux-text-muted) mb-1">
-                  Confirmar nueva contraseña
-                </label>
-                <input
-                  type={showPass ? "text" : "password"}
-                  value={passwordConfirm}
-                  onChange={(e) => setPasswordConfirm(e.target.value)}
-                  placeholder="Repite la nueva contraseña"
-                  className="w-full rounded-lg bg-(--hulux-surface-elevated) border border-(--hulux-border) px-3 py-2 text-sm text-(--hulux-text) placeholder-(--hulux-text-muted) focus:outline-none focus:ring-2 focus:ring-(--hulux-blue)"
-                />
-              </div>
-
-              {/* Indicador de seguridad */}
-              {passwordNueva.length > 0 && (
-                <div className="space-y-1">
-                  <div className="flex gap-1">
-                    {[1, 2, 3, 4].map((i) => (
-                      <div
-                        key={i}
-                        className={`h-1 flex-1 rounded-full transition-colors ${
-                          passwordNueva.length >= i * 3
-                            ? i <= 1
-                              ? "bg-red-400"
-                              : i <= 2
-                              ? "bg-orange-400"
-                              : i <= 3
-                              ? "bg-yellow-400"
-                              : "bg-green-400"
-                            : "bg-(--hulux-border)"
-                        }`}
-                      />
-                    ))}
-                  </div>
-                  <p className="text-xs text-(--hulux-text-muted)">
-                    {passwordNueva.length < 6
-                      ? "Muy corta"
-                      : passwordNueva.length < 9
-                      ? "Débil"
-                      : passwordNueva.length < 12
-                      ? "Aceptable"
-                      : "Fuerte"}
-                  </p>
+            ) : (
+              <>
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-xs font-semibold uppercase tracking-wider text-(--hulux-text-muted)">
+                    Cambiar contraseña
+                  </h3>
+                  <button
+                    onClick={() => setShowPass((v) => !v)}
+                    className="text-xs text-(--hulux-text-muted) hover:text-(--hulux-text) transition-colors"
+                  >
+                    {showPass ? "Ocultar" : "Mostrar"}
+                  </button>
                 </div>
-              )}
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-xs text-(--hulux-text-muted) mb-1">
+                      Contraseña actual
+                    </label>
+                    <input
+                      type={showPass ? "text" : "password"}
+                      value={passwordActual}
+                      onChange={(e) => setPasswordActual(e.target.value)}
+                      placeholder="••••••••"
+                      className="w-full rounded-lg bg-(--hulux-surface-elevated) border border-(--hulux-border) px-3 py-2 text-sm text-(--hulux-text) placeholder-(--hulux-text-muted) focus:outline-none focus:ring-2 focus:ring-(--hulux-blue)"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-(--hulux-text-muted) mb-1">
+                      Nueva contraseña
+                    </label>
+                    <input
+                      type={showPass ? "text" : "password"}
+                      value={passwordNueva}
+                      onChange={(e) => setPasswordNueva(e.target.value)}
+                      placeholder="Mínimo 6 caracteres"
+                      className="w-full rounded-lg bg-(--hulux-surface-elevated) border border-(--hulux-border) px-3 py-2 text-sm text-(--hulux-text) placeholder-(--hulux-text-muted) focus:outline-none focus:ring-2 focus:ring-(--hulux-blue)"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-(--hulux-text-muted) mb-1">
+                      Confirmar nueva contraseña
+                    </label>
+                    <input
+                      type={showPass ? "text" : "password"}
+                      value={passwordConfirm}
+                      onChange={(e) => setPasswordConfirm(e.target.value)}
+                      placeholder="Repite la nueva contraseña"
+                      className="w-full rounded-lg bg-(--hulux-surface-elevated) border border-(--hulux-border) px-3 py-2 text-sm text-(--hulux-text) placeholder-(--hulux-text-muted) focus:outline-none focus:ring-2 focus:ring-(--hulux-blue)"
+                    />
+                  </div>
 
-              <button
-                onClick={handleCambiarPassword}
-                disabled={savingPass}
-                className="w-full px-4 py-2 text-sm font-semibold rounded-lg bg-[rgba(112,0,63,0.12)] hover:bg-[rgba(112,0,63,0.22)] text-(--hulux-maroon-light) border border-[rgba(112,0,63,0.25)] transition-colors disabled:opacity-50"
-              >
-                {savingPass ? "Cambiando..." : "Cambiar contraseña"}
-              </button>
-            </div>
+                  {/* Indicador de seguridad */}
+                  {passwordNueva.length > 0 && (
+                    <div className="space-y-1">
+                      <div className="flex gap-1">
+                        {[1, 2, 3, 4].map((i) => (
+                          <div
+                            key={i}
+                            className={`h-1 flex-1 rounded-full transition-colors ${
+                              passwordNueva.length >= i * 3
+                                ? i <= 1
+                                  ? "bg-red-400"
+                                  : i <= 2
+                                  ? "bg-orange-400"
+                                  : i <= 3
+                                  ? "bg-yellow-400"
+                                  : "bg-green-400"
+                                : "bg-(--hulux-border)"
+                            }`}
+                          />
+                        ))}
+                      </div>
+                      <p className="text-xs text-(--hulux-text-muted)">
+                        {passwordNueva.length < 6
+                          ? "Muy corta"
+                          : passwordNueva.length < 9
+                          ? "Débil"
+                          : passwordNueva.length < 12
+                          ? "Aceptable"
+                          : "Fuerte"}
+                      </p>
+                    </div>
+                  )}
+
+                  <button
+                    onClick={handleCambiarPassword}
+                    disabled={savingPass}
+                    className="w-full px-4 py-2 text-sm font-semibold rounded-lg bg-[rgba(112,0,63,0.12)] hover:bg-[rgba(112,0,63,0.22)] text-(--hulux-maroon-light) border border-[rgba(112,0,63,0.25)] transition-colors disabled:opacity-50"
+                  >
+                    {savingPass ? "Cambiando..." : "Cambiar contraseña"}
+                  </button>
+                </div>
+              </>
+            )}
           </section>
         </div>
       </div>
