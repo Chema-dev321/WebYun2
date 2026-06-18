@@ -97,12 +97,12 @@ export default function PerfilModal({ onClose }: Props) {
     <>
       {/* Overlay */}
       <div
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[1000]"
+        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-1000"
         onClick={onClose}
       />
 
       {/* Panel */}
-      <div className="fixed inset-y-0 right-0 w-full max-w-md z-[1010] flex flex-col bg-(--hulux-surface) border-l border-(--hulux-border) shadow-2xl">
+      <div className="fixed inset-y-0 right-0 w-full max-w-md z-1010 flex flex-col bg-(--hulux-surface) border-l border-(--hulux-border) shadow-2xl">
         {/* Header del panel */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-(--hulux-border) bg-(--hulux-subtle)">
           <div>
@@ -124,7 +124,7 @@ export default function PerfilModal({ onClose }: Props) {
 
           {/* Avatar / Inicial */}
           <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-full bg-gradient-to-br from-[var(--hulux-blue)] to-[var(--hulux-cyan)] flex items-center justify-center text-white text-2xl font-bold shadow-lg select-none">
+            <div className="w-14 h-14 rounded-full bg-linear-to-br from-(--hulux-blue) to-(--hulux-cyan) flex items-center justify-center text-white text-2xl font-bold shadow-lg select-none">
               {(user?.displayName || user?.email || "?")[0].toUpperCase()}
             </div>
             <div>

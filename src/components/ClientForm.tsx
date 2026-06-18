@@ -2,11 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import type { NAP } from "@/lib/types";
-import {
-  getMunicipios,
-  getLocalidadesByMunicipio,
-  registerCliente,
-} from "@/lib/firestore";
+import { registerCliente } from "@/lib/firestore";
 import { useAuth } from "@/lib/AuthContext";
 import { registrarLog } from "@/lib/audit";
 
@@ -19,8 +15,6 @@ interface Props {
 
 export default function ClientForm({ naps, onSuccess, initialNap, onCancel }: Props) {
   const { user } = useAuth();
-  const [municipios, setMunicipios] = useState<string[]>([]);
-  const [localidades, setLocalidades] = useState<string[]>([]);
   const [municipio, setMunicipio] = useState(initialNap?.municipio || "");
   const [localidad, setLocalidad] = useState(initialNap?.localidad || "");
   const [idNap, setIdNap] = useState(initialNap?.id || "");
@@ -30,25 +24,28 @@ export default function ClientForm({ naps, onSuccess, initialNap, onCancel }: Pr
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState<{ type: "error" | "success"; text: string } | null>(null);
 
-  useEffect(() => {
-    getMunicipios().then(setMunicipios);
-  }, []);
+  // Derivar municipios y localidades directamente de las NAPs (igual que el Dashboard)
+  const municipios = useMemo(() => {
+    const set = new Set(naps.filter(n => n.municipio).map(n => n.municipio!));
+    return Array.from(set).sort();
+  }, [naps]);
 
+  const localidades = useMemo(() => {
+    if (!municipio) return [];
+    const set = new Set(
+      naps.filter(n => n.municipio === municipio && n.localidad).map(n => n.localidad!)
+    );
+    return Array.from(set).sort();
+  }, [naps, municipio]);
+
+  // Resetear localidad e idNap cuando cambia municipio (solo si no viene de initialNap)
   useEffect(() => {
-    if (municipio) {
-      getLocalidadesByMunicipio(municipio).then((l) => {
-        setLocalidades(l);
-        // Do not reset if we have an initialNap
-        if (!initialNap) {
-          setLocalidad("");
-          setIdNap("");
-        }
-      });
-    } else {
-      setLocalidades([]);
-      if (!initialNap) setLocalidad("");
+    if (!initialNap) {
+      setLocalidad("");
+      setIdNap("");
     }
-  }, [municipio, initialNap]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [municipio]);
 
   // NAPs filtradas por municipio y/o localidad seleccionados
   const napsFiltradas = useMemo(() => {

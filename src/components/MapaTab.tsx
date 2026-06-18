@@ -250,13 +250,28 @@ export default function MapaTab({ naps }: Props) {
 
       const semBadge = `<span style="background:${color}22;color:${color === "#4ade80" ? "#16a34a" : color};border:1px solid ${color}55;padding:1px 7px;border-radius:999px;font-size:10px;font-weight:600">${SEMAFORO_LABEL[sem]}</span>`;
 
+      const verifBadge = nap.verificacion === 1
+        ? `<span style="background:#cddb0022;color:#6b7c00;border:1px solid #cddb0055;padding:1px 7px;border-radius:999px;font-size:10px;font-weight:600">✓ Verificada</span>`
+        : `<span style="background:#70003f18;color:#a0005a;border:1px solid #70003f33;padding:1px 7px;border-radius:999px;font-size:10px;font-weight:600">✗ Sin verificar</span>`;
+
+      const coordsStr = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+      const coordsRow = `
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;background:#f0f9ff;border:1px solid #bae6fd;border-radius:6px;padding:5px 8px">
+          <span style="font-size:10px;color:#0369a1;font-family:monospace">${coordsStr}</span>
+          <button
+            onclick="navigator.clipboard.writeText('${coordsStr}').then(()=>{this.textContent='✓';setTimeout(()=>{this.textContent='Copiar'},1200)})"
+            style="font-size:10px;background:#0ea5e9;color:white;border:none;border-radius:4px;padding:2px 7px;cursor:pointer;margin-left:6px;font-family:system-ui"
+          >Copiar</button>
+        </div>`;
+
       marker.bindPopup(`
-        <div style="font-family:system-ui,sans-serif;min-width:200px">
-          <div style="font-weight:700;font-size:13px;margin-bottom:6px;color:#11293e">${nap.id_nap}</div>
+        <div style="font-family:system-ui,sans-serif;min-width:210px">
+          <div style="font-weight:700;font-size:13px;margin-bottom:4px;color:#11293e">${nap.id_nap}</div>
           <div style="font-size:11px;color:#666;margin-bottom:8px">${nap.municipio} › ${nap.localidad}</div>
-          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
+          <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px">
             ${semBadge}
             ${tomodatBadge}
+            ${verifBadge}
           </div>
           <div style="background:#f5f5f5;border-radius:6px;padding:6px 10px;font-size:12px">
             <div style="display:flex;justify-content:space-between;margin-bottom:4px">
@@ -268,8 +283,10 @@ export default function MapaTab({ naps }: Props) {
             </div>
             <div style="text-align:right;font-size:10px;color:#888;margin-top:2px">${pct}%</div>
           </div>
+          ${nap.fecha_verificacion ? `<div style="font-size:10px;color:#888;margin-top:6px">Última verificación: <strong>${nap.fecha_verificacion}</strong></div>` : ""}
+          ${coordsRow}
         </div>
-      `, { maxWidth: 260 });
+      `, { maxWidth: 280 });
 
       marker.on("click", () => {
         setSelectedNap(nap);

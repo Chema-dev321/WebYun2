@@ -131,6 +131,47 @@ export default function NAPTable({ naps, onRefresh, onFilterChange, userRole = "
     onFilterChange?.(filteredNaps);
   }, [filteredNaps, onFilterChange]);
 
+  const handleDownloadCSV = () => {
+    if (filteredNaps.length === 0) return;
+    
+    const headers = [
+      "ID NAP", "Localidad", "Municipio", "Capacidad", 
+      "Ocupados", "Disponibles", "Semáforo", "Verificación", "Última Verificación", "Latitud", "Longitud"
+    ];
+    
+    const rows = filteredNaps.map(nap => {
+      const color = getNAPColor(nap);
+      const semaforoStr = SEMAFORO_LABELS[color];
+      return [
+        nap.id_nap,
+        nap.localidad,
+        nap.municipio,
+        nap.capacidad_total,
+        nap.puertos_ocupados,
+        nap.capacidad_total - nap.puertos_ocupados,
+        semaforoStr,
+        nap.verificacion === 1 ? "Sí" : "No",
+        nap.fecha_verificacion || "",
+        nap.latitud || "",
+        nap.longitud || ""
+      ];
+    });
+    
+    const csvContent = [
+      headers.join(","),
+      ...rows.map(r => r.map(cell => `"${cell}"`).join(","))
+    ].join("\n");
+    
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", `naps_webyun_${new Date().toISOString().split("T")[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const handleDelete = async (clienteId: string, napId: string) => {
     const ok = await confirm("¿Eliminar este cliente? Se liberará el puerto en la NAP.");
     if (!ok) return;
@@ -366,9 +407,21 @@ export default function NAPTable({ naps, onRefresh, onFilterChange, userRole = "
 
           {/* Results count */}
           <div className="flex items-center justify-between text-xs text-(--hulux-text-muted) pt-2">
-            <span>
-              Mostrando {filteredNaps.length} de {naps.length} NAPs
-            </span>
+            <div className="flex items-center gap-3">
+              <span>
+                Mostrando {filteredNaps.length} de {naps.length} NAPs
+              </span>
+              <button
+                onClick={handleDownloadCSV}
+                className="flex items-center gap-1.5 px-2 py-1 text-xs font-semibold bg-(--hulux-surface) hover:bg-[rgba(148,237,242,0.1)] border border-(--hulux-border) rounded text-(--hulux-text) transition-colors"
+                title="Descargar tabla actual como CSV"
+              >
+                <svg className="w-3.5 h-3.5 text-(--hulux-cyan)" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+                CSV
+              </button>
+            </div>
             {(search || municipio || activosSemaforo.size > 0 || disponibilidad !== "todas") && (
               <button
                 onClick={() => {

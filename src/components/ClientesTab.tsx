@@ -156,14 +156,64 @@ export default function ClientesTab({ naps, userRole = "instalador" }: { naps: N
           </div>
 
           <div className="flex-1 min-w-[140px] sm:flex-none ml-auto text-right flex flex-col items-end gap-2">
-            {(municipio || localidad || idNapFilter) && (
+            <div className="flex items-center gap-2">
+              {(municipio || localidad || idNapFilter) && (
+                <button
+                  onClick={clearFilters}
+                  className="text-xs px-3 py-1.5 bg-(--hulux-maroon-light) hover:brightness-95 text-white font-medium rounded-lg transition-colors"
+                >
+                  Limpiar filtros
+                </button>
+              )}
               <button
-                onClick={clearFilters}
-                className="text-xs px-3 py-1.5 bg-(--hulux-maroon-light) hover:brightness-95 text-white font-medium rounded-lg transition-colors"
+                onClick={async () => {
+                  try {
+                    const { getAllClientesForExport } = await import("@/lib/firestore");
+                    const allClientes = await getAllClientesForExport(
+                      municipio || undefined,
+                      localidad || undefined,
+                      idNapFilter || undefined
+                    );
+                    
+                    if (allClientes.length === 0) return;
+                    
+                    const headers = ["ID WISP", "Nombre", "ID NAP", "Localidad", "Municipio", "Coordenadas NAP", "Fecha Alta"];
+                    const rows = allClientes.map(c => [
+                      c.id_wisp,
+                      c.nombre,
+                      c.id_nap,
+                      c.localidad,
+                      c.municipio,
+                      c.coords_nap || "No provistas",
+                      c.fecha_alta
+                    ]);
+                    
+                    const csvContent = [
+                      headers.join(","),
+                      ...rows.map(r => r.map(cell => `"${cell}"`).join(","))
+                    ].join("\n");
+                    
+                    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+                    const url = URL.createObjectURL(blob);
+                    const link = document.createElement("a");
+                    link.href = url;
+                    link.setAttribute("download", `clientes_webyun_${new Date().toISOString().split("T")[0]}.csv`);
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                  } catch (e) {
+                    console.error("Error al exportar CSV:", e);
+                    alert("Ocurrió un error al generar el archivo CSV.");
+                  }
+                }}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-(--hulux-surface) hover:bg-[rgba(148,237,242,0.1)] border border-(--hulux-border) rounded-lg text-(--hulux-text) transition-colors"
               >
-                Limpiar filtros
+                <svg className="w-3.5 h-3.5 text-(--hulux-cyan)" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+                Descargar CSV
               </button>
-            )}
+            </div>
             <span className="text-xs text-(--hulux-text-muted) block mb-1">Nota: Utiliza &quot;Buscar Cliente&quot; para buscar por nombre</span>
           </div>
         </div>

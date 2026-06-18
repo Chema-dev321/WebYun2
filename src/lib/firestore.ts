@@ -126,6 +126,27 @@ export async function getClientes(
   };
 }
 
+export async function getAllClientesForExport(
+  municipio?: string,
+  localidad?: string,
+  id_nap?: string
+): Promise<Cliente[]> {
+  const colRef = collection(db, CLIENTES_COL);
+  const constraints: any[] = [];
+
+  if (municipio) constraints.push(where("municipio", "==", municipio));
+  if (localidad) constraints.push(where("localidad", "==", localidad));
+  if (id_nap) constraints.push(where("id_nap", "==", id_nap));
+
+  if (!municipio && !localidad && !id_nap) {
+    constraints.push(orderBy("fecha_alta", "desc"));
+  }
+
+  const q = query(colRef, ...constraints);
+  const snap = await getDocs(q);
+  return snap.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<Cliente, "id">) }));
+}
+
 export async function getClientesByNAP(napId: string): Promise<Cliente[]> {
   const q = query(
     collection(db, CLIENTES_COL),

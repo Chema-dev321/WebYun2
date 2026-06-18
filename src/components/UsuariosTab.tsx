@@ -47,13 +47,55 @@ export default function UsuariosTab({ usuarios }: { usuarios: Usuario[] }) {
     }
   };
 
+  const handleDownloadCSV = () => {
+    if (usuarios.length === 0) return;
+    
+    // Headers
+    const headers = ["ID", "Nombre", "Email", "Rol", "Estado", "Fecha Creación"];
+    
+    // Rows
+    const rows = usuarios.map(u => [
+      u.uid,
+      u.nombre || "Sin nombre",
+      u.email,
+      u.rol,
+      u.deshabilitado ? "Inhabilitado" : "Activo",
+      u.creado
+    ]);
+    
+    // Construir CSV
+    const csvContent = [
+      headers.join(","),
+      ...rows.map(r => r.map(cell => `"${cell}"`).join(","))
+    ].join("\n");
+    
+    // Descargar
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", `usuarios_webyun_${new Date().toISOString().split("T")[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="max-w-4xl mx-auto">
       <div className="rounded-xl border border-(--hulux-border) bg-(--hulux-surface) shadow-(--hulux-shadow) overflow-hidden">
-        <div className="bg-(--hulux-subtle) px-5 py-3 border-b border-(--hulux-border)">
+        <div className="bg-(--hulux-subtle) px-5 py-3 border-b border-(--hulux-border) flex items-center justify-between">
           <h3 className="text-sm font-semibold text-(--hulux-text)">
             Usuarios de la plataforma ({usuarios.length})
           </h3>
+          <button
+            onClick={handleDownloadCSV}
+            className="flex items-center gap-2 px-3 py-1.5 text-xs font-semibold bg-(--hulux-surface) hover:bg-[rgba(148,237,242,0.1)] border border-(--hulux-border) rounded-lg text-(--hulux-text) transition-colors"
+          >
+            <svg className="w-4 h-4 text-(--hulux-cyan)" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+            Descargar CSV
+          </button>
         </div>
         {usuarios.length === 0 ? (
           <div className="p-8 text-center text-(--hulux-text-muted) text-sm">
