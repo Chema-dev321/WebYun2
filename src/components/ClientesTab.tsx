@@ -177,14 +177,13 @@ export default function ClientesTab({ naps, userRole = "instalador" }: { naps: N
                     
                     if (allClientes.length === 0) return;
                     
-                    const headers = ["ID WISP", "Nombre", "ID NAP", "Localidad", "Municipio", "Coordenadas NAP", "Fecha Alta"];
+                    const headers = ["ID WISP", "Nombre", "ID NAP", "Localidad", "Municipio", "Fecha Alta"];
                     const rows = allClientes.map(c => [
                       c.id_wisp,
                       c.nombre,
                       c.id_nap,
                       c.localidad,
                       c.municipio,
-                      c.coords_nap || "No provistas",
                       c.fecha_alta
                     ]);
                     
