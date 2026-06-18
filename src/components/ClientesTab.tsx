@@ -165,6 +165,7 @@ export default function ClientesTab({ naps, userRole = "instalador" }: { naps: N
                   Limpiar filtros
                 </button>
               )}
+              {/* CSV_EXPORT_DISABLED
               <button
                 onClick={async () => {
                   try {
@@ -212,6 +213,7 @@ export default function ClientesTab({ naps, userRole = "instalador" }: { naps: N
                 </svg>
                 Descargar CSV
               </button>
+              CSV_EXPORT_DISABLED */}
             </div>
             <span className="text-xs text-(--hulux-text-muted) block mb-1">Nota: Utiliza &quot;Buscar Cliente&quot; para buscar por nombre</span>
           </div>

@@ -411,6 +411,7 @@ export default function NAPTable({ naps, onRefresh, onFilterChange, userRole = "
               <span>
                 Mostrando {filteredNaps.length} de {naps.length} NAPs
               </span>
+              {/* CSV_EXPORT_DISABLED
               <button
                 onClick={handleDownloadCSV}
                 className="flex items-center gap-1.5 px-2 py-1 text-xs font-semibold bg-(--hulux-surface) hover:bg-[rgba(148,237,242,0.1)] border border-(--hulux-border) rounded text-(--hulux-text) transition-colors"
@@ -421,6 +422,7 @@ export default function NAPTable({ naps, onRefresh, onFilterChange, userRole = "
                 </svg>
                 CSV
               </button>
+              CSV_EXPORT_DISABLED */}
             </div>
             {(search || municipio || activosSemaforo.size > 0 || disponibilidad !== "todas") && (
               <button

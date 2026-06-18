@@ -87,6 +87,7 @@ export default function UsuariosTab({ usuarios }: { usuarios: Usuario[] }) {
           <h3 className="text-sm font-semibold text-(--hulux-text)">
             Usuarios de la plataforma ({usuarios.length})
           </h3>
+          {/* CSV_EXPORT_DISABLED
           <button
             onClick={handleDownloadCSV}
             className="flex items-center gap-2 px-3 py-1.5 text-xs font-semibold bg-(--hulux-surface) hover:bg-[rgba(148,237,242,0.1)] border border-(--hulux-border) rounded-lg text-(--hulux-text) transition-colors"
@@ -96,6 +97,7 @@ export default function UsuariosTab({ usuarios }: { usuarios: Usuario[] }) {
             </svg>
             Descargar CSV
           </button>
+          CSV_EXPORT_DISABLED */}
         </div>
         {usuarios.length === 0 ? (
           <div className="p-8 text-center text-(--hulux-text-muted) text-sm">
