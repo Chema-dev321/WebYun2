@@ -111,6 +111,14 @@ export default function MapaTab({ naps }: Props) {
   const [mounted, setMounted] = useState(false);
   const mapCenteredRef = useRef(false);
 
+  // Special markers
+  const userMarkerRef = useRef<import("leaflet").Marker | null>(null);
+  const searchMarkerRef = useRef<import("leaflet").Marker | null>(null);
+
+  // Coords search
+  const [searchCoordsInput, setSearchCoordsInput] = useState("");
+  const [searchMarker, setSearchMarker] = useState<[number, number] | null>(null);
+
 
   // NAPs with coords
   const napsConCoords = useMemo(() => naps.filter(
@@ -309,6 +317,54 @@ export default function MapaTab({ naps }: Props) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [napsFiltradas, mounted]);
 
+  // Special markers effect (User & Search)
+  useEffect(() => {
+    if (!mounted) return;
+    import("leaflet").then((L) => {
+      const map = mapInstanceRef.current;
+      if (!map) return;
+
+      // Update User Marker
+      if (userMarkerRef.current) {
+        map.removeLayer(userMarkerRef.current);
+        userMarkerRef.current = null;
+      }
+      if (userPos) {
+        userMarkerRef.current = L.marker(userPos, {
+          icon: L.divIcon({
+            className: "",
+            html: `<div style="width:16px;height:16px;background:#3b82f6;border:3px solid white;border-radius:50%;box-shadow:0 0 0 2px rgba(59,130,246,0.3)"></div>`,
+            iconSize: [16, 16],
+            iconAnchor: [8, 8],
+          }),
+        })
+          .addTo(map)
+          .bindPopup("<b>Tu ubicación</b>");
+      }
+
+      // Update Search Marker
+      if (searchMarkerRef.current) {
+        map.removeLayer(searchMarkerRef.current);
+        searchMarkerRef.current = null;
+      }
+      if (searchMarker) {
+        searchMarkerRef.current = L.marker(searchMarker, {
+          icon: L.divIcon({
+            className: "",
+            html: `<div style="width:24px;height:24px;display:flex;align-items:center;justify-content:center;background:#0ea5e9;border:2px solid white;border-radius:50%;box-shadow:0 2px 5px rgba(0,0,0,0.3)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg></div>`,
+            iconSize: [24, 24],
+            iconAnchor: [12, 12],
+            popupAnchor: [0, -14],
+          }),
+        })
+          .addTo(map)
+          .bindPopup(`<b>Coordenadas buscadas</b><br/>${searchMarker[0].toFixed(6)}, ${searchMarker[1].toFixed(6)}`);
+        
+        // Don't auto-open popup on every render, but we can do it if desired.
+      }
+    });
+  }, [userPos, searchMarker, mounted]);
+
   // Locate user
   const locateUser = useCallback(() => {
     setLocating(true);
@@ -323,18 +379,6 @@ export default function MapaTab({ naps }: Props) {
           const map = mapInstanceRef.current;
           if (!map) return;
           map.setView([lat, lng], 13);
-
-          // User marker
-          const userIcon = L.divIcon({
-            html: `<div style="width:14px;height:14px;background:#3b82f6;border:3px solid white;border-radius:50%;box-shadow:0 0 0 4px rgba(59,130,246,0.3)"></div>`,
-            iconSize: [14, 14],
-            iconAnchor: [7, 7],
-            className: "",
-          });
-          L.marker([lat, lng], { icon: userIcon })
-            .bindPopup("<b>Tu ubicación</b>")
-            .addTo(map)
-            .openPopup();
         });
       },
       () => {
@@ -344,12 +388,32 @@ export default function MapaTab({ naps }: Props) {
     );
   }, []);
 
-
-
   if (!mounted) return null;
 
+  // Search coords
+  const handleSearchCoords = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!searchCoordsInput.trim()) {
+      setSearchMarker(null);
+      return;
+    }
+    const parts = searchCoordsInput.split(",");
+    if (parts.length === 2) {
+      const lat = parseFloat(parts[0].trim());
+      const lng = parseFloat(parts[1].trim());
+      if (!isNaN(lat) && !isNaN(lng)) {
+        setSearchMarker([lat, lng]);
+        if (mapInstanceRef.current) {
+          mapInstanceRef.current.setView([lat, lng], 17);
+        }
+        return;
+      }
+    }
+    alert("Formato inválido. Usa: latitud, longitud (ej. 20.123, -98.456)");
+  };
+
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col h-full space-y-4">
 
       {/* ── Header ── */}
       <div className="flex items-center justify-between gap-2">
@@ -427,8 +491,29 @@ export default function MapaTab({ naps }: Props) {
             ))}
           </div>
 
+          <div className="w-px h-5 bg-(--hulux-border) hidden lg:block" />
+
+          {/* Buscador de Coordenadas */}
+          <form onSubmit={handleSearchCoords} className="flex gap-1 flex-1 min-w-[200px]">
+            <input
+              type="text"
+              placeholder="Buscar lat, lng..."
+              value={searchCoordsInput}
+              onChange={(e) => setSearchCoordsInput(e.target.value)}
+              className="flex-1 px-3 py-1.5 text-[12px] bg-(--hulux-surface-elevated) border border-(--hulux-border) rounded-lg focus:outline-none focus:border-(--hulux-cyan)"
+            />
+            <button type="submit"
+              className="px-2 py-1.5 bg-(--hulux-subtle) hover:bg-(--hulux-border) border border-(--hulux-border) rounded-lg text-[12px] transition-colors flex items-center justify-center text-(--hulux-text-muted)"
+              title="Buscar coordenadas"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </button>
+          </form>
+
           {/* Location + seed */}
-          <div className="flex gap-2 w-full sm:w-auto sm:ml-auto">
+          <div className="flex gap-2 w-full sm:w-auto lg:ml-auto">
 
             <button onClick={locateUser} disabled={locating}
               className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 py-2 sm:py-1.5 rounded-lg text-[12px] sm:text-[11px] font-medium bg-(--hulux-blue) text-white dark:bg-(--hulux-cyan) dark:text-(--hulux-blue) shadow-sm disabled:opacity-60 transition-all">
