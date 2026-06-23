@@ -58,7 +58,11 @@ export async function getNAPById(id: string): Promise<NAP | null> {
 }
 
 export async function addNAP(data: Omit<NAP, "id">): Promise<string> {
-  await setDoc(doc(db, NAPS_COL, data.id_nap), data, { merge: true });
+  // Firestore does not accept `undefined` values — strip them out
+  const cleaned = Object.fromEntries(
+    Object.entries(data).filter(([, v]) => v !== undefined)
+  ) as Omit<NAP, "id">;
+  await setDoc(doc(db, NAPS_COL, data.id_nap), cleaned, { merge: true });
   // Registrar municipio/localidad en config_geografica
   const geoId = `${data.municipio}|${data.localidad}`;
   await setDoc(doc(db, GEO_COL, geoId), {
