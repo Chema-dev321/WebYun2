@@ -47,7 +47,7 @@ function Dashboard() {
   const [naps, setNaps] = useState<NAP[]>([]);
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState<Tab>("mapa");
+  const [tab, setTab] = useState<Tab>("dashboard");
   const [filteredNaps, setFilteredNaps] = useState<NAP[] | null>(null);
   const [perfilOpen, setPerfilOpen] = useState(false);
   const [reconciling, setReconciling] = useState(false);
@@ -82,10 +82,16 @@ function Dashboard() {
   }, [userRole]);
 
   useEffect(() => {
-    if (availableTabs.length > 0 && !availableTabs.find(t => t.key === tab)) {
-      setTab(availableTabs[0].key);
+    if (availableTabs.length > 0) {
+      // Only redirect if current tab is not in the allowed list
+      setTab((current) => {
+        const isAllowed = availableTabs.some((t) => t.key === current);
+        return isAllowed ? current : availableTabs[0].key;
+      });
     }
-  }, [availableTabs, tab]);
+  // Only re-run when the set of available tabs changes, NOT when tab changes
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [availableTabs]);
 
   useEffect(() => {
     let mounted = true;

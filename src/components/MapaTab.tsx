@@ -153,32 +153,34 @@ export default function MapaTab({ naps }: Props) {
   useEffect(() => {
     if (!mounted || !mapRef.current || mapInstanceRef.current) return;
 
-    const L = require("leaflet");
-    // @ts-ignore
-    if (typeof window !== "undefined") window.L = L;
+    import("leaflet").then((L) => {
+      if (!mapRef.current || mapInstanceRef.current) return; // guard against double init
+      // @ts-ignore
+      if (typeof window !== "undefined") window.L = L;
 
-    // Fix default icon path issue with Next.js
-    delete (L.Icon.Default.prototype as unknown as Record<string, unknown>)._getIconUrl;
-    L.Icon.Default.mergeOptions({
-      iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
-      iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
-      shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+      // Fix default icon path issue with Next.js
+      delete (L.Icon.Default.prototype as unknown as Record<string, unknown>)._getIconUrl;
+      L.Icon.Default.mergeOptions({
+        iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
+        iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+        shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+      });
+
+      // Default center: Mexico
+      const defaultCenter: [number, number] = [23.6345, -102.5528];
+      const map = L.map(mapRef.current!, {
+        center: defaultCenter,
+        zoom: 6,
+        zoomControl: true,
+      });
+
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+        maxZoom: 19,
+      }).addTo(map);
+
+      mapInstanceRef.current = map;
     });
-
-    // Default center: Mexico
-    const defaultCenter: [number, number] = [23.6345, -102.5528];
-    const map = L.map(mapRef.current!, {
-      center: defaultCenter,
-      zoom: 6,
-      zoomControl: true,
-    });
-
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-      maxZoom: 19,
-    }).addTo(map);
-
-    mapInstanceRef.current = map;
 
     return () => {
       if (mapInstanceRef.current) {
@@ -192,128 +194,130 @@ export default function MapaTab({ naps }: Props) {
   useEffect(() => {
     if (!mapInstanceRef.current) return;
 
-    const L = require("leaflet");
-    // @ts-ignore
-    if (typeof window !== "undefined") window.L = L;
-    require("leaflet.markercluster");
+    import("leaflet").then(async (L) => {
+      await import("leaflet.markercluster");
+      // @ts-ignore
+      if (typeof window !== "undefined") window.L = L;
 
-    const map = mapInstanceRef.current!;
+      const map = mapInstanceRef.current;
+      if (!map) return;
 
-    // Remove old cluster group
-    if (clusterGroupRef.current) {
-      map.closePopup(); // Important: Fix for _leaflet_pos crash
-      clusterGroupRef.current.clearLayers();
-      map.removeLayer(clusterGroupRef.current);
-    }
-
-    // @ts-ignore
-    const clusterGroup = L.markerClusterGroup({
-      chunkedLoading: true,
-      maxClusterRadius: 50,
-      disableClusteringAtZoom: 16,
-      spiderfyOnMaxZoom: true,
-      iconCreateFunction: function (cluster: any) {
-        const count = cluster.getChildCount();
-        let bg = 'rgba(74, 222, 128, 0.2)';
-        let border = '#4ade80';
-        let textColor = 'var(--hulux-text, #11293e)';
-
-        if (count >= 50) {
-          bg = 'rgba(239, 68, 68, 0.2)'; // rojo
-          border = '#ef4444';
-        } else if (count >= 15) {
-          bg = 'rgba(245, 158, 11, 0.2)'; // amarillo
-          border = '#f59e0b';
-        }
-
-        return L.divIcon({
-          html: `<div style="background-color: ${bg}; border: 2px solid ${border}; border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; color: ${textColor}; backdrop-filter: blur(2px); box-shadow: 0 4px 10px rgba(0,0,0,0.15);"><span>${count}</span></div>`,
-          className: 'custom-cluster-icon',
-          iconSize: L.point(36, 36)
-        });
+      // Remove old cluster group
+      if (clusterGroupRef.current) {
+        map.closePopup();
+        clusterGroupRef.current.clearLayers();
+        map.removeLayer(clusterGroupRef.current);
       }
-    });
 
-    napsFiltradas.forEach((nap) => {
-      const lat = nap.latitud!;
-      const lng = nap.longitud!;
-      const sem = getSemaforo(nap);
-      const color = SEMAFORO_HEX[sem];
-      const tomodatOk = nap.estado_tomodat === "Activo";
-      const iconUrl = createMarkerIcon(color, tomodatOk);
-      const pct = Math.round((nap.puertos_ocupados / nap.capacidad_total) * 100);
+      // @ts-ignore
+      const clusterGroup = L.markerClusterGroup({
+        chunkedLoading: true,
+        maxClusterRadius: 50,
+        disableClusteringAtZoom: 16,
+        spiderfyOnMaxZoom: true,
+        iconCreateFunction: function (cluster: any) {
+          const count = cluster.getChildCount();
+          let bg = 'rgba(74, 222, 128, 0.2)';
+          let border = '#4ade80';
+          let textColor = 'var(--hulux-text, #11293e)';
 
-      const icon = L.icon({
-        iconUrl,
-        iconSize: [30, 36],
-        iconAnchor: [15, 36],
-        popupAnchor: [0, -38],
+          if (count >= 50) {
+            bg = 'rgba(239, 68, 68, 0.2)';
+            border = '#ef4444';
+          } else if (count >= 15) {
+            bg = 'rgba(245, 158, 11, 0.2)';
+            border = '#f59e0b';
+          }
+
+          return L.divIcon({
+            html: `<div style="background-color: ${bg}; border: 2px solid ${border}; border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; color: ${textColor}; backdrop-filter: blur(2px); box-shadow: 0 4px 10px rgba(0,0,0,0.15);"><span>${count}</span></div>`,
+            className: 'custom-cluster-icon',
+            iconSize: L.point(36, 36)
+          });
+        }
       });
 
-      const marker = L.marker([lat, lng], { icon });
+      napsFiltradas.forEach((nap) => {
+        const lat = nap.latitud!;
+        const lng = nap.longitud!;
+        const sem = getSemaforo(nap);
+        const color = SEMAFORO_HEX[sem];
+        const tomodatOk = nap.estado_tomodat === "Activo";
+        const iconUrl = createMarkerIcon(color, tomodatOk);
+        const pct = Math.round((nap.puertos_ocupados / nap.capacidad_total) * 100);
 
-      const tomodatBadge = tomodatOk
-        ? `<span style="background:#4ade8022;color:#16a34a;border:1px solid #4ade8055;padding:1px 7px;border-radius:999px;font-size:10px;font-weight:600">✓ Tomodat Activo</span>`
-        : `<span style="background:#f59e0b22;color:#b45309;border:1px solid #f59e0b55;padding:1px 7px;border-radius:999px;font-size:10px;font-weight:600">⚠ Tomodat Rojo</span>`;
+        const icon = L.icon({
+          iconUrl,
+          iconSize: [30, 36],
+          iconAnchor: [15, 36],
+          popupAnchor: [0, -38],
+        });
 
-      const semBadge = `<span style="background:${color}22;color:${color === "#4ade80" ? "#16a34a" : color};border:1px solid ${color}55;padding:1px 7px;border-radius:999px;font-size:10px;font-weight:600">${SEMAFORO_LABEL[sem]}</span>`;
+        const marker = L.marker([lat, lng], { icon });
 
-      const verifBadge = nap.verificacion === 1
-        ? `<span style="background:#cddb0022;color:#6b7c00;border:1px solid #cddb0055;padding:1px 7px;border-radius:999px;font-size:10px;font-weight:600">✓ Verificada</span>`
-        : `<span style="background:#70003f18;color:#a0005a;border:1px solid #70003f33;padding:1px 7px;border-radius:999px;font-size:10px;font-weight:600">✗ Sin verificar</span>`;
+        const tomodatBadge = tomodatOk
+          ? `<span style="background:#4ade8022;color:#16a34a;border:1px solid #4ade8055;padding:1px 7px;border-radius:999px;font-size:10px;font-weight:600">✓ Tomodat Activo</span>`
+          : `<span style="background:#f59e0b22;color:#b45309;border:1px solid #f59e0b55;padding:1px 7px;border-radius:999px;font-size:10px;font-weight:600">⚠ Tomodat Rojo</span>`;
 
-      const coordsStr = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
-      const coordsRow = `
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;background:#f0f9ff;border:1px solid #bae6fd;border-radius:6px;padding:5px 8px">
-          <span style="font-size:10px;color:#0369a1;font-family:monospace">${coordsStr}</span>
-          <button
-            onclick="navigator.clipboard.writeText('${coordsStr}').then(()=>{this.textContent='✓';setTimeout(()=>{this.textContent='Copiar'},1200)})"
-            style="font-size:10px;background:#0ea5e9;color:white;border:none;border-radius:4px;padding:2px 7px;cursor:pointer;margin-left:6px;font-family:system-ui"
-          >Copiar</button>
-        </div>`;
+        const semBadge = `<span style="background:${color}22;color:${color === "#4ade80" ? "#16a34a" : color};border:1px solid ${color}55;padding:1px 7px;border-radius:999px;font-size:10px;font-weight:600">${SEMAFORO_LABEL[sem]}</span>`;
 
-      marker.bindPopup(`
-        <div style="font-family:system-ui,sans-serif;min-width:210px">
-          <div style="font-weight:700;font-size:13px;margin-bottom:4px;color:#11293e">${nap.id_nap}</div>
-          <div style="font-size:11px;color:#666;margin-bottom:8px">${nap.municipio} › ${nap.localidad}</div>
-          <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px">
-            ${semBadge}
-            ${tomodatBadge}
-            ${verifBadge}
-          </div>
-          <div style="background:#f5f5f5;border-radius:6px;padding:6px 10px;font-size:12px">
-            <div style="display:flex;justify-content:space-between;margin-bottom:4px">
-              <span style="color:#888">Puertos ocupados</span>
-              <strong style="color:#11293e">${nap.puertos_ocupados} / ${nap.capacidad_total}</strong>
+        const verifBadge = nap.verificacion === 1
+          ? `<span style="background:#cddb0022;color:#6b7c00;border:1px solid #cddb0055;padding:1px 7px;border-radius:999px;font-size:10px;font-weight:600">✓ Verificada</span>`
+          : `<span style="background:#70003f18;color:#a0005a;border:1px solid #70003f33;padding:1px 7px;border-radius:999px;font-size:10px;font-weight:600">✗ Sin verificar</span>`;
+
+        const coordsStr = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+        const coordsRow = `
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;background:#f0f9ff;border:1px solid #bae6fd;border-radius:6px;padding:5px 8px">
+            <span style="font-size:10px;color:#0369a1;font-family:monospace">${coordsStr}</span>
+            <button
+              onclick="navigator.clipboard.writeText('${coordsStr}').then(()=>{this.textContent='✓';setTimeout(()=>{this.textContent='Copiar'},1200)})"
+              style="font-size:10px;background:#0ea5e9;color:white;border:none;border-radius:4px;padding:2px 7px;cursor:pointer;margin-left:6px;font-family:system-ui"
+            >Copiar</button>
+          </div>`;
+
+        marker.bindPopup(`
+          <div style="font-family:system-ui,sans-serif;min-width:210px">
+            <div style="font-weight:700;font-size:13px;margin-bottom:4px;color:#11293e">${nap.id_nap}</div>
+            <div style="font-size:11px;color:#666;margin-bottom:8px">${nap.municipio} › ${nap.localidad}</div>
+            <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px">
+              ${semBadge}
+              ${tomodatBadge}
+              ${verifBadge}
             </div>
-            <div style="background:#e5e7eb;border-radius:4px;height:6px;overflow:hidden">
-              <div style="height:100%;width:${Math.min(pct, 100)}%;background:${color};border-radius:4px;transition:width .3s"></div>
+            <div style="background:#f5f5f5;border-radius:6px;padding:6px 10px;font-size:12px">
+              <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+                <span style="color:#888">Puertos ocupados</span>
+                <strong style="color:#11293e">${nap.puertos_ocupados} / ${nap.capacidad_total}</strong>
+              </div>
+              <div style="background:#e5e7eb;border-radius:4px;height:6px;overflow:hidden">
+                <div style="height:100%;width:${Math.min(pct, 100)}%;background:${color};border-radius:4px;transition:width .3s"></div>
+              </div>
+              <div style="text-align:right;font-size:10px;color:#888;margin-top:2px">${pct}%</div>
             </div>
-            <div style="text-align:right;font-size:10px;color:#888;margin-top:2px">${pct}%</div>
+            ${nap.fecha_verificacion ? `<div style="font-size:10px;color:#888;margin-top:6px">\u00daltima verificaci\u00f3n: <strong>${nap.fecha_verificacion}</strong></div>` : ""}
+            ${coordsRow}
           </div>
-          ${nap.fecha_verificacion ? `<div style="font-size:10px;color:#888;margin-top:6px">Última verificación: <strong>${nap.fecha_verificacion}</strong></div>` : ""}
-          ${coordsRow}
-        </div>
-      `, { maxWidth: 280 });
+        `, { maxWidth: 280 });
 
-      marker.on("click", () => {
-        setSelectedNap(nap);
+        marker.on("click", () => {
+          setSelectedNap(nap);
+        });
+
+        clusterGroup.addLayer(marker);
       });
 
-      clusterGroup.addLayer(marker);
-    });
+      map.addLayer(clusterGroup);
+      clusterGroupRef.current = clusterGroup;
 
-    map.addLayer(clusterGroup);
-    clusterGroupRef.current = clusterGroup;
-
-    // Auto-fit bounds if markers exist and no user pos
-    if (napsFiltradas.length > 0 && !userPos && !mapCenteredRef.current) {
-      const bounds = L.latLngBounds(
-        napsFiltradas.map((n) => [n.latitud!, n.longitud!] as [number, number])
-      );
-      map.fitBounds(bounds, { padding: [40, 40], maxZoom: 14 });
-      mapCenteredRef.current = true;
-    }
+      // Auto-fit bounds if markers exist and no user pos
+      if (napsFiltradas.length > 0 && !userPos && !mapCenteredRef.current) {
+        const bounds = L.latLngBounds(
+          napsFiltradas.map((n) => [n.latitud!, n.longitud!] as [number, number])
+        );
+        map.fitBounds(bounds, { padding: [40, 40], maxZoom: 14 });
+        mapCenteredRef.current = true;
+      }
+    }); // end import("leaflet").then
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [napsFiltradas, mounted]);
 
