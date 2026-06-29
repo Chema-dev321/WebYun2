@@ -25,6 +25,16 @@ const GEO_COL = "config_geografica";
 
 // ── NAPs ──
 
+// Helper: Touch NAPs Metadata to signal global updates
+export async function touchNapsMetadata(): Promise<void> {
+  try {
+    await setDoc(doc(db, "metadata", "naps"), { lastUpdatedAt: Date.now() }, { merge: true });
+  } catch (e) {
+    console.error("Failed to touch metadata:", e);
+  }
+}
+
+
 export interface PaginatedResult<T> {
   data: T[];
   lastVisible: unknown;
@@ -69,6 +79,7 @@ export async function addNAP(data: Omit<NAP, "id">): Promise<string> {
     municipio: data.municipio,
     localidad: data.localidad,
   });
+  await touchNapsMetadata();
   return data.id_nap;
 }
 
@@ -77,6 +88,7 @@ export async function updateNAP(id: string, data: Partial<NAP>): Promise<void> {
     Object.entries(data).filter(([, v]) => v !== undefined)
   );
   await updateDoc(doc(db, NAPS_COL, id), cleaned as Record<string, unknown>);
+  await touchNapsMetadata();
 }
 
 export async function deleteNAP(napId: string): Promise<{ success: boolean; error?: string }> {
@@ -85,9 +97,21 @@ export async function deleteNAP(napId: string): Promise<{ success: boolean; erro
     const clientesSnap = await getDocs(clientesQuery);
 
     await runTransaction(db, async (tx) => {
+      // Bloqueamos la NAP leyéndola dentro de la transacción
+      const napRef = doc(db, NAPS_COL, napId);
+      const napSnap = await tx.get(napRef);
+      
+      if (!napSnap.exists()) {
+        throw new Error("La NAP ya no existe o fue eliminada.");
+      }
+
+      // Eliminamos los clientes encontrados
       clientesSnap.docs.forEach((d) => tx.delete(d.ref));
-      tx.delete(doc(db, NAPS_COL, napId));
+      
+      // Eliminamos la NAP
+      tx.delete(napRef);
     });
+    await touchNapsMetadata();
     return { success: true };
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Error al eliminar NAP.";
@@ -169,50 +193,43 @@ export async function getClienteByWisp(id_wisp: string): Promise<Cliente | null>
   return { id: doc.id, ...(doc.data() as Omit<Cliente, "id">) };
 }
 
+let cachedClientes: Cliente[] | null = null;
+let lastCacheTime = 0;
+const CACHE_TTL = 1000 * 60 * 5; // 5 minutos de caché en memoria
+
 export async function searchClientes(searchText: string): Promise<Cliente[]> {
   const txt = searchText.trim();
   if (!txt) return [];
 
-  // Buscar coincidencia exacta por ID WISP
-  const qWisp = getDocs(query(collection(db, CLIENTES_COL), where("id_wisp", "==", txt), limit(5)));
-  
-  // Buscar coincidencia exacta por ID NAP (ignorando case asumiendo que suelen escribir exacto)
-  // Para hacer búsqueda parcial requeriríamos Algolia, pero un "==" en id_nap ayuda
-  const qNap = getDocs(query(collection(db, CLIENTES_COL), where("id_nap", "==", txt.toUpperCase()), limit(50)));
-
-  // Búsqueda por prefijo de nombre (Case Sensitive en Firestore, asume que está Capitalizado o en Mayúsculas)
-  // Intentamos con la primera letra mayúscula para coincidir con el formato de la BD
-  const txtCapitalizado = txt.charAt(0).toUpperCase() + txt.slice(1).toLowerCase();
-  const txtMayusculas = txt.toUpperCase();
-
-  const qNombreCap = getDocs(
-    query(
-      collection(db, CLIENTES_COL),
-      where("nombre", ">=", txtCapitalizado),
-      where("nombre", "<=", txtCapitalizado + "\uf8ff"),
-      limit(20)
-    )
-  );
-
-  const qNombreMayus = getDocs(
-    query(
-      collection(db, CLIENTES_COL),
-      where("nombre", ">=", txtMayusculas),
-      where("nombre", "<=", txtMayusculas + "\uf8ff"),
-      limit(20)
-    )
-  );
-
-  const results = await Promise.all([qWisp, qNap, qNombreCap, qNombreMayus]);
-  
   const map = new Map<string, Cliente>();
-  results.forEach(snap => {
-    snap.docs.forEach(doc => {
+  const addDocs = (snap: any) => {
+    snap.docs.forEach((doc: any) => {
       map.set(doc.id, { id: doc.id, ...(doc.data() as Omit<Cliente, "id">) });
     });
-  });
+  };
 
-  return Array.from(map.values());
+  // 1. Buscar coincidencia exacta por ID WISP
+  const qWisp = await getDocs(query(collection(db, CLIENTES_COL), where("id_wisp", "==", txt), limit(5)));
+  addDocs(qWisp);
+  if (map.size > 0) return Array.from(map.values());
+
+  // 2. Buscar coincidencia exacta por ID NAP
+  const qNap = await getDocs(query(collection(db, CLIENTES_COL), where("id_nap", "==", txt.toUpperCase()), limit(50)));
+  addDocs(qNap);
+  if (map.size > 0) return Array.from(map.values());
+
+  // 3. Búsqueda avanzada por nombre usando caché en memoria
+  // Esto permite buscar subcadenas ("juan" encuentra "Pedro Juan") sin gastar miles de lecturas en Firebase
+  if (!cachedClientes || Date.now() - lastCacheTime > CACHE_TTL) {
+    const snap = await getDocs(collection(db, CLIENTES_COL));
+    cachedClientes = snap.docs.map(doc => ({ id: doc.id, ...(doc.data() as Omit<Cliente, "id">) }));
+    lastCacheTime = Date.now();
+  }
+
+  const searchLower = txt.toLowerCase();
+  const matchedByName = cachedClientes.filter(c => c.nombre.toLowerCase().includes(searchLower));
+  
+  return matchedByName;
 }
 
 export async function updateCliente(
@@ -324,6 +341,7 @@ export async function updateClienteNAP(
           capacidad: data.oldNapData.capacidad_total,
         });
       }
+      await touchNapsMetadata();
     }
 
     return result;
@@ -409,6 +427,7 @@ export async function registerCliente(
           capacidad: napData.capacidad_total,
         });
       }
+      await touchNapsMetadata();
     }
 
     return result;
@@ -467,6 +486,10 @@ export async function deleteCliente(clienteId: string): Promise<{ success: boole
         ocupados: newOcupados,
         capacidad: napData.capacidad_total,
       });
+    }
+
+    if (result.success && "napData" in result && result.napData) {
+      await touchNapsMetadata();
     }
 
     return result;
@@ -574,6 +597,31 @@ export async function updateUsuarioNombre(uid: string, nombre: string): Promise<
 
 // ── Optimizaciones (Suscripciones en tiempo real) ──
 
+export async function fetchAllNAPs(): Promise<NAP[]> {
+  const q = query(collection(db, NAPS_COL), orderBy("nombre"), limit(3000));
+  const snap = await getDocs(q);
+  return snap.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<NAP, "id">) }));
+}
+
+export function subscribeToNapsMetadata(callback: (lastUpdated: number) => void) {
+  const docRef = doc(db, "metadata", "naps");
+  return onSnapshot(
+    docRef,
+    (snap) => {
+      if (snap.exists()) {
+        const data = snap.data();
+        if (data.lastUpdatedAt) {
+          callback(data.lastUpdatedAt);
+        }
+      }
+    },
+    (error) => {
+      console.warn("Error subscribing to NAPs metadata:", error);
+    }
+  );
+}
+
+// Retained for backward compatibility if needed in some places, but we will migrate to fetchAllNAPs + subscribeToNapsMetadata
 export function subscribeToNAPs(callback: (naps: NAP[]) => void) {
   const q = query(collection(db, NAPS_COL), orderBy("nombre"), limit(3000));
   return onSnapshot(

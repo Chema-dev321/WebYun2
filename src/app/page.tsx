@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import type { NAP } from "@/lib/types";
 import type { Usuario } from "@/lib/firestore";
 import NAPTable from "@/components/NAPTable";
@@ -52,6 +52,11 @@ function Dashboard() {
   const [perfilOpen, setPerfilOpen] = useState(false);
   const [reconciling, setReconciling] = useState(false);
   const [reconcileMsg, setReconcileMsg] = useState("");
+  
+  // Optimization states
+  const [updateAvailable, setUpdateAvailable] = useState(false);
+  const [isFetchingNaps, setIsFetchingNaps] = useState(false);
+  const lastFetchTimeRef = useRef(Date.now());
 
   let userRole = usuarios.find((u) => u.uid === user?.uid)?.rol || "instalador";
   if (user?.email === "chemjmme@gmail.com") {
@@ -83,40 +88,60 @@ function Dashboard() {
 
   useEffect(() => {
     if (availableTabs.length > 0) {
-      // Only redirect if current tab is not in the allowed list
       setTab((current) => {
         const isAllowed = availableTabs.some((t) => t.key === current);
         return isAllowed ? current : availableTabs[0].key;
       });
     }
-  // Only re-run when the set of available tabs changes, NOT when tab changes
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [availableTabs]);
+
+  const loadNaps = useCallback(async () => {
+    setIsFetchingNaps(true);
+    try {
+      const { fetchAllNAPs } = await import("@/lib/firestore");
+      const data = await fetchAllNAPs();
+      setNaps(data);
+      lastFetchTimeRef.current = Date.now();
+      setUpdateAvailable(false);
+    } catch (err) {
+      console.error("Error al cargar NAPs:", err);
+    } finally {
+      setIsFetchingNaps(false);
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     let mounted = true;
     const unsubs: Array<() => void> = [];
+    
+    // 1. Initial fetch of NAPs (costs 1 query instead of real-time stream)
+    loadNaps();
+
+    // 2. Subscribe to Users and NAPs Metadata
     import("@/lib/firestore")
-      .then(({ subscribeToNAPs, subscribeToUsuarios }) => {
+      .then(({ subscribeToNapsMetadata, subscribeToUsuarios }) => {
         if (!mounted) return;
 
+        // Listen for new NAP updates (costs 1 single read per update for the entire collection!)
         unsubs.push(
-          subscribeToNAPs((data) => {
-            setNaps(data);
-            setLoading(false);
+          subscribeToNapsMetadata((lastUpdated) => {
+            if (lastUpdated > lastFetchTimeRef.current) {
+              setUpdateAvailable(true);
+            }
           })
         );
         unsubs.push(subscribeToUsuarios(setUsuarios));
       })
       .catch((err) => {
-        console.error("Error al cargar datos:", err);
+        console.error("Error al cargar dependencias:", err);
         setLoading(false);
       });
     return () => {
       mounted = false;
       unsubs.forEach((fn) => fn());
     };
-  }, []);
+  }, [loadNaps]);
 
   const emptyRefresh = useCallback(() => {}, []);
 
@@ -152,6 +177,27 @@ function Dashboard() {
 
   return (
     <main className="min-h-screen bg-(--hulux-bg)">
+      
+      {/* Update Available Banner */}
+      {updateAvailable && (
+        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[100]">
+          <div className="bg-gradient-to-r from-[var(--hulux-blue)] to-[var(--hulux-cyan)] text-white px-5 py-3 rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.12)] flex items-center gap-4 text-sm font-medium border border-white/20 animate-bounce">
+            <div className="flex items-center gap-2">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21.5 2v6h-6M2.13 15.57a10 10 0 1 0 3.84-10.45l-3.33 2.05"></path></svg>
+              <span className="hidden sm:inline">Nuevas actualizaciones de NAPs disponibles</span>
+              <span className="sm:hidden">Nuevas NAPs</span>
+            </div>
+            <button 
+              onClick={loadNaps} 
+              disabled={isFetchingNaps}
+              className="bg-white text-(--hulux-blue) px-4 py-1.5 rounded-full hover:bg-gray-100 transition-colors flex items-center gap-2 disabled:opacity-70 font-bold"
+            >
+              {isFetchingNaps ? "Cargando..." : "Refrescar"}
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <header className="border-b border-(--hulux-border) bg-(--hulux-bg)/95 backdrop-blur sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">

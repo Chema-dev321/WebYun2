@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import nodemailer from "nodemailer";
 
-async function verifyFirebaseToken(idToken: string): Promise<boolean> {
+async function verifyFirebaseToken(idToken: string): Promise<string | null> {
   try {
     const apiKey = process.env.NEXT_PUBLIC_FIREBASE_API_KEY;
-    if (!apiKey) return false;
+    if (!apiKey) return null;
     const res = await fetch(
       `https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${apiKey}`,
       {
@@ -13,9 +13,11 @@ async function verifyFirebaseToken(idToken: string): Promise<boolean> {
         body: JSON.stringify({ idToken }),
       }
     );
-    return res.ok;
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data.users?.[0]?.localId || null;
   } catch {
-    return false;
+    return null;
   }
 }
 
@@ -39,8 +41,31 @@ export async function POST(req: NextRequest) {
     // Verify Firebase Auth token
     const authHeader = req.headers.get("authorization");
     const token = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null;
-    if (!token || !(await verifyFirebaseToken(token))) {
+    if (!token) {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+    }
+
+    const uid = await verifyFirebaseToken(token);
+    if (!uid) {
+      return NextResponse.json({ error: "Token inválido" }, { status: 401 });
+    }
+
+    // Verify user role
+    try {
+      const { db } = await import("@/lib/firebase");
+      const { getDoc, doc } = await import("firebase/firestore");
+      const userSnap = await getDoc(doc(db, "usuarios", uid));
+      if (!userSnap.exists()) {
+         return NextResponse.json({ error: "Usuario no registrado" }, { status: 403 });
+      }
+      const userRole = userSnap.data()?.rol || "instalador";
+      const allowedRoles = ["admin", "infraestructura", "supervisor", "administracion", "soporte"];
+      if (!allowedRoles.includes(userRole)) {
+         return NextResponse.json({ error: "No tienes permisos suficientes para enviar alertas" }, { status: 403 });
+      }
+    } catch (dbError) {
+      console.error("[NAP Notify API] Firestore Error:", dbError);
+      return NextResponse.json({ error: "Error de validación de rol" }, { status: 500 });
     }
 
     const body = await req.json();
