@@ -636,7 +636,7 @@ export default function NAPTable({ naps, onRefresh, onFilterChange, userRole = "
                       ) : (
                         <span
                           className={`px-2 py-0.5 rounded text-xs font-bold ${
-                            nap.estado_tomodat === "Activo"
+                            (nap.estado_tomodat?.trim().toLowerCase() === "activo" || nap.estado_tomodat?.trim().toLowerCase() === "verde")
                               ? "bg-[rgba(205,219,0,0.20)] text-(--hulux-text)"
                               : "bg-[rgba(112,0,63,0.10)] text-(--hulux-text)"
                           }`}

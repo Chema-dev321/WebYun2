@@ -20,7 +20,7 @@ const SEMAFORO_HEX: Record<string, string> = {
 const SEMAFORO_LABEL: Record<string, string> = {
   verde: "Disponible", amarillo: "Alta ocupación (≥70%)", rojo: "Llena", celeste: "Sobre-ocupación",
 };
-const TOMODAT_COLOR: Record<string, string> = { Activo: "#22c55e", Rojo: "#ef4444" };
+const TOMODAT_COLOR: Record<string, string> = { Activo: "#22c55e", Verde: "#22c55e", Rojo: "#ef4444" };
 
 function createMarkerIcon(color: string, tomodatOk: boolean) {
   const alertBadge = !tomodatOk
@@ -99,7 +99,12 @@ export default function MapaTab({ naps }: Props) {
     const sem = getSemaforo(n);
     if (filtro === "disponibles" && (sem === "rojo" || sem === "celeste")) return false;
     if (filtro === "llenas" && sem !== "rojo" && sem !== "celeste") return false;
-    if (tomodatFiltro !== "todos" && n.estado_tomodat !== tomodatFiltro) return false;
+    if (tomodatFiltro !== "todos") {
+      const norm = n.estado_tomodat?.trim().toLowerCase();
+      const isOk = norm === "activo" || norm === "verde";
+      if (tomodatFiltro === "Activo" && !isOk) return false;
+      if (tomodatFiltro === "Rojo" && isOk) return false;
+    }
     return true;
   }), [napsConCoords, filtro, tomodatFiltro]);
 
@@ -219,7 +224,8 @@ export default function MapaTab({ naps }: Props) {
           // Draw single NAP
           const sem = getSemaforo(nap);
           const color = SEMAFORO_HEX[sem];
-          const tomodatOk = nap.estado_tomodat === "Activo";
+          const normTomodat = nap.estado_tomodat?.trim().toLowerCase();
+          const tomodatOk = normTomodat === "activo" || normTomodat === "verde";
           const pct = Math.round((nap.puertos_ocupados / nap.capacidad_total) * 100);
 
           const cacheKey = `${color}-${tomodatOk}`;
