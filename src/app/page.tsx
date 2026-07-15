@@ -143,9 +143,34 @@ function Dashboard() {
     };
   }, [loadNaps]);
 
-  // Used by child components to trigger a reload of NAPs after they perform a mutation.
-  const handleRefresh = useCallback(() => {
-    loadNaps();
+  // Used by child components to trigger a partial or full reload.
+  const handleRefresh = useCallback(async (napIds?: string | string[]) => {
+    if (!napIds) {
+      loadNaps();
+      return;
+    }
+    const ids = Array.isArray(napIds) ? napIds : [napIds];
+    try {
+      const { getNAPById } = await import("@/lib/firestore");
+      const updatedNaps = await Promise.all(ids.map(id => getNAPById(id)));
+      
+      setNaps((prev) => {
+        let next = [...prev];
+        for (const updated of updatedNaps) {
+          if (!updated) continue;
+          const idx = next.findIndex((n) => n.id === updated.id);
+          if (idx >= 0) {
+            next[idx] = updated;
+          } else {
+            next.push(updated);
+          }
+        }
+        return next.sort((a, b) => a.nombre.localeCompare(b.nombre));
+      });
+    } catch (err) {
+      console.error("Error fetching single NAPs:", err);
+      loadNaps(); // fallback
+    }
   }, [loadNaps]);
 
   // Stats — use filtered NAPs when filters are active, otherwise all NAPs

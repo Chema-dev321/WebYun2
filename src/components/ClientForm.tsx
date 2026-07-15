@@ -8,7 +8,7 @@ import { registrarLog } from "@/lib/audit";
 
 interface Props {
   naps: NAP[];
-  onSuccess: () => void;
+  onSuccess: (idNap?: string) => void;
   initialNap?: NAP;
   onCancel?: () => void;
 }
@@ -93,7 +93,7 @@ export default function ClientForm({ naps, onSuccess, initialNap, onCancel }: Pr
       setMsg({ type: "success", text: "Cliente registrado correctamente." });
       setNombre("");
       setIdWisp("");
-      onSuccess();
+      onSuccess(idNap);
     } else {
       setMsg({ type: "error", text: result.error || "Error desconocido." });
     }

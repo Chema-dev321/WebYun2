@@ -7,7 +7,7 @@ import { useAuth } from "@/lib/AuthContext";
 import { registrarLog } from "@/lib/audit";
 
 interface Props {
-  onSuccess: () => void;
+  onSuccess: (idNap?: string) => void;
   naps: NAP[];
   userRole?: string;
 }
@@ -254,7 +254,7 @@ export default function AgregarNapTab({ onSuccess, naps, userRole }: Props) {
       }
       setNapExiste(false);
       fetchMunicipios();
-      onSuccess();
+      onSuccess(idNap);
     } catch (err: unknown) {
       const msgErr = err instanceof Error ? err.message : "Error al guardar NAP.";
       setMsg({ type: "error", text: msgErr });

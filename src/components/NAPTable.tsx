@@ -11,7 +11,7 @@ import ClientForm from "@/components/ClientForm";
 
 interface Props {
   naps: NAP[];
-  onRefresh: () => void;
+  onRefresh: (napIds?: string | string[]) => void;
   onFilterChange?: (filtered: NAP[]) => void;
   userRole?: string;
 }
@@ -194,7 +194,7 @@ export default function NAPTable({ naps, onRefresh, onFilterChange, userRole = "
       const message = e instanceof Error ? e.message : "Error desconocido";
       showToast(message, "error");
     }
-    onRefresh();
+    onRefresh(napId);
   };
 
   const toggleExpand = async (napId: string) => {
@@ -251,7 +251,7 @@ export default function NAPTable({ naps, onRefresh, onFilterChange, userRole = "
         { napId: editingId, antes: napOriginal, despues: editFields }
       );
       cancelEdit();
-      onRefresh();
+      onRefresh(editingId);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Error al guardar.";
       console.error("Error al editar NAP:", message);
@@ -581,7 +581,7 @@ export default function NAPTable({ naps, onRefresh, onFilterChange, userRole = "
                                 `Marcó NAP ${nap.id_nap} como ${val ? "verificada (Sí)" : "no verificada (No)"} — ${hoy}`,
                                 { napId: nap.id, id_nap: nap.id_nap, verificacion: val, fecha_verificacion: hoy }
                               );
-                              onRefresh();
+                              onRefresh(nap.id);
                             } catch (err) {
                               showToast("Error al actualizar verificación", "error");
                             }
@@ -732,7 +732,7 @@ export default function NAPTable({ naps, onRefresh, onFilterChange, userRole = "
                                   import("@/lib/firestore").then(({ getClientesByNAP }) => {
                                     getClientesByNAP(nap.id).then(setExpandedClientes).finally(() => setLoadingClientes(false));
                                   });
-                                  onRefresh(); // Refresh the NAP table to update occupation numbers
+                                  onRefresh(nap.id); // Refresh the NAP table to update occupation numbers
                                 }}
                                 onCancel={() => setAddingClientToNap(null)}
                               />
