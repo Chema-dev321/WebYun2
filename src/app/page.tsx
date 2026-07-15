@@ -143,7 +143,10 @@ function Dashboard() {
     };
   }, [loadNaps]);
 
-  const emptyRefresh = useCallback(() => {}, []);
+  // Used by child components to trigger a reload of NAPs after they perform a mutation.
+  const handleRefresh = useCallback(() => {
+    loadNaps();
+  }, [loadNaps]);
 
   // Stats — use filtered NAPs when filters are active, otherwise all NAPs
   const stats = useMemo(() => {
@@ -323,12 +326,12 @@ function Dashboard() {
 
         {/* Tab content */}
         {tab === "dashboard" && (
-          <NAPTable naps={naps} onRefresh={emptyRefresh} onFilterChange={setFilteredNaps} userRole={userRole} />
+          <NAPTable naps={naps} onRefresh={handleRefresh} onFilterChange={setFilteredNaps} userRole={userRole} />
         )}
 
         {tab === "registro" && (
           <div className="max-w-2xl mx-auto">
-            <ClientForm onSuccess={emptyRefresh} naps={naps} />
+            <ClientForm onSuccess={handleRefresh} naps={naps} />
           </div>
         )}
 
@@ -341,7 +344,7 @@ function Dashboard() {
         )}
 
         {tab === "agregarNap" && (
-          <AgregarNapTab onSuccess={emptyRefresh} naps={naps} userRole={userRole} />
+          <AgregarNapTab onSuccess={handleRefresh} naps={naps} userRole={userRole} />
         )}
 
         {tab === "usuarios" && (
