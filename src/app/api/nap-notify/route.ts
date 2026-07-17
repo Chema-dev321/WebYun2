@@ -50,23 +50,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Token inválido" }, { status: 401 });
     }
 
-    // Verify user role
-    try {
-      const { db } = await import("@/lib/firebase");
-      const { getDoc, doc } = await import("firebase/firestore");
-      const userSnap = await getDoc(doc(db, "usuarios", uid));
-      if (!userSnap.exists()) {
-         return NextResponse.json({ error: "Usuario no registrado" }, { status: 403 });
-      }
-      const userRole = userSnap.data()?.rol || "instalador";
-      const allowedRoles = ["admin", "infraestructura", "supervisor", "administracion", "soporte"];
-      if (!allowedRoles.includes(userRole)) {
-         return NextResponse.json({ error: "No tienes permisos suficientes para enviar alertas" }, { status: 403 });
-      }
-    } catch (dbError) {
-      console.error("[NAP Notify API] Firestore Error:", dbError);
-      return NextResponse.json({ error: "Error de validación de rol" }, { status: 500 });
-    }
+    // Any authenticated user can trigger an internal notification (instaladores fill NAPs too)
 
     const body = await req.json();
     const { tipoEvento, idNap, nombre, municipio, localidad, ocupados, capacidad } = body;
@@ -78,14 +62,17 @@ export async function POST(req: NextRequest) {
     const transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST || "my.mailbux.com",
       port: Number(process.env.SMTP_PORT) || 587,
-      secure: false,
+      secure: false, // STARTTLS on port 587
       auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS,
       },
-      tls: process.env.NODE_ENV === "development" ? { rejectUnauthorized: false } : undefined,
-      connectionTimeout: 10000,
-      socketTimeout: 10000,
+      tls: {
+        // Allow self-signed certs and relax cert validation for shared hosting SMTP
+        rejectUnauthorized: false,
+      },
+      connectionTimeout: 15000,
+      socketTimeout: 15000,
     });
 
     const emailLlena = (process.env.EMAIL_TO || "chemjmme@gmail.com")
