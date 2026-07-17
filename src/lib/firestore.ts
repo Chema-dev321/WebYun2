@@ -474,21 +474,31 @@ export async function deleteCliente(clienteId: string): Promise<{ success: boole
       return { success: true, napData: napSnap.exists() ? napSnap.data() as Omit<NAP, "id"> : null, newOcupados, idNap: clienteData.id_nap, wasFull };
     });
 
-    // Enviar correo solo si la NAP estaba LLENA y se libero un puerto
-    if (result.success && result.wasFull && "napData" in result && result.napData && result.idNap) {
-      const { napData, newOcupados, idNap } = result as { napData: Omit<NAP, "id">; newOcupados: number; idNap: string };
+    // Enviar correo LIBERADA si la NAP estaba LLENA antes de eliminar el cliente
+    const r = result as {
+      success: boolean;
+      napData?: Omit<NAP, "id"> | null;
+      newOcupados?: number;
+      idNap?: string | null;
+      wasFull?: boolean;
+    };
+
+    if (r.success && r.wasFull && r.napData && r.idNap) {
+      console.log(`[deleteCliente] NAP ${r.idNap} estaba llena — enviando correo LIBERADA`);
       await notifyNapEvent({
         tipoEvento: "LIBERADA",
-        idNap: String(idNap),
-        nombre: napData.nombre,
-        municipio: napData.municipio,
-        localidad: napData.localidad,
-        ocupados: newOcupados,
-        capacidad: napData.capacidad_total,
+        idNap: String(r.idNap),
+        nombre: r.napData.nombre,
+        municipio: r.napData.municipio,
+        localidad: r.napData.localidad,
+        ocupados: r.newOcupados ?? 0,
+        capacidad: r.napData.capacidad_total,
       });
+    } else if (r.success) {
+      console.log(`[deleteCliente] NAP no requería notificación — wasFull:${r.wasFull} idNap:${r.idNap} napData:${!!r.napData}`);
     }
 
-    if (result.success && "napData" in result && result.napData) {
+    if (r.success && r.napData) {
       await touchNapsMetadata();
     }
 
