@@ -182,6 +182,10 @@ export default function NAPTable({ naps, onRefresh, onFilterChange, userRole = "
         showToast(result.error || "Error al eliminar cliente.", "error");
       } else {
         setExpandedClientes((prev) => prev.filter((c) => c.id !== clienteId));
+        showToast(
+          `✅ Cliente "${cliente?.nombre ?? clienteId}" eliminado correctamente. Puerto liberado en NAP ${napId}.`,
+          "success"
+        );
         await registrarLog(
           "ELIMINAR_CLIENTE",
           user?.email ?? "desconocido",

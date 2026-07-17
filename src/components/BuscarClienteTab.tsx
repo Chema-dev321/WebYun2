@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect } from "react";
 import type { NAP, Cliente } from "@/lib/types";
 import { getClienteByWisp, getNAPById, updateCliente, deleteCliente, updateClienteNAP } from "@/lib/firestore";
-import { useConfirm } from "@/components/ToastContext";
+import { useToast, useConfirm } from "@/components/ToastContext";
 
 export default function BuscarClienteTab({ naps, userRole = "instalador" }: { naps: NAP[]; userRole?: string }) {
   const [idWisp, setIdWisp] = useState("");
@@ -13,6 +13,7 @@ export default function BuscarClienteTab({ naps, userRole = "instalador" }: { na
   const [error, setError] = useState("");
   const [searched, setSearched] = useState(false);
 
+  const { showToast } = useToast();
   const { confirm } = useConfirm();
 
   // Edit mode
@@ -166,6 +167,7 @@ export default function BuscarClienteTab({ naps, userRole = "instalador" }: { na
     try {
       const result = await deleteCliente(cliente.id);
       if (result.success) {
+        showToast(`✅ Cliente "${cliente.nombre}" eliminado correctamente. Puerto liberado.`, "success");
         setCliente(null);
         setNapInfo(null);
         setSearched(false);
