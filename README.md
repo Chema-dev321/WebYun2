@@ -1,6 +1,26 @@
 # WebYun
 
-Una aplicación web moderna para la gestión integral de clientes, NAPs (puntos de acceso a red) y usuarios. Construida con tecnologías de vanguardia para proporcionar una experiencia de usuario fluida y una administración de datos eficiente.
+![Next.js](https://img.shields.io/badge/Next.js-15.5-black?style=for-the-badge&logo=nextdotjs)
+![React](https://img.shields.io/badge/React-19.0-61DAFB?style=for-the-badge&logo=react)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?style=for-the-badge&logo=typescript)
+![Firebase](https://img.shields.io/badge/Firebase-11.0-FFCA28?style=for-the-badge&logo=firebase)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4.0-06B6D4?style=for-the-badge&logo=tailwindcss)
+![pnpm](https://img.shields.io/badge/pnpm-11.1-F69220?style=for-the-badge&logo=pnpm)
+
+Una aplicación web moderna para la gestión integral de clientes, NAPs (puntos de acceso a red) y usuarios. Construida con tecnologías de vanguardia para proporcionar una experiencia de usuario fluida, administración de datos eficiente y sincronización en tiempo real.
+
+---
+
+## 📐 Arquitectura del Sistema
+
+```mermaid
+graph TD
+    User([Usuario / Administrador]) <-->|HTTPS / UI| NextApp[Next.js App Router]
+    NextApp <-->|Autenticación| Auth[Firebase Auth]
+    NextApp <-->|Lectura/Escritura Sync| Firestore[(Firestore DB)]
+    NextApp -->|Disparo de Eventos| Functions[Cloud Functions]
+    Functions <-->|Lógica Backend / Jobs| Firestore
+```
 
 ## 🚀 Características
 
