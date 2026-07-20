@@ -304,7 +304,7 @@ export default function AgregarNapTab({ onSuccess, naps, userRole }: Props) {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div>
-            <label className="block text-xs text-(--hulux-text-muted) mb-1">
+            <label className="block text-xs text-(--hulux-text-muted) mb-1 flex items-center">
               Municipio
               <button
                 type="button"
@@ -313,9 +313,9 @@ export default function AgregarNapTab({ onSuccess, naps, userRole }: Props) {
                   setMunicipio("");
                   setLocalidad("");
                 }}
-                className="ml-2 text-(--hulux-maroon) hover:underline"
+                className="ml-3 inline-flex items-center px-2 py-0.5 text-xs font-semibold rounded bg-(--hulux-orange) text-(--hulux-blue) hover:brightness-95 transition-all shadow-sm cursor-pointer"
               >
-                {modoMunicipio === "select" ? "+ nuevo" : "▾ existente"}
+                {modoMunicipio === "select" ? "+ Nuevo" : "▾ Existente"}
               </button>
             </label>
             {modoMunicipio === "select" ? (
@@ -340,7 +340,7 @@ export default function AgregarNapTab({ onSuccess, naps, userRole }: Props) {
             )}
           </div>
           <div>
-            <label className="block text-xs text-(--hulux-text-muted) mb-1">
+            <label className="block text-xs text-(--hulux-text-muted) mb-1 flex items-center">
               Localidad
               {municipio && (
                 <button
@@ -349,9 +349,9 @@ export default function AgregarNapTab({ onSuccess, naps, userRole }: Props) {
                     setModoLocalidad(modoLocalidad === "select" ? "custom" : "select");
                     setLocalidad("");
                   }}
-                  className="ml-2 text-(--hulux-maroon) hover:underline"
+                  className="ml-3 inline-flex items-center px-2 py-0.5 text-xs font-semibold rounded bg-(--hulux-orange) text-(--hulux-blue) hover:brightness-95 transition-all shadow-sm cursor-pointer"
                 >
-                  {modoLocalidad === "select" ? "+ nueva" : "▾ existente"}
+                  {modoLocalidad === "select" ? "+ Nueva" : "▾ Existente"}
                 </button>
               )}
             </label>
