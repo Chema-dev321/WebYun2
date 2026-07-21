@@ -56,7 +56,7 @@ export default function UsuariosTab({ usuarios }: { usuarios: Usuario[] }) {
     // Rows
     const rows = usuarios.map(u => [
       u.uid,
-      u.nombre || "Sin nombre",
+      u.nombre || "Sin nombreS",
       u.email,
       u.rol,
       u.deshabilitado ? "Inhabilitado" : "Activo",
