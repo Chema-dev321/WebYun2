@@ -101,7 +101,8 @@ export default function LoginPage() {
           <div className="absolute top-4 right-4">
             <ThemeToggle />
           </div>
-          <div className="text-center mb-8">
+          <div className="text-center mb-8 flex flex-col items-center">
+            <img src="/logo.png" alt="OptiCore Logo" className="w-20 h-20 object-contain mb-3 drop-shadow-lg" />
             <h1 className="text-2xl font-bold text-(--hulux-text)">OptiCore</h1>
             <p className="text-(--hulux-text-muted) text-sm mt-1">
               {isRegister ? "Crea tu cuenta" : "Inicia sesión para continuar"}

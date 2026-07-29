@@ -9,6 +9,10 @@ import { ToastProvider } from "@/components/ToastContext";
 export const metadata: Metadata = {
   title: "OptiCore - Network Management",
   description: "Sistema avanzado de gestión de fibra óptica",
+  icons: {
+    icon: "/logo.png",
+    apple: "/logo.png",
+  },
 };
 
 export default function RootLayout({

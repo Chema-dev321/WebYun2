@@ -229,9 +229,12 @@ function Dashboard() {
       {/* Header */}
       <header className="border-b border-(--hulux-border) bg-(--hulux-bg)/95 backdrop-blur sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-bold tracking-tight text-(--hulux-text)">OptiCore</h1>
-            <p className="text-(--hulux-text-muted) text-xs">Gestión de fibra óptica</p>
+          <div className="flex items-center gap-3">
+            <img src="/logo.png" alt="OptiCore" className="w-9 h-9 object-contain rounded-lg" />
+            <div>
+              <h1 className="text-xl font-bold tracking-tight text-(--hulux-text)">OptiCore</h1>
+              <p className="text-(--hulux-text-muted) text-xs">Gestión de fibra óptica</p>
+            </div>
           </div>
           <div className="flex items-center gap-4">
             {/* Botón de perfil */}
