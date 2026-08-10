@@ -4,6 +4,7 @@ import { useEffect, useState, useMemo, useCallback, Fragment } from "react";
 import type { LogEntry, AccionLog } from "@/lib/audit";
 import { subscribeToLogs } from "@/lib/audit";
 
+/** Mapeo de etiquetas legibles asociadas a cada tipo de acción registrada */
 const ACCION_LABELS: Record<AccionLog, string> = {
   CREAR_NAP: "Crear NAP",
   EDITAR_NAP: "Editar NAP",
@@ -17,6 +18,7 @@ const ACCION_LABELS: Record<AccionLog, string> = {
   LOGIN: "Inicio sesión",
 };
 
+/** Clases de estilos y colores CSS para badges según la categoría del evento */
 const ACCION_COLORS: Record<AccionLog, string> = {
   CREAR_NAP: "bg-[rgba(205,219,0,0.18)] text-(--hulux-lime) border border-[rgba(205,219,0,0.35)]",
   EDITAR_NAP: "bg-[rgba(148,237,242,0.18)] text-(--hulux-cyan) border border-[rgba(148,237,242,0.35)]",
@@ -30,6 +32,7 @@ const ACCION_COLORS: Record<AccionLog, string> = {
   LOGIN: "bg-[rgba(17,41,62,0.08)] text-(--hulux-text-muted) border border-(--hulux-border)",
 };
 
+/** Emoticonos ilustrativos por tipo de acción */
 const ACCION_ICONS: Record<AccionLog, string> = {
   CREAR_NAP: "🔌",
   EDITAR_NAP: "✏️",
@@ -43,6 +46,10 @@ const ACCION_ICONS: Record<AccionLog, string> = {
   LOGIN: "🔐",
 };
 
+/**
+ * Formatea una fecha ISO a un texto legible en español mexicano.
+ * @param iso Cadena de fecha en formato ISO.
+ */
 function formatDate(iso: string): string {
   try {
     const d = new Date(iso);
@@ -59,6 +66,10 @@ function formatDate(iso: string): string {
   }
 }
 
+/**
+ * Calcula el tiempo transcurrido desde una fecha ISO hasta la actualidad ("hace X min").
+ * @param iso Cadena de fecha en formato ISO.
+ */
 function timeAgo(iso: string): string {
   try {
     const diff = Date.now() - new Date(iso).getTime();
@@ -74,16 +85,33 @@ function timeAgo(iso: string): string {
   }
 }
 
+/**
+ * Componente `LogsTab`.
+ *
+ * Renderiza la bitácora de auditoría del sistema en tiempo real, permitiendo:
+ * - Visualizar todas las operaciones de modificación, altas y bajas ejecutadas por los usuarios.
+ * - Filtrar por texto libre, tipo de acción y usuario responsable.
+ * - Inspeccionar los objetos JSON de detalles técnicos de cada evento en una fila desplegable.
+ */
 export default function LogsTab() {
+  /** Lista de logs recibidos en tiempo real */
   const [logs, setLogs] = useState<LogEntry[]>([]);
+  /** Estado de carga inicial */
   const [loading, setLoading] = useState(true);
+  /** Texto de búsqueda en la bitácora */
   const [search, setSearch] = useState("");
+  /** Filtro seleccionado por tipo de acción */
   const [filtroAccion, setFiltroAccion] = useState<AccionLog | "">("");
+  /** Filtro seleccionado por correo de usuario */
   const [filtroUsuario, setFiltroUsuario] = useState("");
+  /** ID del log expandido para ver sus detalles en formato JSON */
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  /** Índice de página actual en la tabla */
   const [page, setPage] = useState(0);
+  /** Cantidad de registros por página */
   const pageSize = 30;
 
+  // Escucha eventos de auditoría en tiempo real desde Firestore
   useEffect(() => {
     const unsub = subscribeToLogs((data) => {
       setLogs(data);
@@ -92,12 +120,13 @@ export default function LogsTab() {
     return () => unsub();
   }, []);
 
-  // Unique users from logs
+  /** Lista memorizada de correos de usuario presentes en los logs */
   const usuarios = useMemo(() => {
     const set = new Set(logs.map((l) => l.usuarioEmail));
     return Array.from(set).sort();
   }, [logs]);
 
+  /** Lista de registros resultantes tras aplicar los filtros de búsqueda */
   const filtered = useMemo(() => {
     let result = logs;
     if (filtroAccion) result = result.filter((l) => l.accion === filtroAccion);
@@ -114,9 +143,14 @@ export default function LogsTab() {
     return result;
   }, [logs, filtroAccion, filtroUsuario, search]);
 
+  /** Número total de páginas */
   const totalPages = Math.ceil(filtered.length / pageSize);
+  /** Subconjunto de logs visibles en la página actual */
   const paged = filtered.slice(page * pageSize, (page + 1) * pageSize);
 
+  /**
+   * Restablece todos los filtros de la bitácora.
+   */
   const clearFilters = useCallback(() => {
     setFiltroAccion("");
     setFiltroUsuario("");
@@ -128,7 +162,7 @@ export default function LogsTab() {
 
   return (
     <div className="space-y-5">
-      {/* Header */}
+      {/* Encabezado */}
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-lg font-bold text-(--hulux-text)">Registro de Actividad</h2>
@@ -143,7 +177,7 @@ export default function LogsTab() {
         </div>
       </div>
 
-      {/* Filters (Collapsible on mobile) */}
+      {/* Barra de Filtros (Plegable en móviles) */}
       <details className="group bg-(--hulux-surface) border border-(--hulux-border) rounded-xl shadow-(--hulux-shadow) [&:not([open])_.content]:hidden sm:[&:not([open])_.content]:block" open>
         <summary className="p-4 text-[13px] font-semibold text-(--hulux-text) cursor-pointer sm:hidden flex items-center justify-between list-none">
           <div className="flex items-center gap-2">
@@ -158,7 +192,7 @@ export default function LogsTab() {
         </summary>
         
         <div className="content p-4 pt-0 sm:pt-4 flex flex-wrap items-end gap-3 border-t border-(--hulux-border) sm:border-0">
-          {/* Search */}
+          {/* Búsqueda general */}
           <div className="relative flex-1 min-w-[200px]">
             <label className="block text-xs text-(--hulux-text-muted) mb-1">Buscar</label>
             <svg
@@ -177,7 +211,7 @@ export default function LogsTab() {
             />
           </div>
 
-          {/* Accion filter */}
+          {/* Filtro por Acción */}
           <div className="flex-1 min-w-[140px] sm:flex-none">
             <label className="block text-xs text-(--hulux-text-muted) mb-1">Tipo de acción</label>
             <select
@@ -192,7 +226,7 @@ export default function LogsTab() {
             </select>
           </div>
 
-          {/* User filter */}
+          {/* Filtro por Usuario */}
           <div className="flex-1 min-w-[140px] sm:flex-none">
             <label className="block text-xs text-(--hulux-text-muted) mb-1">Usuario</label>
             <select
@@ -207,7 +241,7 @@ export default function LogsTab() {
             </select>
           </div>
 
-          {/* Clear */}
+          {/* Limpiar Filtros */}
           {hasFilters && (
             <button
               onClick={clearFilters}
@@ -219,7 +253,7 @@ export default function LogsTab() {
         </div>
       </details>
 
-      {/* Table */}
+      {/* Tabla de Resultados */}
       {loading ? (
         <div className="text-center py-16 text-(--hulux-text-muted)">
           <svg className="animate-spin h-6 w-6 mx-auto mb-3" viewBox="0 0 24 24" fill="none">
@@ -255,12 +289,12 @@ export default function LogsTab() {
                       className="border-t border-(--hulux-border) hover:bg-[rgba(148,237,242,0.07)] transition-colors cursor-pointer"
                       onClick={() => setExpandedId(expandedId === log.id ? null : log.id)}
                     >
-                      {/* Icon */}
+                      {/* Icono de Acción */}
                       <td className="p-3 text-center text-base">
                         {ACCION_ICONS[log.accion]}
                       </td>
 
-                      {/* Date */}
+                      {/* Marca Temporal */}
                       <td className="p-3">
                         <div className="font-mono text-xs text-(--hulux-text)">
                           {formatDate(log.timestamp)}
@@ -270,7 +304,7 @@ export default function LogsTab() {
                         </div>
                       </td>
 
-                      {/* User */}
+                      {/* Usuario Responsable */}
                       <td className="p-3">
                         <div className="flex items-center gap-2">
                           <div className="w-6 h-6 rounded-full bg-(--hulux-blue) dark:bg-(--hulux-cyan) flex items-center justify-center text-[10px] font-bold text-white dark:text-(--hulux-blue) shrink-0">
@@ -282,19 +316,19 @@ export default function LogsTab() {
                         </div>
                       </td>
 
-                      {/* Action badge */}
+                      {/* Insignia de Acción */}
                       <td className="p-3">
                         <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold whitespace-nowrap ${ACCION_COLORS[log.accion]}`}>
                           {ACCION_LABELS[log.accion]}
                         </span>
                       </td>
 
-                      {/* Description */}
+                      {/* Descripción resumida */}
                       <td className="p-3 text-xs text-(--hulux-text) max-w-xs">
                         <span className="line-clamp-2">{log.descripcion}</span>
                       </td>
 
-                      {/* Expand toggle */}
+                      {/* Icono de despliegue de detalles */}
                       <td className="p-3 text-center">
                         {log.detalles && (
                           <svg
@@ -307,7 +341,7 @@ export default function LogsTab() {
                       </td>
                     </tr>
 
-                    {/* Expanded details */}
+                    {/* Fila desplegable con objeto JSON de detalles */}
                     {expandedId === log.id && log.detalles && (
                       <tr key={`${log.id}-details`} className="border-t border-(--hulux-border) bg-[rgba(148,237,242,0.04)]">
                         <td colSpan={6} className="px-6 py-4">
@@ -328,7 +362,7 @@ export default function LogsTab() {
             </table>
           </div>
 
-          {/* Pagination */}
+          {/* Paginación */}
           {totalPages > 1 && (
             <div className="flex items-center justify-center gap-2">
               <button
@@ -355,3 +389,4 @@ export default function LogsTab() {
     </div>
   );
 }
+

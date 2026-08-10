@@ -4,15 +4,24 @@ import { useAuth } from "@/lib/AuthContext";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef } from "react";
 
+/**
+ * Componente `ProtectedRoute`.
+ *
+ * Envoltorio HOC (Higher-Order Component) que verifica el estado de autenticación del usuario.
+ * Redirige automáticamente al `/login` si no existe una sesión activa y muestra un spinner de carga mientras valida.
+ */
 export default function ProtectedRoute({
   children,
 }: {
+  /** Contenido protegido a renderizar si el usuario está autenticado */
   children: React.ReactNode;
 }) {
   const { user, loading } = useAuth();
   const router = useRouter();
+  /** Ref para garantizar que la redirección a `/login` ocurra una sola vez */
   const redirected = useRef(false);
 
+  // Efecto: Redirige a /login si terminó la carga y no hay usuario autenticado
   useEffect(() => {
     if (!loading && !user && !redirected.current) {
       redirected.current = true;
@@ -24,6 +33,7 @@ export default function ProtectedRoute({
     }
   }, [user, loading, router]);
 
+  // Pantalla de carga mientras se verifica el estado de autenticación
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-(--hulux-bg)">
@@ -53,9 +63,11 @@ export default function ProtectedRoute({
     );
   }
 
+  // Si no hay usuario autenticado, no renderiza nada mientras completa la redirección
   if (!user) {
     return null;
   }
 
   return <>{children}</>;
 }
+

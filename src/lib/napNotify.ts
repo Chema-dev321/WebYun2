@@ -1,26 +1,40 @@
 import { auth } from "./firebase";
 
+/**
+ * Parámetros requeridos para notificar un cambio de estado en una Caja NAP vía correo electrónico.
+ */
 interface NapNotifyParams {
+  /** Tipo de evento ocurrido ('LLENA' al saturarse, 'LIBERADA' al liberar puerto, 'VACIA' al quedar sin clientes) */
   tipoEvento: "LLENA" | "LIBERADA" | "VACIA";
+  /** Identificador de la NAP (ej. 'NAP-SCL-01') */
   idNap: string;
+  /** Nombre descriptivo de la NAP */
   nombre: string;
+  /** Municipio de la NAP */
   municipio: string;
+  /** Localidad de la NAP */
   localidad: string;
+  /** Cantidad actual de puertos ocupados */
   ocupados: number;
+  /** Capacidad total de puertos */
   capacidad: number;
 }
 
+/**
+ * Envía un webhook/petición a `/api/nap-notify` para disparar una notificación por correo electrónico.
+ * Incluye el Token JWT del usuario autenticado actual para autorización.
+ *
+ * @param params Datos de la NAP y el evento a notificar.
+ */
 export async function notifyNapEvent(params: NapNotifyParams): Promise<void> {
   try {
     const token = auth.currentUser ? await auth.currentUser.getIdToken() : null;
 
-    // Use absolute URL so this works both in the browser (client) and on the
-    // Vercel serverless runtime (server). NEXT_PUBLIC_APP_URL must be set in
-    // Vercel → Settings → Environment Variables, e.g. https://tu-app.vercel.app
+    // Determina la URL base absoluta según si se ejecuta en cliente o servidor Next.js
     const baseUrl =
       typeof window !== "undefined"
-        ? "" // browser — relative URL works fine
-        : process.env.NEXT_PUBLIC_APP_URL || ""; // server — needs absolute URL
+        ? "" // Navegador: soporta ruta relativa
+        : process.env.NEXT_PUBLIC_APP_URL || ""; // Servidor: requiere URL absoluta
 
     const response = await fetch(`${baseUrl}/api/nap-notify`, {
       method: "POST",
@@ -43,3 +57,4 @@ export async function notifyNapEvent(params: NapNotifyParams): Promise<void> {
     console.error("[NAP Notify] Error al enviar notificacion:", error);
   }
 }
+

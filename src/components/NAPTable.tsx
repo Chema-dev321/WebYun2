@@ -9,13 +9,24 @@ import { useAuth } from "@/lib/AuthContext";
 import { registrarLog } from "@/lib/audit";
 import ClientForm from "@/components/ClientForm";
 
+/**
+ * Propiedades recibidas por el componente {@link NAPTable}.
+ */
 interface Props {
+  /** Lista completa de NAPs a mostrar/filtrar en la tabla */
   naps: NAP[];
+  /** Callback para solicitar el refresco de los datos desde Firestore (recibe opcionalmente el ID de la NAP a actualizar) */
   onRefresh: (napIds?: string | string[]) => void;
+  /** Callback opcional notificado cuando cambia la lista filtrada de NAPs (usado por el Dashboard para actualizar métricas) */
   onFilterChange?: (filtered: NAP[]) => void;
+  /** Rol del usuario autenticado ('admin', 'infraestructura', 'soporte', 'instalador'), que determina qué acciones están permitidas */
   userRole?: string;
 }
 
+/**
+ * Mapeo de colores asociados a cada estado del semáforo de ocupación.
+ * Utiliza variables CSS personalizadas definidas en el tema global (`--hulux-*`).
+ */
 const SEMAFORO_COLORS: Record<SemaforoState, string> = {
   verde: "var(--hulux-lime)",
   amarillo: "var(--hulux-orange)",
@@ -23,6 +34,9 @@ const SEMAFORO_COLORS: Record<SemaforoState, string> = {
   celeste: "var(--hulux-cyan)",
 };
 
+/**
+ * Etiquetas descriptivas para el semáforo de ocupación de las NAPs.
+ */
 const SEMAFORO_LABELS: Record<SemaforoState, string> = {
   verde: "Verde (disponible)",
   amarillo: "Amarillo (≥70%)",
@@ -30,38 +44,74 @@ const SEMAFORO_LABELS: Record<SemaforoState, string> = {
   celeste: "Azul celeste (sobre-ocupación)",
 };
 
+/**
+ * Componente principal `NAPTable`.
+ *
+ * Muestra una tabla interactiva de Cajas NAP (Network Access Points) con soporte para:
+ * - Filtros combinados por texto (ID, municipio, localidad), municipio/localidad dependientes, disponibilidad y color de semáforo.
+ * - Edición inline de NAPs (para roles autorizados).
+ * - Verificación rápida del estado físico de las NAPs.
+ * - Eliminación de NAPs y clientes vinculados.
+ * - Despliegue de detalle de clientes conectados por NAP y registro de nuevos clientes.
+ * - Paginación dinámica y exportación a CSV.
+ */
 export default function NAPTable({ naps, onRefresh, onFilterChange, userRole = "instalador" }: Props) {
-  // ── Filters ──
+  // ── Estados para Filtros y Búsqueda ──
+  /** Texto de búsqueda rápida por ID de NAP, municipio o localidad */
   const [search, setSearch] = useState("");
+  /** Municipio seleccionado para filtrar NAPs */
   const [municipio, setMunicipio] = useState("");
+  /** Localidad seleccionada para filtrar NAPs (depende del municipio seleccionado) */
   const [localidad, setLocalidad] = useState("");
+  /** Conjunto de colores de semáforo activos en el filtro */
   const [activosSemaforo, setActivosSemaforo] = useState<Set<SemaforoState>>(new Set());
+  /** Filtro por estado de capacidad/ocupación de los puertos */
   const [disponibilidad, setDisponibilidad] = useState<"todas" | "espacio" | "llenas">("todas");
+  /** Índice de la página actual en la tabla (0-indexed) */
   const [page, setPage] = useState(0);
+  /** Número máximo de NAPs por página */
   const pageSize = 20;
 
-  // Edit mode
+  // ── Estados para Edición Inline y Eliminación de NAP ──
+  /** ID de la NAP que está siendo editada actualmente (`null` si ninguna está en edición) */
   const [editingId, setEditingId] = useState<string | null>(null);
+  /** Objeto que almacena temporalmente los valores modificados de la NAP en edición */
   const [editFields, setEditFields] = useState<Partial<NAP>>({});
+  /** Estado de carga mientras se guardan las modificaciones de una NAP */
   const [saving, setSaving] = useState(false);
+  /** ID de la NAP en proceso de eliminación (`null` si ninguna) */
   const [deleting, setDeleting] = useState<string | null>(null);
 
-  // Expand
+  // ── Estados para Despliegue de Clientes por NAP ──
+  /** ID de la NAP expandida para ver su lista de clientes (`null` si ninguna) */
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  /** Lista de clientes pertenecientes a la NAP expandida actualmente */
   const [expandedClientes, setExpandedClientes] = useState<ClienteType[]>([]);
+  /** Estado de carga de la consulta de clientes a Firestore */
   const [loadingClientes, setLoadingClientes] = useState(false);
+  /** ID de la NAP en la cual se está desplegando el formulario de nuevo cliente (`null` si no hay activo) */
   const [addingClientToNap, setAddingClientToNap] = useState<string | null>(null);
 
+  // ── Hooks de Utilidades Globales ──
+  /** Hook para desplegar notificaciones tipo Toast */
   const { showToast } = useToast();
+  /** Hook para mostrar modales de confirmación */
   const { confirm } = useConfirm();
+  /** Contexto de autenticación del usuario actual */
   const { user } = useAuth();
 
-  // Derived lists
+  // ── Listas Derivadas (Memorizadas) ──
+  /**
+   * Obtiene la lista única y ordenada alfabéticamente de municipios presentes en las NAPs.
+   */
   const municipios = useMemo(() => {
     const set = new Set(naps.map((n) => n.municipio));
     return Array.from(set).sort();
   }, [naps]);
 
+  /**
+   * Obtiene la lista única y ordenada de localidades perteneciente al municipio seleccionado.
+   */
   const localidades = useMemo(() => {
     if (!municipio) return [];
     const set = new Set(
@@ -70,17 +120,24 @@ export default function NAPTable({ naps, onRefresh, onFilterChange, userRole = "
     return Array.from(set).sort();
   }, [naps, municipio]);
 
-  // Reset localidad when municipio changes
+  /**
+   * Efecto: Reinicia el filtro de localidad cuando se cambia de municipio.
+   */
   useEffect(() => {
     setLocalidad("");
   }, [municipio]);
 
-  // Reset page on filter change
+  /**
+   * Efecto: Reinicia la página a la primera (0) al modificar cualquier filtro de búsqueda.
+   */
   useEffect(() => {
     setPage(0);
   }, [search, municipio, localidad, activosSemaforo, disponibilidad]);
 
-  // Toggle semaforo filter
+  /**
+   * Alterna la inclusión/exclusión de un color de semáforo dentro del filtro activo.
+   * @param s Estado del semáforo a conmutar ('verde', 'amarillo', 'rojo', 'celeste')
+   */
   const toggleSemaforo = (s: SemaforoState) => {
     setActivosSemaforo((prev) => {
       const next = new Set(prev);
@@ -90,10 +147,12 @@ export default function NAPTable({ naps, onRefresh, onFilterChange, userRole = "
     });
   };
 
-  // ── Filtered NAPs ──
+  /**
+   * Lista memorizada de NAPs resultantes tras aplicar todos los criterios de filtrado.
+   */
   const filteredNaps = useMemo(() => {
     return naps.filter((nap) => {
-      // Text search
+      // 1. Filtro por texto en ID, municipio o localidad
       if (search.trim()) {
         const q = search.toLowerCase();
         const match =
@@ -103,18 +162,18 @@ export default function NAPTable({ naps, onRefresh, onFilterChange, userRole = "
         if (!match) return false;
       }
 
-      // Municipio
+      // 2. Filtro por municipio específico
       if (municipio && nap.municipio !== municipio) return false;
 
-      // Localidad
+      // 3. Filtro por localidad específica
       if (localidad && nap.localidad !== localidad) return false;
 
-      // Semaforo
+      // 4. Filtro por chips de semáforo
       if (activosSemaforo.size > 0) {
         if (!activosSemaforo.has(getNAPColor(nap))) return false;
       }
 
-      // Disponibilidad
+      // 5. Filtro por disponibilidad de puertos
       if (disponibilidad === "espacio") {
         if (nap.puertos_ocupados >= nap.capacidad_total) return false;
       }
@@ -126,11 +185,16 @@ export default function NAPTable({ naps, onRefresh, onFilterChange, userRole = "
     });
   }, [naps, search, municipio, localidad, activosSemaforo, disponibilidad]);
 
-  // Report filtered NAPs to parent for dashboard stats
+  /**
+   * Efecto: Reporta la lista filtrada de NAPs al componente padre si existe la función callback `onFilterChange`.
+   */
   useEffect(() => {
     onFilterChange?.(filteredNaps);
   }, [filteredNaps, onFilterChange]);
 
+  /**
+   * Exporta las NAPs actualmente filtradas a un archivo en formato CSV y simula su descarga en el navegador.
+   */
   const handleDownloadCSV = () => {
     if (filteredNaps.length === 0) return;
     
@@ -172,6 +236,12 @@ export default function NAPTable({ naps, onRefresh, onFilterChange, userRole = "
     document.body.removeChild(link);
   };
 
+  /**
+   * Elimina un cliente específico asignado a una NAP y libera su puerto.
+   * Registra el evento correspondiente en la bitácora de auditoría.
+   * @param clienteId ID único del documento del cliente en Firestore.
+   * @param napId ID único de la NAP asociada.
+   */
   const handleDelete = async (clienteId: string, napId: string) => {
     const ok = await confirm("¿Eliminar este cliente? Se liberará el puerto en la NAP.");
     if (!ok) return;
@@ -201,6 +271,11 @@ export default function NAPTable({ naps, onRefresh, onFilterChange, userRole = "
     onRefresh(napId);
   };
 
+  /**
+   * Despliega u oculta el panel de detalles y lista de clientes de una NAP.
+   * Carga dinámicamente los clientes desde Firestore cuando se expande por primera vez.
+   * @param napId ID único de la NAP a expandir/colapsar.
+   */
   const toggleExpand = async (napId: string) => {
     if (expandedId === napId) {
       setExpandedId(null);
@@ -221,6 +296,10 @@ export default function NAPTable({ naps, onRefresh, onFilterChange, userRole = "
     }
   };
 
+  /**
+   * Inicia la edición en línea de los datos de una NAP especificando el objeto NAP inicial.
+   * @param nap Objeto NAP a editar.
+   */
   const startEdit = (nap: NAP) => {
     setEditingId(nap.id);
     setEditFields({
@@ -236,11 +315,17 @@ export default function NAPTable({ naps, onRefresh, onFilterChange, userRole = "
     });
   };
 
+  /**
+   * Cancela la edición en línea actual y restablece los valores del estado temporal.
+   */
   const cancelEdit = () => {
     setEditingId(null);
     setEditFields({});
   };
 
+  /**
+   * Guarda los cambios modificados en el formulario en línea de la NAP en Firestore y registra la acción en los logs.
+   */
   const saveEdit = async () => {
     if (!editingId) return;
     setSaving(true);
@@ -264,6 +349,10 @@ export default function NAPTable({ naps, onRefresh, onFilterChange, userRole = "
     setSaving(false);
   };
 
+  /**
+   * Elimina por completo una NAP de Firestore junto con sus clientes vinculados tras solicitar confirmación.
+   * @param napId ID único del documento de la NAP a eliminar.
+   */
   const handleDeleteNAP = async (napId: string) => {
     const ok = await confirm("¿Eliminar esta NAP y todos sus clientes? Esta acción no se puede deshacer.");
     if (!ok) return;
@@ -291,13 +380,15 @@ export default function NAPTable({ naps, onRefresh, onFilterChange, userRole = "
     setDeleting(null);
   };
 
-  // ── Pagination ──
+  // ── Cálculo de Paginación ──
+  /** Número total de páginas según la cantidad de NAPs filtradas */
   const totalPages = Math.ceil(filteredNaps.length / pageSize);
+  /** Subconjunto de NAPs visibles en la página actual */
   const pagedNaps = filteredNaps.slice(page * pageSize, (page + 1) * pageSize);
 
   return (
     <div className="space-y-4">
-      {/* ── Filter bar (Collapsible on mobile) ── */}
+      {/* ── Barra de Filtros y Búsqueda (Plegable en dispositivos móviles) ── */}
       <details className="group rounded-xl border border-(--hulux-border) bg-(--hulux-surface) shadow-(--hulux-shadow) [&:not([open])_.content]:hidden sm:[&:not([open])_.content]:block" open>
         <summary className="p-4 text-[13px] font-semibold text-(--hulux-text) cursor-pointer sm:hidden flex items-center justify-between list-none">
           <div className="flex items-center gap-2">
@@ -312,8 +403,9 @@ export default function NAPTable({ naps, onRefresh, onFilterChange, userRole = "
         </summary>
         
         <div className="content p-4 pt-0 sm:pt-4 space-y-3 border-t border-(--hulux-border) sm:border-0">
-          {/* Row 1: Search + Municipio + Localidad + Disponibilidad */}
+          {/* Fila 1: Campo de texto de Búsqueda + Selección de Municipio, Localidad y Disponibilidad */}
           <div className="flex flex-wrap gap-3 items-end">
+            {/* Input de Búsqueda libre por ID / Municipio / Localidad */}
             <div className="flex-1 min-w-50">
               <label className="block text-xs text-(--hulux-text-muted) mb-1">Buscar</label>
               <div className="relative">
@@ -334,6 +426,7 @@ export default function NAPTable({ naps, onRefresh, onFilterChange, userRole = "
               </div>
             </div>
 
+            {/* Select de Municipio */}
             <div className="flex-1 min-w-35 sm:flex-none">
               <label className="block text-xs text-(--hulux-text-muted) mb-1">Municipio</label>
               <select
@@ -348,6 +441,7 @@ export default function NAPTable({ naps, onRefresh, onFilterChange, userRole = "
               </select>
             </div>
 
+            {/* Select de Localidad (se activa únicamente al seleccionar un Municipio) */}
             <div className="flex-1 min-w-35 sm:flex-none">
               <label className="block text-xs text-(--hulux-text-muted) mb-1">Localidad</label>
               <select
@@ -363,6 +457,7 @@ export default function NAPTable({ naps, onRefresh, onFilterChange, userRole = "
               </select>
             </div>
 
+            {/* Botones de Disponibilidad: Todas / Con espacio / Llenas */}
             <div className="flex gap-1 w-full sm:w-auto">
               {(["todas", "espacio", "llenas"] as const).map((d) => (
                 <button
@@ -381,7 +476,7 @@ export default function NAPTable({ naps, onRefresh, onFilterChange, userRole = "
             </div>
           </div>
 
-          {/* Row 2: Semaforo chips */}
+          {/* Fila 2: Chips de estado de Semáforo */}
           <div>
             <label className="block text-xs text-(--hulux-text-muted) mb-1.5">Semáforo</label>
             <div className="flex flex-wrap gap-1.5">
@@ -409,7 +504,7 @@ export default function NAPTable({ naps, onRefresh, onFilterChange, userRole = "
             </div>
           </div>
 
-          {/* Results count */}
+          {/* Contador de resultados y botón para restablecer filtros */}
           <div className="flex items-center justify-between text-xs text-(--hulux-text-muted) pt-2">
             <div className="flex items-center gap-3">
               <span>
@@ -446,7 +541,7 @@ export default function NAPTable({ naps, onRefresh, onFilterChange, userRole = "
         </div>
       </details>
 
-      {/* ── Table ── */}
+      {/* ── Renderizado de la Tabla Principal ── */}
       {pagedNaps.length === 0 ? (
         <div className="text-center py-12 text-(--hulux-text-muted) text-sm rounded-xl border border-(--hulux-border) bg-(--hulux-surface) shadow-(--hulux-shadow)">
           Sin resultados con los filtros actuales.
@@ -481,6 +576,7 @@ export default function NAPTable({ naps, onRefresh, onFilterChange, userRole = "
                 return (
                   <Fragment key={nap.id}>
                     <tr className="border-t border-(--hulux-border) hover:bg-[rgba(148,237,242,0.12)]">
+                      {/* Indicador visual de Semáforo */}
                       <td className="p-3">
                       <span
                         className="inline-block w-3 h-3 rounded-full"
@@ -496,7 +592,9 @@ export default function NAPTable({ naps, onRefresh, onFilterChange, userRole = "
                         }
                       />
                     </td>
+                    {/* ID de la NAP */}
                     <td className="p-3 text-(--hulux-text-muted) font-medium">{nap.id_nap}</td>
+                    {/* Municipio (modo lectura o edición inline) */}
                     <td className="p-3">
                       {editingId === nap.id ? (
                         <input
@@ -509,6 +607,7 @@ export default function NAPTable({ naps, onRefresh, onFilterChange, userRole = "
                         nap.municipio
                       )}
                     </td>
+                    {/* Localidad (modo lectura o edición inline) */}
                     <td className="p-3">
                       {editingId === nap.id ? (
                         <input
@@ -521,6 +620,7 @@ export default function NAPTable({ naps, onRefresh, onFilterChange, userRole = "
                         nap.localidad
                       )}
                     </td>
+                    {/* Ocupación de puertos (puertos ocupados / capacidad total) */}
                     <td className="p-3">
                       {editingId === nap.id ? (
                         <select
@@ -537,6 +637,7 @@ export default function NAPTable({ naps, onRefresh, onFilterChange, userRole = "
                         </span>
                       )}
                     </td>
+                    {/* Porcentaje de ocupación con barra de progreso */}
                     <td className="p-3">
                       <div className="flex items-center gap-2">
                         <div className="w-14 h-2 bg-(--hulux-progress-track) rounded-full overflow-hidden">
@@ -551,7 +652,7 @@ export default function NAPTable({ naps, onRefresh, onFilterChange, userRole = "
                         <span className="text-xs text-(--hulux-text) font-bold">{pct}%</span>
                       </div>
                     </td>
-                    {/* Últ. Verificación */}
+                    {/* Fecha de la última verificación en campo */}
                     <td className="p-3 text-xs text-(--hulux-text-muted) whitespace-nowrap">
                       {editingId === nap.id ? (
                         <input
@@ -566,7 +667,7 @@ export default function NAPTable({ naps, onRefresh, onFilterChange, userRole = "
                         <span>—</span>
                       )}
                     </td>
-                    {/* Verificación Sí/No — inline select */}
+                    {/* Selector de verificación rápida (Sí/No) */}
                     <td className="p-3 text-center">
                       <select
                         value={editingId === nap.id ? (editFields.verificacion ?? nap.verificacion) : nap.verificacion}
@@ -601,6 +702,7 @@ export default function NAPTable({ naps, onRefresh, onFilterChange, userRole = "
                         <option value={0}>✗ No</option>
                       </select>
                     </td>
+                    {/* Coordenadas Geográficas (Latitud, Longitud) */}
                     <td className="p-3 text-xs text-(--hulux-text-muted)">
                       {editingId === nap.id ? (
                         <div className="flex flex-col gap-1">
@@ -627,6 +729,7 @@ export default function NAPTable({ naps, onRefresh, onFilterChange, userRole = "
                         <span>—</span>
                       )}
                     </td>
+                    {/* Estado en Tomodat */}
                     <td className="p-3">
                       {editingId === nap.id ? (
                         <select
@@ -649,6 +752,7 @@ export default function NAPTable({ naps, onRefresh, onFilterChange, userRole = "
                         </span>
                       )}
                     </td>
+                    {/* Acciones de Edición y Eliminación de NAP (según el rol del usuario) */}
                     <td className="p-3">
                       {(userRole === "admin" || userRole === "infraestructura") && (
                         editingId === nap.id ? (
@@ -686,6 +790,7 @@ export default function NAPTable({ naps, onRefresh, onFilterChange, userRole = "
                         )
                       )}
                     </td>
+                    {/* Botón para expandir/ocultar el desglose de clientes conectados */}
                     <td className="p-3 text-right">
                       <div className="group relative inline-flex justify-center items-center">
                         <button
@@ -704,6 +809,8 @@ export default function NAPTable({ naps, onRefresh, onFilterChange, userRole = "
                       </div>
                     </td>
                   </tr>
+
+                  {/* ── Fila Desplegable de Detalle de Clientes ── */}
                   {isExpanded && (
                     <tr className="bg-[rgba(17,41,62,0.02)] dark:bg-[rgba(148,237,242,0.03)] border-b border-(--hulux-border)">
                       <td colSpan={11} className="p-4">
@@ -723,6 +830,7 @@ export default function NAPTable({ naps, onRefresh, onFilterChange, userRole = "
                             )}
                           </div>
                           
+                          {/* Formulario integrado para añadir cliente directamente a esta NAP */}
                           {addingClientToNap === nap.id && (
                             <div className="mb-4 bg-[rgba(148,237,242,0.05)] border border-[rgba(148,237,242,0.15)] rounded-lg p-4">
                               <h4 className="text-xs font-semibold text-(--hulux-text) mb-2">Nuevo cliente en {nap.id_nap}</h4>
@@ -731,18 +839,19 @@ export default function NAPTable({ naps, onRefresh, onFilterChange, userRole = "
                                 naps={naps}
                                 onSuccess={() => {
                                   setAddingClientToNap(null);
-                                  // Refresh clients for this NAP
+                                  // Refresca la lista de clientes de la NAP actual
                                   setLoadingClientes(true);
                                   import("@/lib/firestore").then(({ getClientesByNAP }) => {
                                     getClientesByNAP(nap.id).then(setExpandedClientes).finally(() => setLoadingClientes(false));
                                   });
-                                  onRefresh(nap.id); // Refresh the NAP table to update occupation numbers
+                                  onRefresh(nap.id); // Refresca la tabla principal de NAPs para actualizar los números de ocupación
                                 }}
                                 onCancel={() => setAddingClientToNap(null)}
                               />
                             </div>
                           )}
 
+                          {/* Listado de clientes o indicador de estado */}
                           {loadingClientes ? (
                             <p className="text-(--hulux-text-muted) text-sm flex items-center gap-2">
                               <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
@@ -789,7 +898,7 @@ export default function NAPTable({ naps, onRefresh, onFilterChange, userRole = "
             </tbody>
           </table>
 
-          {/* ── Legend ── */}
+          {/* ── Leyenda de Colores del Semáforo ── */}
           <div className="flex flex-wrap gap-4 p-3 bg-(--hulux-subtle) rounded-b-xl border-t border-(--hulux-border) text-xs text-(--hulux-text-muted)">
             <span className="flex items-center gap-1">
               <span className="w-3 h-3 rounded-full bg-(--hulux-lime)" /> Disponible
@@ -807,7 +916,7 @@ export default function NAPTable({ naps, onRefresh, onFilterChange, userRole = "
         </div>
       )}
 
-      {/* ── Pagination ── */}
+      {/* ── Controles de Paginación ── */}
       {totalPages > 1 && (
         <div className="flex items-center justify-between">
           <span className="text-xs text-(--hulux-text-muted)">

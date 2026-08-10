@@ -9,6 +9,9 @@ import {
 } from "firebase/firestore";
 import { db } from "./firebase";
 
+/**
+ * Tipos de acciones registrables en la bitácora de auditoría del sistema WebYun.
+ */
 export type AccionLog =
   | "CREAR_NAP"
   | "EDITAR_NAP"
@@ -21,18 +24,39 @@ export type AccionLog =
   | "SINCRONIZAR_CONTADORES"
   | "LOGIN";
 
+/**
+ * Representa una entrada de la bitácora de auditoría en Firestore.
+ */
 export interface LogEntry {
+  /** ID único del log */
   id: string;
+  /** Categoría o tipo de acción realizada */
   accion: AccionLog;
+  /** Correo electrónico del usuario que ejecutó la acción */
   usuarioEmail: string;
+  /** UID de autenticación en Firebase del usuario */
   usuarioUid: string;
+  /** Descripción textual legible de la acción */
   descripcion: string;
+  /** Metadata o detalles técnicos adicionales asociados al evento */
   detalles?: Record<string, unknown>;
-  timestamp: string; // ISO string
+  /** Marca temporal en formato ISO string */
+  timestamp: string;
 }
 
+/** Nombre de la colección de auditoría en Firestore */
 const LOGS_COL = "audit_logs";
 
+/**
+ * Registra una nueva acción en la bitácora de auditoría de Firestore.
+ * No interrumpe el flujo principal si ocurre algún fallo al guardar.
+ *
+ * @param accion Tipo de acción ejecutada.
+ * @param usuarioEmail Email del usuario autenticado.
+ * @param usuarioUid UID de Firebase Authentication.
+ * @param descripcion Resumen inteligible de la operación.
+ * @param detalles Datos objeto opcionales con el estado antes/después o IDs relevantes.
+ */
 export async function registrarLog(
   accion: AccionLog,
   usuarioEmail: string,
@@ -50,11 +74,18 @@ export async function registrarLog(
       timestamp: Timestamp.now(),
     });
   } catch (err) {
-    // Audit logs should never break the main flow
+    // Los logs de auditoría no deben interrumpir el flujo del usuario
     console.warn("No se pudo guardar el log de auditoría:", err);
   }
 }
 
+/**
+ * Suscribe un callback en tiempo real a las entradas de auditoría más recientes.
+ *
+ * @param callback Función receptora de la lista actualizada de logs.
+ * @param maxEntries Límite de registros a recuperar (por defecto 200).
+ * @returns Función de desuscripción para limpiar el listener.
+ */
 export function subscribeToLogs(
   callback: (logs: LogEntry[]) => void,
   maxEntries = 200
@@ -84,4 +115,5 @@ export function subscribeToLogs(
     callback(logs);
   });
 }
+
 

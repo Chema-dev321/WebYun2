@@ -4,8 +4,19 @@ import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import useSupercluster from "use-supercluster";
 import type { NAP } from "@/lib/types";
 
-interface Props { naps: NAP[]; }
+/**
+ * Propiedades del componente {@link MapaTab}.
+ */
+interface Props {
+  /** Lista completa de NAPs registradas para mostrar en el mapa */
+  naps: NAP[];
+}
 
+/**
+ * Determina el estado del semáforo de ocupación de una NAP.
+ * @param nap Objeto NAP a evaluar.
+ * @returns `"verde"` | `"amarillo"` | `"rojo"` | `"celeste"`.
+ */
 function getSemaforo(nap: NAP): "verde" | "amarillo" | "rojo" | "celeste" {
   const o = nap.puertos_ocupados, c = nap.capacidad_total;
   if (o > c) return "celeste";
@@ -14,14 +25,24 @@ function getSemaforo(nap: NAP): "verde" | "amarillo" | "rojo" | "celeste" {
   return "verde";
 }
 
+/** Mapeo de colores hexadecimales según la clasificación del semáforo */
 const SEMAFORO_HEX: Record<string, string> = {
   verde: "#22c55e", amarillo: "#f59e0b", rojo: "#ef4444", celeste: "#06b6d4",
 };
+
+/** Mapeo de texto explicativo para el semáforo */
 const SEMAFORO_LABEL: Record<string, string> = {
   verde: "Disponible", amarillo: "Alta ocupación (≥70%)", rojo: "Llena", celeste: "Sobre-ocupación",
 };
+
+/** Colores por estado Tomodat */
 const TOMODAT_COLOR: Record<string, string> = { Activo: "#22c55e", Verde: "#22c55e", Rojo: "#ef4444" };
 
+/**
+ * Genera una URL Data-URI de un marcador SVG personalizado para las NAPs.
+ * @param color Color hexadecimal del marcador.
+ * @param tomodatOk Si `false`, superpone una insignia de alerta de Tomodat.
+ */
 function createMarkerIcon(color: string, tomodatOk: boolean) {
   const alertBadge = !tomodatOk
     ? `<circle cx="34" cy="6" r="7" fill="#ef4444" stroke="white" stroke-width="1.5"/><text x="34" y="10" text-anchor="middle" font-size="9" font-weight="bold" fill="white">!</text>`
@@ -49,6 +70,10 @@ function createMarkerIcon(color: string, tomodatOk: boolean) {
   return `data:image/svg+xml,${encodeURIComponent(svg)}`;
 }
 
+/**
+ * Genera el marcado HTML para los clusters de agrupamiento masivo de NAPs.
+ * @param count Número de NAPs agrupadas en el cluster.
+ */
 function createClusterIconSvg(count: number) {
   let bg = "rgba(74, 222, 128, 0.4)";
   let border = "#4ade80";
@@ -59,6 +84,10 @@ function createClusterIconSvg(count: number) {
   return html;
 }
 
+/**
+ * Parsea una coordenada convirtiendo comas en puntos y descartando valores inválidos.
+ * @param raw Valor bruto de la coordenada.
+ */
 function parseCoord(raw: unknown): number | null {
   const s = String(raw ?? "").replace(",", ".").trim();
   if (!s) return null;
@@ -66,13 +95,22 @@ function parseCoord(raw: unknown): number | null {
   return isNaN(n) ? null : n;
 }
 
+/**
+ * Componente `MapaTab`.
+ *
+ * Visualizador cartográfico interactivo basado en Leaflet y Supercluster para renderizado fluido de NAPs:
+ * - Agrupamiento de alto rendimiento (`useSupercluster`) para miles de marcadores.
+ * - Filtros rápidos por estado de ocupación (Disponibles / Llenas) y Tomodat.
+ * - Buscador directo de coordenadas GPS.
+ * - Geolocalización del usuario en tiempo real.
+ * - Popups informativos con opción de copiar coordenadas e inspección de puertos.
+ */
 export default function MapaTab({ naps }: Props) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<any>(null);
   const layerGroupRef = useRef<any>(null);
   const userMarkerRef = useRef<any>(null);
   const searchMarkerRef = useRef<any>(null);
-  const mapCenteredRef = useRef(false);
 
   const [mounted, setMounted] = useState(false);
   const [mapReady, setMapReady] = useState(false);
@@ -83,18 +121,19 @@ export default function MapaTab({ naps }: Props) {
   const [userPos, setUserPos] = useState<[number, number] | null>(null);
   const [searchInput, setSearchInput] = useState("");
 
-  // Map state for Supercluster
+  // ── Estado del mapa para Supercluster ──
   const [bounds, setBounds] = useState<[number, number, number, number] | undefined>(undefined);
   const [zoom, setZoom] = useState(6);
 
   useEffect(() => { setMounted(true); }, []);
 
-  // ── Data ──
+  /** NAPs que poseen coordenadas lat/lng válidas */
   const napsConCoords = useMemo(() =>
     naps.filter(n => parseCoord(n.latitud) !== null && parseCoord(n.longitud) !== null),
     [naps]
   );
 
+  /** NAPs filtradas según los parámetros seleccionados por el usuario */
   const napsFiltradas = useMemo(() => napsConCoords.filter(n => {
     const sem = getSemaforo(n);
     if (filtro === "disponibles" && (sem === "rojo" || sem === "celeste")) return false;
@@ -108,6 +147,7 @@ export default function MapaTab({ naps }: Props) {
     return true;
   }), [napsConCoords, filtro, tomodatFiltro]);
 
+  /** Estadísticas calculadas de ocupación y georreferenciación */
   const stats = useMemo(() => ({
     total: napsConCoords.length,
     sinCoords: naps.length - napsConCoords.length,
@@ -115,7 +155,7 @@ export default function MapaTab({ naps }: Props) {
     llenas: napsConCoords.filter(n => { const s = getSemaforo(n); return s === "rojo" || s === "celeste"; }).length,
   }), [naps, napsConCoords]);
 
-  // Transform to GeoJSON for Supercluster
+  /** Puntos formateados a GeoJSON para Supercluster */
   const points = useMemo(() => {
     return napsFiltradas.map(nap => {
       const lat = parseCoord(nap.latitud)!;
@@ -132,10 +172,10 @@ export default function MapaTab({ naps }: Props) {
     points,
     bounds,
     zoom,
-    options: { radius: 75, maxZoom: 15 } // Clusters split at zoom 15
+    options: { radius: 75, maxZoom: 15 }
   });
 
-  // ── Init map (once) ──
+  // Inicializa el mapa de Leaflet una única vez al montar
   useEffect(() => {
     if (!mounted || !mapRef.current || mapInstanceRef.current) return;
 
@@ -144,7 +184,7 @@ export default function MapaTab({ naps }: Props) {
       if (!mapRef.current || mapInstanceRef.current) return;
 
       const map = L.map(mapRef.current, {
-        center: [20.2687, -98.9461], // Actopan por defecto
+        center: [20.2687, -98.9461],
         zoom: 13,
         preferCanvas: true,
         zoomControl: true,
@@ -160,7 +200,6 @@ export default function MapaTab({ naps }: Props) {
       setMapReady(true);
       requestAnimationFrame(() => map.invalidateSize());
 
-      // Update supercluster state on pan/zoom
       const updateBounds = () => {
         const b = map.getBounds();
         setBounds([
@@ -174,7 +213,7 @@ export default function MapaTab({ naps }: Props) {
 
       map.on("moveend", updateBounds);
       map.on("zoomend", updateBounds);
-      updateBounds(); // Initial state
+      updateBounds();
     });
 
     return () => {
@@ -186,7 +225,7 @@ export default function MapaTab({ naps }: Props) {
     };
   }, [mounted]);
 
-  // ── Draw ONLY visible clusters/markers ──
+  // Renderiza ÚNICAMENTE los clusters y marcadores visibles según el área del viewport
   useEffect(() => {
     if (!mapReady || !mapInstanceRef.current || !clusters) return;
 
@@ -206,7 +245,6 @@ export default function MapaTab({ naps }: Props) {
         const { cluster: isCluster, point_count: pointCount, nap } = props;
 
         if (isCluster) {
-          // Draw Cluster bubble
           const icon = L.divIcon({
             html: createClusterIconSvg(pointCount),
             className: "custom-cluster-icon",
@@ -221,7 +259,6 @@ export default function MapaTab({ naps }: Props) {
           });
           newLayers.push(marker);
         } else if (nap) {
-          // Draw single NAP
           const sem = getSemaforo(nap);
           const color = SEMAFORO_HEX[sem];
           const normTomodat = nap.estado_tomodat?.trim().toLowerCase();
@@ -282,7 +319,7 @@ export default function MapaTab({ naps }: Props) {
     });
   }, [clusters, mapReady, supercluster, userPos, points.length]);
 
-  // ── User / Search markers ──
+  // Actualiza el marcador de posición del usuario
   useEffect(() => {
     if (!mapReady || !mapInstanceRef.current) return;
     import("leaflet").then(mod => {
@@ -299,6 +336,9 @@ export default function MapaTab({ naps }: Props) {
     });
   }, [mapReady, userPos]);
 
+  /**
+   * Obtiene la posición GPS del usuario mediante la API de Geolocalización del navegador.
+   */
   const locateUser = useCallback(() => {
     setLocating(true);
     navigator.geolocation.getCurrentPosition(pos => {
@@ -309,6 +349,9 @@ export default function MapaTab({ naps }: Props) {
     }, () => { setLocating(false); alert("No se pudo obtener tu ubicación."); });
   }, []);
 
+  /**
+   * Procesa la búsqueda por coordenadas lat/lng en la entrada de texto.
+   */
   const handleSearch = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!searchInput.trim()) return;
@@ -333,7 +376,7 @@ export default function MapaTab({ naps }: Props) {
 
   return (
     <div className="flex flex-col h-full space-y-4">
-      {/* Header */}
+      {/* Encabezado */}
       <div className="flex items-center justify-between gap-2">
         <div>
           <h2 className="text-base sm:text-lg font-bold text-(--hulux-text)">Mapa de NAPs</h2>
@@ -353,7 +396,7 @@ export default function MapaTab({ naps }: Props) {
         </div>
       </div>
 
-      {/* Filters */}
+      {/* Filtros de Mapa */}
       <div className="bg-(--hulux-surface) border border-(--hulux-border) rounded-xl shadow-(--hulux-shadow) p-2 px-3 flex flex-wrap items-center gap-3">
         <div className="flex gap-1 flex-1 min-w-[200px]">
           {(["todas", "disponibles", "llenas"] as const).map(f => (
@@ -401,16 +444,16 @@ export default function MapaTab({ naps }: Props) {
         </div>
       </div>
 
-      {/* Map */}
+      {/* Contenedor del Mapa */}
       <div className="relative z-0 rounded-xl overflow-hidden border border-(--hulux-border) shadow-(--hulux-shadow)" style={{ height: "clamp(360px, 65vh, 620px)" }}>
         <div ref={mapRef} style={{ height: "100%", width: "100%" }} />
-        {/* Counter */}
+        {/* Contador superpuesto */}
         <div className="absolute top-2 right-2 z-[9999] bg-(--hulux-surface)/90 backdrop-blur border border-(--hulux-border) rounded-lg px-2.5 py-1 text-[11px] font-medium text-(--hulux-text) shadow">
           {napsFiltradas.length}/{stats.total} NAPs
         </div>
       </div>
 
-      {/* Selected NAP */}
+      {/* Tarjeta de detalle de NAP seleccionada */}
       {selectedNap && (() => {
         const sem = getSemaforo(selectedNap);
         const pct = Math.min(Math.round(selectedNap.puertos_ocupados / selectedNap.capacidad_total * 100), 100);
@@ -462,7 +505,7 @@ export default function MapaTab({ naps }: Props) {
         );
       })()}
 
-      {/* Legend */}
+      {/* Leyenda de Semáforo */}
       <div className="flex flex-wrap gap-x-4 gap-y-1.5 text-[11px] text-(--hulux-text-muted)">
         {Object.entries(SEMAFORO_LABEL).map(([key, label]) => (
           <div key={key} className="flex items-center gap-1.5">
@@ -474,3 +517,4 @@ export default function MapaTab({ naps }: Props) {
     </div>
   );
 }
+

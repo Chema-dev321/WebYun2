@@ -6,30 +6,52 @@ import { registerCliente } from "@/lib/firestore";
 import { useAuth } from "@/lib/AuthContext";
 import { registrarLog } from "@/lib/audit";
 
+/**
+ * Propiedades del componente {@link ClientForm}.
+ */
 interface Props {
+  /** Lista completa de NAPs registradas en la plataforma */
   naps: NAP[];
+  /** Callback ejecutado tras el registro exitoso del cliente */
   onSuccess: (idNap?: string) => void;
+  /** NAP inicial preseleccionada si el formulario se invoca desde el desglose de una NAP */
   initialNap?: NAP;
+  /** Callback opcional para cancelar la creación del cliente */
   onCancel?: () => void;
 }
 
+/**
+ * Componente `ClientForm`.
+ *
+ * Renderiza el formulario para registrar un nuevo cliente en el sistema.
+ * Soporta filtrado en cascada por municipio/localidad para ubicar rápidamente la NAP correspondiente
+ * y valida automáticamente la capacidad disponible antes del registro.
+ */
 export default function ClientForm({ naps, onSuccess, initialNap, onCancel }: Props) {
   const { user } = useAuth();
+  /** Municipio seleccionado en el filtro */
   const [municipio, setMunicipio] = useState(initialNap?.municipio || "");
+  /** Localidad seleccionada en el filtro */
   const [localidad, setLocalidad] = useState(initialNap?.localidad || "");
+  /** ID de la NAP seleccionada */
   const [idNap, setIdNap] = useState(initialNap?.id || "");
+  /** Nombre completo del cliente */
   const [nombre, setNombre] = useState("");
+  /** ID único WISP del cliente */
   const [idWisp, setIdWisp] = useState("");
 
+  /** Estado de carga mientras se procesa el registro */
   const [loading, setLoading] = useState(false);
+  /** Mensaje de retroalimentación (error o éxito) */
   const [msg, setMsg] = useState<{ type: "error" | "success"; text: string } | null>(null);
 
-  // Derivar municipios y localidades directamente de las NAPs (igual que el Dashboard)
+  /** Lista memorizada de municipios disponibles a partir de las NAPs */
   const municipios = useMemo(() => {
     const set = new Set(naps.filter(n => n.municipio).map(n => n.municipio!));
     return Array.from(set).sort();
   }, [naps]);
 
+  /** Lista memorizada de localidades pertenecientes al municipio seleccionado */
   const localidades = useMemo(() => {
     if (!municipio) return [];
     const set = new Set(
@@ -38,7 +60,7 @@ export default function ClientForm({ naps, onSuccess, initialNap, onCancel }: Pr
     return Array.from(set).sort();
   }, [naps, municipio]);
 
-  // Resetear localidad e idNap cuando cambia municipio (solo si no viene de initialNap)
+  // Efecto: Restablece localidad e idNap al cambiar el municipio (si no se proveyó initialNap)
   useEffect(() => {
     if (!initialNap) {
       setLocalidad("");
@@ -47,7 +69,7 @@ export default function ClientForm({ naps, onSuccess, initialNap, onCancel }: Pr
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [municipio]);
 
-  // NAPs filtradas por municipio y/o localidad seleccionados
+  /** Lista memorizada de NAPs filtradas según el municipio y localidad elegidos */
   const napsFiltradas = useMemo(() => {
     return naps.filter((n) => {
       if (municipio && n.municipio !== municipio) return false;
@@ -56,8 +78,12 @@ export default function ClientForm({ naps, onSuccess, initialNap, onCancel }: Pr
     });
   }, [naps, municipio, localidad]);
 
+  /** Objeto NAP correspondiente a la opción seleccionada */
   const selectedNap = naps.find((n) => n.id === idNap);
 
+  /**
+   * Maneja el envío del formulario para crear el nuevo cliente de forma atómica.
+   */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setMsg(null);
@@ -143,7 +169,7 @@ export default function ClientForm({ naps, onSuccess, initialNap, onCancel }: Pr
           </select>
         </div>
 
-        {/* NAP - dropdown completo con filtro */}
+        {/* Seleccionador de NAP destino */}
         <div className="md:col-span-2">
           <label className="block text-xs text-(--hulux-text-muted) mb-1">
             NAP ({napsFiltradas.length} disponibles)
@@ -162,7 +188,7 @@ export default function ClientForm({ naps, onSuccess, initialNap, onCancel }: Pr
           </select>
         </div>
 
-        {/* Info NAP */}
+        {/* Resumen de ocupación de la NAP elegida */}
         {selectedNap && (
           <div className="md:col-span-2 text-xs text-(--hulux-text-muted)">
             <span className="text-(--hulux-text-muted)">{selectedNap.municipio} &rsaquo; {selectedNap.localidad}</span>
@@ -175,7 +201,7 @@ export default function ClientForm({ naps, onSuccess, initialNap, onCancel }: Pr
           </div>
         )}
 
-        {/* Nombre cliente */}
+        {/* Nombre del cliente */}
         <div>
           <label className="block text-xs text-(--hulux-text-muted) mb-1">
             Nombre del Cliente
@@ -236,3 +262,4 @@ export default function ClientForm({ naps, onSuccess, initialNap, onCancel }: Pr
     </form>
   );
 }
+

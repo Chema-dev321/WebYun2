@@ -4,27 +4,53 @@ import { useEffect, useState, useMemo } from "react";
 import type { NAP, Cliente } from "@/lib/types";
 import { getClientes } from "@/lib/firestore";
 
-export default function ClientesTab({ naps, userRole = "instalador" }: { naps: NAP[]; userRole?: string }) {
+/**
+ * Propiedades del componente {@link ClientesTab}.
+ */
+interface ClientesTabProps {
+  /** Lista de NAPs en memoria para derivar los selectores de filtro */
+  naps: NAP[];
+  /** Rol de usuario activo en el sistema */
+  userRole?: string;
+}
+
+/**
+ * Componente `ClientesTab`.
+ *
+ * Muestra el directorio general paginado desde el servidor de todos los clientes registrados.
+ * Permite filtrar por Municipio, Localidad e ID de NAP, con navegación por cursores de Firestore.
+ */
+export default function ClientesTab({ naps, userRole = "instalador" }: ClientesTabProps) {
+  /** Lista de clientes en la página activa */
   const [clientes, setClientes] = useState<Cliente[]>([]);
+  /** Estado de carga mientras se consulta la base de datos */
   const [loadingClientes, setLoadingClientes] = useState(true);
   
-  // Filtros
+  // ── Filtros de consulta ──
+  /** Municipio seleccionado en el filtro */
   const [municipio, setMunicipio] = useState("");
+  /** Localidad seleccionada en el filtro */
   const [localidad, setLocalidad] = useState("");
+  /** ID de NAP filtrado */
   const [idNapFilter, setIdNapFilter] = useState("");
 
-  // Paginación de servidor
+  // ── Paginación basada en cursores de Firestore ──
+  /** Cantidad de clientes solicitados por página */
   const pageSize = 25;
-  const [history, setHistory] = useState<any[]>([null]); // Historial de cursores
+  /** Historial de documentos de cursor para habilitar retroceso entre páginas */
+  const [history, setHistory] = useState<any[]>([null]);
+  /** Índice de la página actual */
   const [pageIndex, setPageIndex] = useState(0);
+  /** Indica si existen más páginas después de la actual */
   const [hasMore, setHasMore] = useState(false);
 
-  // Derivar municipios y localidades desde las NAPs en memoria
+  /** Lista memorizada de municipios derivados de las NAPs */
   const municipios = useMemo(() => {
     const set = new Set(naps.filter(n => n.municipio).map((n) => n.municipio!));
     return Array.from(set).sort();
   }, [naps]);
 
+  /** Lista memorizada de localidades para el municipio seleccionado */
   const localidades = useMemo(() => {
     if (!municipio) return [];
     const set = new Set(
@@ -33,6 +59,7 @@ export default function ClientesTab({ naps, userRole = "instalador" }: { naps: N
     return Array.from(set).sort();
   }, [naps, municipio]);
 
+  /** NAPs disponibles acordes a los filtros activos */
   const napsDisponibles = useMemo(() => {
     let list = naps;
     if (municipio) list = list.filter((n) => n.municipio === municipio);
@@ -41,7 +68,7 @@ export default function ClientesTab({ naps, userRole = "instalador" }: { naps: N
     return Array.from(set).sort();
   }, [naps, municipio, localidad]);
 
-  // Cargar clientes desde el servidor (paginado)
+  // Efecto: Carga la página actual de clientes desde Firestore cuando cambia el índice o los filtros
   useEffect(() => {
     let mounted = true;
     setLoadingClientes(true);
@@ -54,7 +81,7 @@ export default function ClientesTab({ naps, userRole = "instalador" }: { naps: N
         setClientes(res.data);
         setHasMore(res.hasMore);
         
-        // Guardar el cursor de la próxima página si hay más
+        // Guarda el cursor de la próxima página si existen más registros
         if (res.hasMore && pageIndex === history.length - 1) {
           setHistory((prev) => [...prev, res.lastVisible]);
         }
@@ -71,7 +98,9 @@ export default function ClientesTab({ naps, userRole = "instalador" }: { naps: N
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pageIndex, municipio, localidad, idNapFilter]);
 
-  // Al cambiar filtros, resetear paginación
+  /**
+   * Restablece los cursores y la página a 0 cuando el usuario modifica los filtros.
+   */
   const handleFilterChange = (type: "municipio" | "localidad" | "idNap", val: string) => {
     if (type === "municipio") {
       setMunicipio(val);
@@ -87,6 +116,9 @@ export default function ClientesTab({ naps, userRole = "instalador" }: { naps: N
     setPageIndex(0);
   };
 
+  /**
+   * Limpia todos los filtros y reinicia la paginación al estado inicial.
+   */
   const clearFilters = () => {
     setMunicipio("");
     setLocalidad("");
@@ -97,7 +129,7 @@ export default function ClientesTab({ naps, userRole = "instalador" }: { naps: N
 
   return (
     <div className="space-y-4">
-      {/* ── Filter bar (Collapsible on mobile) ── */}
+      {/* ── Barra de Filtros (Desplegable en móviles) ── */}
       <details className="group rounded-xl border border-(--hulux-border) bg-(--hulux-surface) shadow-(--hulux-shadow) [&:not([open])_.content]:hidden sm:[&:not([open])_.content]:block" open>
         <summary className="p-4 text-[13px] font-semibold text-(--hulux-text) cursor-pointer sm:hidden flex items-center justify-between list-none">
           <div className="flex items-center gap-2">
@@ -112,6 +144,7 @@ export default function ClientesTab({ naps, userRole = "instalador" }: { naps: N
         </summary>
         
         <div className="content p-4 pt-0 sm:pt-4 flex flex-wrap items-end gap-3 border-t border-(--hulux-border) sm:border-0">
+          {/* Select Municipio */}
           <div className="flex-1 min-w-[140px] sm:flex-none">
             <label className="block text-xs text-(--hulux-text-muted) mb-1">Municipio</label>
             <select
@@ -126,6 +159,7 @@ export default function ClientesTab({ naps, userRole = "instalador" }: { naps: N
             </select>
           </div>
 
+          {/* Select Localidad */}
           <div className="flex-1 min-w-[140px] sm:flex-none">
             <label className="block text-xs text-(--hulux-text-muted) mb-1">Localidad</label>
             <select
@@ -141,6 +175,7 @@ export default function ClientesTab({ naps, userRole = "instalador" }: { naps: N
             </select>
           </div>
 
+          {/* Select ID NAP */}
           <div className="flex-1 min-w-[140px] sm:flex-none">
             <label className="block text-xs text-(--hulux-text-muted) mb-1">ID NAP</label>
             <select
@@ -155,6 +190,7 @@ export default function ClientesTab({ naps, userRole = "instalador" }: { naps: N
             </select>
           </div>
 
+          {/* Botones de acción de filtros */}
           <div className="flex-1 min-w-[140px] sm:flex-none ml-auto text-right flex flex-col items-end gap-2">
             <div className="flex items-center gap-2">
               {(municipio || localidad || idNapFilter) && (
@@ -220,6 +256,7 @@ export default function ClientesTab({ naps, userRole = "instalador" }: { naps: N
         </div>
       </details>
 
+      {/* Renderizado de la tabla o indicador de carga */}
       {loadingClientes ? (
         <div className="text-center py-12 text-(--hulux-text-muted)">Cargando página de clientes...</div>
       ) : clientes.length === 0 ? (
@@ -263,7 +300,7 @@ export default function ClientesTab({ naps, userRole = "instalador" }: { naps: N
           </table>
           </div>
 
-          {/* Pagination */}
+          {/* Navegación por Paginación */}
           <div className="flex items-center justify-center gap-2 mt-4">
             <button
               onClick={() => setPageIndex((p) => Math.max(0, p - 1))}
@@ -288,3 +325,4 @@ export default function ClientesTab({ naps, userRole = "instalador" }: { naps: N
     </div>
   );
 }
+

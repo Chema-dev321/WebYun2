@@ -4,11 +4,33 @@ import { updateUsuarioRol, toggleUsuarioHabilitado } from "@/lib/firestore";
 import { useToast } from "./ToastContext";
 import { useConfirm } from "./ToastContext";
 
-export default function UsuariosTab({ usuarios }: { usuarios: Usuario[] }) {
+/**
+ * Propiedades del componente {@link UsuariosTab}.
+ */
+interface UsuariosTabProps {
+  /** Lista completa de usuarios registrados en la plataforma */
+  usuarios: Usuario[];
+}
+
+/**
+ * Componente `UsuariosTab`.
+ *
+ * Muestra el panel de administración de usuarios de la plataforma WebYun, permitiendo:
+ * - Asignar y modificar roles de usuario (`admin`, `sucursal`, `supervisor`, `infraestructura`, `instalador`, etc.).
+ * - Habilitar e inhabilitar cuentas de usuario con confirmación previa.
+ * - Exportar la lista de usuarios a CSV.
+ */
+export default function UsuariosTab({ usuarios }: UsuariosTabProps) {
   const { showToast } = useToast();
   const { confirm } = useConfirm();
+  /** ID del usuario en proceso de actualización */
   const [updatingId, setUpdatingId] = useState<string | null>(null);
 
+  /**
+   * Cambia el rol de un usuario en Firestore.
+   * @param uid UID del usuario.
+   * @param newRole Nuevo rol asignado.
+   */
   const handleRoleChange = async (uid: string, newRole: Rol) => {
     try {
       setUpdatingId(uid);
@@ -22,6 +44,10 @@ export default function UsuariosTab({ usuarios }: { usuarios: Usuario[] }) {
     }
   };
 
+  /**
+   * Conmuta el estado de habilitación/inhabilitación de la cuenta de un usuario previa confirmación.
+   * @param u Objeto Usuario objetivo.
+   */
   const handleToggleHabilitado = async (u: Usuario) => {
     const accion = u.deshabilitado ? "habilitar" : "inhabilitar";
     const ok = await confirm(
@@ -47,29 +73,28 @@ export default function UsuariosTab({ usuarios }: { usuarios: Usuario[] }) {
     }
   };
 
+  /**
+   * Genera y descarga un reporte en formato CSV con el listado de usuarios.
+   */
   const handleDownloadCSV = () => {
     if (usuarios.length === 0) return;
     
-    // Headers
     const headers = ["ID", "Nombre", "Email", "Rol", "Estado", "Fecha Creación"];
     
-    // Rows
     const rows = usuarios.map(u => [
       u.uid,
-      u.nombre || "Sin nombreS",
+      u.nombre || "Sin nombre",
       u.email,
       u.rol,
       u.deshabilitado ? "Inhabilitado" : "Activo",
       u.creado
     ]);
     
-    // Construir CSV
     const csvContent = [
       headers.join(","),
       ...rows.map(r => r.map(cell => `"${cell}"`).join(","))
     ].join("\n");
     
-    // Descargar
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
@@ -147,7 +172,7 @@ export default function UsuariosTab({ usuarios }: { usuarios: Usuario[] }) {
                         </div>
                       </td>
 
-                      {/* Rol select */}
+                      {/* Selector de Rol */}
                       <td className="p-3">
                         <select
                           value={u.rol || "instalador"}
@@ -165,7 +190,7 @@ export default function UsuariosTab({ usuarios }: { usuarios: Usuario[] }) {
                         </select>
                       </td>
 
-                      {/* Estado badge */}
+                      {/* Insignia de Estado */}
                       <td className="p-3">
                         {isDisabled ? (
                           <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-[rgba(112,0,63,0.12)] text-(--hulux-maroon-light) border border-[rgba(112,0,63,0.2)]">
@@ -178,12 +203,12 @@ export default function UsuariosTab({ usuarios }: { usuarios: Usuario[] }) {
                         )}
                       </td>
 
-                      {/* Fecha creación */}
+                      {/* Fecha de Creación */}
                       <td className="p-3 text-(--hulux-text-muted) text-xs whitespace-nowrap">
                         {u.creado}
                       </td>
 
-                      {/* Botón habilitar / inhabilitar */}
+                      {/* Botón para Habilitar / Inhabilitar */}
                       <td className="p-3">
                         <button
                           onClick={() => handleToggleHabilitado(u)}
@@ -212,3 +237,4 @@ export default function UsuariosTab({ usuarios }: { usuarios: Usuario[] }) {
     </div>
   );
 }
+

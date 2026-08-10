@@ -6,52 +6,90 @@ import { addNAP } from "@/lib/firestore";
 import { useAuth } from "@/lib/AuthContext";
 import { registrarLog } from "@/lib/audit";
 
+/**
+ * Propiedades del componente {@link AgregarNapTab}.
+ */
 interface Props {
+  /** Callback ejecutado exitosamente tras guardar la NAP */
   onSuccess: (idNap?: string) => void;
+  /** Lista de NAPs existentes para validar duplicados y calcular sufijos */
   naps: NAP[];
+  /** Rol de usuario activo en el sistema */
   userRole?: string;
 }
 
+/**
+ * Componente `AgregarNapTab`.
+ *
+ * Ofrece una interfaz inteligente para el alta y edición de NAPs (Cajas de Distribución de Fibra Optical), incluyendo:
+ * - Algoritmo de autogeneración de nomenclatura/código de NAP basado en consonantes de Municipio y Localidad.
+ * - Detección automática de NAPs existentes para edición inmediata.
+ * - Formularios reactivos para Municipio y Localidad con opción de valor existente o nuevo.
+ * - Captura de coordenadas GPS, estado Tomodat, verificación y capacidad de puertos.
+ */
 export default function AgregarNapTab({ onSuccess, naps, userRole }: Props) {
   const { user } = useAuth();
+  /** ID o código único de la NAP */
   const [idNap, setIdNap] = useState("");
+  /** Nombre descriptivo de la NAP */
   const [nombre, setNombre] = useState("");
+  /** Municipio al que pertenece la NAP */
   const [municipio, setMunicipio] = useState("");
+  /** Localidad o colonia de la NAP */
   const [localidad, setLocalidad] = useState("");
+  /** Capacidad de puertos (8 o 16) */
   const [capacidad, setCapacidad] = useState("8");
+  /** Estado en el sistema Tomodat */
   const [estadoTomodat, setEstadoTomodat] = useState("Activo");
+  /** Bandera de verificación técnica (0 o 1) */
   const [verificacion, setVerificacion] = useState("0");
+  /** Fecha de la última verificación */
   const [fechaVerificacion, setFechaVerificacion] = useState("");
+  /** Coordenada de latitud GPS */
   const [latitud, setLatitud] = useState("");
+  /** Coordenada de longitud GPS */
   const [longitud, setLongitud] = useState("");
+  /** Estado de carga durante el guardado */
   const [loading, setLoading] = useState(false);
+  /** Mensaje de notificación del formulario */
   const [msg, setMsg] = useState<{ type: "error" | "success" | "info"; text: string } | null>(null);
 
-  // Dropdowns
+  // ── Controles de desplegables dinámicos ──
+  /** Lista de municipios disponibles */
   const [municipios, setMunicipios] = useState<string[]>([]);
+  /** Lista de localidades del municipio seleccionado */
   const [localidades, setLocalidades] = useState<string[]>([]);
+  /** Modo de selección de municipio: existente en desplegable o ingreso manual */
   const [modoMunicipio, setModoMunicipio] = useState<"select" | "custom">("select");
+  /** Modo de selección de localidad: existente en desplegable o ingreso manual */
   const [modoLocalidad, setModoLocalidad] = useState<"select" | "custom">("select");
 
-  // Duplicate check
+  // ── Comprobación de duplicados y alertas ──
+  /** Indica si el ID de NAP especificado ya existe en la base de datos */
   const [napExiste, setNapExiste] = useState(false);
+  /** Estado de verificación asíncrona de existencia */
   const [checking, setChecking] = useState(false);
+  /** Mensaje explicativo sobre la nomenclatura de la NAP */
   const [nomenclaturaMsg, setNomenclaturaMsg] = useState("");
 
-  // Track if idNap was manually entered by user — useRef so the effect always reads the latest value
+  /** Referencia para saber si el usuario ingresó manualmente el ID (evita sobreescritura automática) */
   const isManualIdRef = useRef(false);
 
-  // Get existing NAP IDs set for fast lookup
+  /** Set de IDs de NAPs existentes para búsquedas rápidas `O(1)` */
   const napIdsSet = useMemo(() => new Set(naps.map((n) => n.id_nap)), [naps]);
 
   const CONSONANTES = "BCDFGHJKLMNPQRSTVWXYZ";
 
+  /**
+   * Genera automáticamente un código/ID de NAP óptimo utilizando las iniciales de Municipio y Localidad
+   * seguidas de las consonantes y el siguiente número secuencial disponible.
+   */
   const generateIdNap = useCallback((mun: string, loc: string): string => {
     if (!mun || !loc) return "";
     const m = mun.charAt(0).toUpperCase();
     const l = loc.charAt(0).toUpperCase();
 
-    // Collect unique consonants from localidad (excluding first letter) then municipio
+    // Recolectar consonantes únicas
     const seen = new Set<string>();
     const consonants: string[] = [];
     const full = (loc.toUpperCase() + mun.toUpperCase()).slice(1);
@@ -62,14 +100,13 @@ export default function AgregarNapTab({ onSuccess, naps, userRole }: Props) {
       }
     }
 
-    // Try each consonant prefix
+    // Probar prefijos de consonantes
     for (const c of consonants.slice(0, 8)) {
       const prefix = `${m}${l}${c}`;
-      // Find max existing suffix for this prefix
       let maxNum = 100;
       for (const id of napIdsSet) {
         if (id.startsWith(prefix + " ") || id.startsWith(prefix)) {
-          const numPart = id.replace(prefix, "").replace(/\\s/g, "");
+          const numPart = id.replace(prefix, "").replace(/\s/g, "");
           const num = parseInt(numPart);
           if (!isNaN(num) && num > maxNum) maxNum = num;
         }
@@ -80,7 +117,7 @@ export default function AgregarNapTab({ onSuccess, naps, userRole }: Props) {
       }
     }
 
-    // Fallback: just use first two letters + first consonant + next number
+    // Alternativa en caso de fallback
     const fallbackPrefix = consonants.length > 0
       ? `${m}${l}${consonants[0]}`
       : `${m}${l}X`;
@@ -89,19 +126,16 @@ export default function AgregarNapTab({ onSuccess, naps, userRole }: Props) {
     return `${fallbackPrefix} ${fallbackNum}`;
   }, [napIdsSet]);
 
-  // Auto-generate idNap when municipio + localidad change ONLY if user hasn't typed manually
+  // Autogeneración del ID cuando cambian municipio/localidad si el usuario no editó manualmente
   useEffect(() => {
-    // If user manually typed an ID, never overwrite it
     if (isManualIdRef.current) return;
     if (!napExiste && municipio && localidad) {
       const generated = generateIdNap(municipio, localidad);
       setIdNap(generated);
 
-      // Show message only if the first available consonant was actually skipped
       const m = municipio.charAt(0).toUpperCase();
       const l = localidad.charAt(0).toUpperCase();
       const locUp = localidad.toUpperCase();
-      // Find first consonant in localidad (excluding first letter)
       let firstConsonant = "";
       for (let i = 1; i < locUp.length; i++) {
         if (CONSONANTES.includes(locUp[i])) {
@@ -109,7 +143,6 @@ export default function AgregarNapTab({ onSuccess, naps, userRole }: Props) {
           break;
         }
       }
-      // If no consonant in localidad, check municipio
       if (!firstConsonant) {
         const munUp = municipio.toUpperCase();
         for (let i = 0; i < munUp.length; i++) {
@@ -137,14 +170,16 @@ export default function AgregarNapTab({ onSuccess, naps, userRole }: Props) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [municipio, localidad, napExiste, generateIdNap, napIdsSet]);
 
-  // When user manually edits idNap, mark it as manual so auto-generate won't overwrite it
+  /**
+   * Manejador del cambio manual del ID de la NAP.
+   */
   const handleIdNapChange = (val: string) => {
     isManualIdRef.current = true;
     setIdNap(val);
     setNomenclaturaMsg("");
   };
 
-  // Clear the manual flag when form resets
+  /** Restablece la bandera manual al reiniciar el formulario */
   const clearManualFlag = () => {
     isManualIdRef.current = false;
   };
@@ -168,14 +203,14 @@ export default function AgregarNapTab({ onSuccess, naps, userRole }: Props) {
     }
   }, [municipio]);
 
-  // Auto-generate nombre when localidad or idNap changes (only for new NAPs)
+  // Autogenera el nombre legible de la NAP
   useEffect(() => {
     if (!napExiste && localidad && idNap) {
       setNombre(`${localidad} - ${idNap}`);
     }
   }, [localidad, idNap, napExiste]);
 
-  // Check if NAP already exists
+  // Comprueba la existencia previa de la NAP ingresada
   useEffect(() => {
     if (!idNap.trim() || idNap.trim().length < 2) {
       setNapExiste(false);
@@ -206,6 +241,9 @@ export default function AgregarNapTab({ onSuccess, naps, userRole }: Props) {
     return () => clearTimeout(timer);
   }, [idNap]);
 
+  /**
+   * Envía el formulario para crear o actualizar la NAP en Firestore.
+   */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setMsg(null);
@@ -250,7 +288,7 @@ export default function AgregarNapTab({ onSuccess, naps, userRole }: Props) {
         setLatitud("");
         setLongitud("");
         setNomenclaturaMsg("");
-        clearManualFlag(); // Allow auto-generate for the next NAP
+        clearManualFlag();
       }
       setNapExiste(false);
       fetchMunicipios();
@@ -270,6 +308,7 @@ export default function AgregarNapTab({ onSuccess, naps, userRole }: Props) {
       >
         <h2 className="text-lg font-semibold">{napExiste ? "Editar NAP" : "Agregar NAP"}</h2>
 
+        {/* Input ID NAP */}
         <div>
           <label className="block text-xs text-(--hulux-text-muted) mb-1">
             ID NAP (código)
@@ -291,6 +330,7 @@ export default function AgregarNapTab({ onSuccess, naps, userRole }: Props) {
           )}
         </div>
 
+        {/* Input Nombre */}
         <div>
           <label className="block text-xs text-(--hulux-text-muted) mb-1">Nombre de la NAP</label>
           <input
@@ -302,6 +342,7 @@ export default function AgregarNapTab({ onSuccess, naps, userRole }: Props) {
           />
         </div>
 
+        {/* Municipio y Localidad */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div>
             <label className="block text-xs text-(--hulux-text-muted) mb-1 flex items-center">
@@ -378,6 +419,7 @@ export default function AgregarNapTab({ onSuccess, naps, userRole }: Props) {
           </div>
         </div>
 
+        {/* Capacidad, Verificación y Fecha */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div>
             <label className="block text-xs text-(--hulux-text-muted) mb-1">Capacidad (puertos)</label>
@@ -412,6 +454,7 @@ export default function AgregarNapTab({ onSuccess, naps, userRole }: Props) {
           </div>
         </div>
 
+        {/* Coordenadas GPS */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div>
             <label className="block text-xs text-(--hulux-text-muted) mb-1">Latitud</label>
@@ -437,6 +480,7 @@ export default function AgregarNapTab({ onSuccess, naps, userRole }: Props) {
           </div>
         </div>
 
+        {/* Estado Tomodat */}
         <div>
           <label className="block text-xs text-(--hulux-text-muted) mb-1">Estado Tomodat</label>
           <select
@@ -449,6 +493,7 @@ export default function AgregarNapTab({ onSuccess, naps, userRole }: Props) {
           </select>
         </div>
 
+        {/* Mensaje de estado */}
         {msg && (
           <div
             className={`text-sm p-2 rounded-lg ${
@@ -474,3 +519,4 @@ export default function AgregarNapTab({ onSuccess, naps, userRole }: Props) {
     </div>
   );
 }
+

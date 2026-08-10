@@ -11,25 +11,46 @@ import { auth } from "@/lib/firebase";
 import { useAuth } from "@/lib/AuthContext";
 import { useToast } from "@/components/ToastContext";
 
+/**
+ * Propiedades del componente {@link PerfilModal}.
+ */
 interface Props {
+  /** Callback para cerrar el modal/panel de perfil */
   onClose: () => void;
 }
 
+/**
+ * Componente `PerfilModal`.
+ *
+ * Renderiza un panel lateral deslizable (drawer) que permite al usuario autenticado:
+ * - Actualizar su nombre para mostrar (displayName) en Firebase Auth y Firestore.
+ * - Reautenticarse y cambiar su contraseña (si inició sesión con Email/Password).
+ */
 export default function PerfilModal({ onClose }: Props) {
   const { user } = useAuth();
   const { showToast } = useToast();
 
-  // Nombre
+  // ── Estados para Edición de Nombre ──
+  /** Nombre editable del usuario */
   const [nombre, setNombre] = useState(user?.displayName || "");
+  /** Estado de carga durante el guardado del nombre */
   const [savingNombre, setSavingNombre] = useState(false);
 
-  // Contraseña
+  // ── Estados para Cambio de Contraseña ──
+  /** Contraseña actual ingresada para reautenticación */
   const [passwordActual, setPasswordActual] = useState("");
+  /** Nueva contraseña propuesta */
   const [passwordNueva, setPasswordNueva] = useState("");
+  /** Confirmación de la nueva contraseña */
   const [passwordConfirm, setPasswordConfirm] = useState("");
+  /** Estado de carga durante la actualización de contraseña */
   const [savingPass, setSavingPass] = useState(false);
+  /** Estado para alternar la visibilidad de los caracteres de la contraseña */
   const [showPass, setShowPass] = useState(false);
 
+  /**
+   * Guarda los cambios del nombre del usuario en Firebase Auth y en Firestore.
+   */
   const handleGuardarNombre = async () => {
     if (!nombre.trim()) {
       showToast("El nombre no puede estar vacío.", "error");
@@ -51,6 +72,9 @@ export default function PerfilModal({ onClose }: Props) {
     }
   };
 
+  /**
+   * Reautentica al usuario con su contraseña actual y aplica la nueva contraseña elegida.
+   */
   const handleCambiarPassword = async () => {
     if (!passwordActual) {
       showToast("Ingresa tu contraseña actual.", "error");
@@ -78,7 +102,7 @@ export default function PerfilModal({ onClose }: Props) {
       setPasswordNueva("");
       setPasswordConfirm("");
     } catch (err: unknown) {
-      console.error("Password update error:", err);
+      console.error("Error al actualizar contraseña:", err);
       const msg =
         err instanceof Error && err.message.includes("wrong-password")
           ? "La contraseña actual es incorrecta."
@@ -95,15 +119,15 @@ export default function PerfilModal({ onClose }: Props) {
 
   return (
     <>
-      {/* Overlay */}
+      {/* Fondo semitransparente con efecto Blur */}
       <div
         className="fixed inset-0 bg-black/50 backdrop-blur-sm z-1000"
         onClick={onClose}
       />
 
-      {/* Panel */}
+      {/* Panel lateral desplegable */}
       <div className="fixed inset-y-0 right-0 w-full max-w-md z-1010 flex flex-col bg-(--hulux-surface) border-l border-(--hulux-border) shadow-2xl">
-        {/* Header del panel */}
+        {/* Encabezado del panel */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-(--hulux-border) bg-(--hulux-subtle)">
           <div>
             <h2 className="text-base font-bold text-(--hulux-text)">Mi Perfil</h2>
@@ -119,10 +143,10 @@ export default function PerfilModal({ onClose }: Props) {
           </button>
         </div>
 
-        {/* Contenido con scroll */}
+        {/* Cuerpo del perfil con desplazador vertical */}
         <div className="flex-1 overflow-y-auto px-6 py-6 space-y-8">
 
-          {/* Avatar / Inicial */}
+          {/* Avatar con inicial */}
           <div className="flex items-center gap-4">
             <div className="w-14 h-14 rounded-full bg-linear-to-br from-(--hulux-blue) to-(--hulux-cyan) flex items-center justify-center text-white text-2xl font-bold shadow-lg select-none">
               {(user?.displayName || user?.email || "?")[0].toUpperCase()}
@@ -135,7 +159,7 @@ export default function PerfilModal({ onClose }: Props) {
             </div>
           </div>
 
-          {/* ── Sección: Nombre ── */}
+          {/* ── Sección: Nombre para Mostrar ── */}
           <section>
             <h3 className="text-xs font-semibold uppercase tracking-wider text-(--hulux-text-muted) mb-3">
               Nombre para mostrar
@@ -158,10 +182,9 @@ export default function PerfilModal({ onClose }: Props) {
             </div>
           </section>
 
-          {/* Separador */}
           <div className="border-t border-(--hulux-border)" />
 
-          {/* ── Sección: Contraseña ── */}
+          {/* ── Sección: Cambiar Contraseña ── */}
           <section>
             {user?.providerData.some(p => p.providerId === "google.com") ? (
               <div className="bg-[rgba(148,237,242,0.1)] border border-[rgba(148,237,242,0.2)] rounded-lg p-4 text-sm text-(--hulux-text-muted)">
@@ -218,7 +241,7 @@ export default function PerfilModal({ onClose }: Props) {
                     />
                   </div>
 
-                  {/* Indicador de seguridad */}
+                  {/* Barra indicadora de fortaleza de contraseña */}
                   {passwordNueva.length > 0 && (
                     <div className="space-y-1">
                       <div className="flex gap-1">
@@ -267,3 +290,4 @@ export default function PerfilModal({ onClose }: Props) {
     </>
   );
 }
+

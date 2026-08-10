@@ -2,10 +2,15 @@
 
 import { useEffect, useState } from "react";
 
+/** Tipo de tema visual ('light' para modo claro, 'dark' para modo oscuro) */
 type Theme = "light" | "dark";
 
+/** Clave de almacenamiento en localStorage para recordar el tema seleccionado */
 const STORAGE_KEY = "webyun-theme";
 
+/**
+ * Detecta el tema preferido del sistema operativo/navegador mediante media query.
+ */
 function getSystemTheme(): Theme {
   if (typeof window === "undefined") return "light";
   return window.matchMedia("(prefers-color-scheme: dark)").matches
@@ -13,31 +18,44 @@ function getSystemTheme(): Theme {
     : "light";
 }
 
+/**
+ * Aplica el tema al elemento raíz `<html>` mediante el atributo `data-theme` y lo guarda en `localStorage`.
+ * @param theme Tema visual a aplicar.
+ */
 function applyTheme(theme: Theme) {
   document.documentElement.dataset.theme = theme;
   try {
     localStorage.setItem(STORAGE_KEY, theme);
   } catch {
-    // storage blocked — ignore
+    // Si localStorage está bloqueado por el navegador, se ignora
   }
 }
 
+/**
+ * Componente `ThemeToggle`.
+ *
+ * Renderiza un botón interactivo para conmutar entre el modo claro y oscuro del tema visual de la aplicación.
+ */
 export default function ThemeToggle() {
   const [theme, setTheme] = useState<Theme>("light");
 
+  // Efecto: Recupera la preferencia guardada en localStorage o la del sistema operativo al montar el componente
   useEffect(() => {
     let stored: Theme | null = null;
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw === "light" || raw === "dark") stored = raw;
     } catch {
-      // ignore
+      // Ignorar errores de acceso
     }
     const initial = stored ?? getSystemTheme();
     setTheme(initial);
     applyTheme(initial);
   }, []);
 
+  /**
+   * Conmuta el tema actual entre claro y oscuro.
+   */
   const toggle = () => {
     const next: Theme = theme === "dark" ? "light" : "dark";
     setTheme(next);
@@ -85,3 +103,4 @@ export default function ThemeToggle() {
     </button>
   );
 }
+

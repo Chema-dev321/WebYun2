@@ -5,34 +5,68 @@ import type { NAP, Cliente } from "@/lib/types";
 import { getClienteByWisp, getNAPById, updateCliente, deleteCliente, updateClienteNAP } from "@/lib/firestore";
 import { useToast, useConfirm } from "@/components/ToastContext";
 
-export default function BuscarClienteTab({ naps, userRole = "instalador" }: { naps: NAP[]; userRole?: string }) {
+/**
+ * Propiedades del componente {@link BuscarClienteTab}.
+ */
+interface BuscarClienteTabProps {
+  /** Lista de NAPs en memoria para relacionar datos y poblar selectores */
+  naps: NAP[];
+  /** Rol de usuario activo en la aplicación */
+  userRole?: string;
+}
+
+/**
+ * Componente `BuscarClienteTab`.
+ *
+ * Muestra una herramienta de búsqueda inteligente de clientes que admite:
+ * - Búsqueda por ID WISP, ID NAP o subcadena de nombre.
+ * - Despliegue de tarjetas de información detallada del cliente y la NAP asociada.
+ * - Edición de datos generales y reasignación de NAP en una sola vista.
+ * - Eliminación de clientes y liberación automática de puertos.
+ */
+export default function BuscarClienteTab({ naps, userRole = "instalador" }: BuscarClienteTabProps) {
+  /** Texto ingresado en el buscador */
   const [idWisp, setIdWisp] = useState("");
+  /** Cliente seleccionado/encontrado */
   const [cliente, setCliente] = useState<Cliente | null>(null);
+  /** Información de la NAP a la que pertenece el cliente */
   const [napInfo, setNapInfo] = useState<NAP | null>(null);
+  /** Estado de carga de la búsqueda */
   const [loading, setLoading] = useState(false);
+  /** Mensaje de error al buscar */
   const [error, setError] = useState("");
+  /** Indica si ya se ejecutó al menos una búsqueda */
   const [searched, setSearched] = useState(false);
 
   const { showToast } = useToast();
   const { confirm } = useConfirm();
 
-  // Edit mode
+  // ── Estados para el modo de edición ──
+  /** Indica si la tarjeta del cliente está en modo edición */
   const [editando, setEditando] = useState(false);
+  /** Nombre editable */
   const [editNombre, setEditNombre] = useState("");
+  /** Municipio editable */
   const [editMunicipio, setEditMunicipio] = useState("");
+  /** Localidad editable */
   const [editLocalidad, setEditLocalidad] = useState("");
+  /** ID de NAP destino editable */
   const [editIdNap, setEditIdNap] = useState("");
+  /** Estado de carga durante el guardado */
   const [saving, setSaving] = useState(false);
+  /** Estado de carga durante la eliminación */
   const [deleting, setDeleting] = useState(false);
 
+  /** Lista de coincidencia cuando la búsqueda retorna múltiples resultados */
   const [resultados, setResultados] = useState<Cliente[]>([]);
 
-  // Derived dropdown options for edit mode
+  /** Lista única de municipios para los desplegables de edición */
   const municipiosUnicos = useMemo(() => {
     const set = new Set(naps.map((n) => n.municipio));
     return Array.from(set).sort();
   }, [naps]);
 
+  /** Lista de localidades pertenecientes al municipio seleccionado en edición */
   const localidadesFiltradas = useMemo(() => {
     if (!editMunicipio) return [];
     const set = new Set(
@@ -41,7 +75,7 @@ export default function BuscarClienteTab({ naps, userRole = "instalador" }: { na
     return Array.from(set).sort();
   }, [naps, editMunicipio]);
 
-  // Derived NAP info from props instead of subscribing again
+  // Efecto: Actualiza la información de la NAP asociada cuando cambia el cliente o las NAPs
   useEffect(() => {
     if (cliente) {
       const updated = naps.find((n) => n.id_nap === cliente.id_nap || n.id === cliente.id_nap);
@@ -51,6 +85,9 @@ export default function BuscarClienteTab({ naps, userRole = "instalador" }: { na
     }
   }, [cliente, naps]);
 
+  /**
+   * Limpia los campos del formulario y el resultado de búsqueda actual.
+   */
   const limpiarBusqueda = () => {
     setIdWisp("");
     setCliente(null);
@@ -61,6 +98,10 @@ export default function BuscarClienteTab({ naps, userRole = "instalador" }: { na
     setEditando(false);
   };
 
+  /**
+   * Selecciona un cliente de la lista de múltiples resultados y obtiene su NAP asociada.
+   * @param c Objeto Cliente seleccionado.
+   */
   const seleccionarCliente = async (c: Cliente) => {
     setCliente(c);
     setResultados([]);
@@ -68,10 +109,13 @@ export default function BuscarClienteTab({ naps, userRole = "instalador" }: { na
       const nap = await getNAPById(c.id_nap);
       setNapInfo(nap);
     } catch {
-      // Ignorar si falla la NAP
+      // Ignorar si falla la carga de la NAP
     }
   };
 
+  /**
+   * Ejecuta la búsqueda de clientes llamando al servicio Firestore.
+   */
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -88,7 +132,6 @@ export default function BuscarClienteTab({ naps, userRole = "instalador" }: { na
 
     setLoading(true);
     try {
-      // Import dynamic to avoid circular dependencies or simply use searchClientes from the top
       const { searchClientes } = await import("@/lib/firestore");
       const results = await searchClientes(idWisp.trim());
       
@@ -107,6 +150,9 @@ export default function BuscarClienteTab({ naps, userRole = "instalador" }: { na
     setLoading(false);
   };
 
+  /**
+   * Inicia el modo de edición de la tarjeta del cliente seleccionado.
+   */
   const iniciarEdicion = () => {
     if (!cliente) return;
     setEditNombre(cliente.nombre);
@@ -116,22 +162,26 @@ export default function BuscarClienteTab({ naps, userRole = "instalador" }: { na
     setEditando(true);
   };
 
+  /**
+   * Cancela la edición y restablece la vista de lectura.
+   */
   const cancelarEdicion = () => {
     setEditando(false);
   };
 
+  /**
+   * Guarda los cambios en el cliente y reasigna la NAP si fue modificada.
+   */
   const guardarCambios = async () => {
     if (!cliente) return;
     setSaving(true);
     try {
-      // Update basic fields
       await updateCliente(cliente.id, {
         nombre: editNombre.trim(),
         municipio: editMunicipio.trim(),
         localidad: editLocalidad.trim(),
       });
 
-      // Reassign NAP if changed
       if (editIdNap !== cliente.id_nap) {
         const result = await updateClienteNAP(cliente.id, editIdNap);
         if (!result.success) {
@@ -157,6 +207,9 @@ export default function BuscarClienteTab({ naps, userRole = "instalador" }: { na
     setSaving(false);
   };
 
+  /**
+   * Elimina al cliente seleccionado previa confirmación.
+   */
   const eliminarCliente = async () => {
     if (!cliente) return;
     const ok = await confirm(
@@ -185,6 +238,7 @@ export default function BuscarClienteTab({ naps, userRole = "instalador" }: { na
   return (
     <div className="max-w-2xl mx-auto">
 
+      {/* Formulario de búsqueda */}
       <form onSubmit={handleSearch} className="mb-6">
         <label className="block text-sm text-(--hulux-text) mb-2">
           Buscar cliente (ID WISP, Nombre o NAP)
@@ -222,6 +276,7 @@ export default function BuscarClienteTab({ naps, userRole = "instalador" }: { na
         </div>
       )}
 
+      {/* Lista de múltiples coincidencias */}
       {resultados.length > 0 && !cliente && (
         <div className="rounded-xl border border-(--hulux-border) bg-(--hulux-surface) shadow-(--hulux-shadow) overflow-hidden mt-6">
           <div className="bg-(--hulux-subtle) px-5 py-3 border-b border-(--hulux-border)">
@@ -241,6 +296,7 @@ export default function BuscarClienteTab({ naps, userRole = "instalador" }: { na
         </div>
       )}
 
+      {/* Tarjeta de detalle de cliente encontrado */}
       {cliente && (
         <div className="rounded-xl border border-(--hulux-border) bg-(--hulux-surface) shadow-(--hulux-shadow) overflow-hidden">
           <div className="bg-(--hulux-subtle) px-5 py-3 border-b border-(--hulux-border) flex items-center justify-between">
@@ -386,7 +442,9 @@ export default function BuscarClienteTab({ naps, userRole = "instalador" }: { na
   );
 }
 
-// ── Editable Row ──
+/**
+ * Componente helper para campos de edición en línea.
+ */
 function EditableRow({
   label,
   value,
@@ -409,7 +467,9 @@ function EditableRow({
   );
 }
 
-// ── Info Row ──
+/**
+ * Componente helper para filas de lectura de información de cliente.
+ */
 function InfoRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex flex-col sm:flex-row sm:items-start gap-0.5 sm:gap-3">
@@ -418,3 +478,4 @@ function InfoRow({ label, value }: { label: string; value: string }) {
     </div>
   );
 }
+
