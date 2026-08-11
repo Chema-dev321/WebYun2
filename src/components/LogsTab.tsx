@@ -16,6 +16,8 @@ const ACCION_LABELS: Record<AccionLog, string> = {
   EDITAR_CLIENTE: "Editar Cliente",
   SINCRONIZAR_CONTADORES: "Sincronizar",
   LOGIN: "Inicio sesión",
+  EXPORTAR_BACKUP: "Exportar Respaldo",
+  IMPORTAR_BACKUP: "Restaurar Respaldo",
 };
 
 /** Clases de estilos y colores CSS para badges según la categoría del evento */
@@ -30,6 +32,8 @@ const ACCION_COLORS: Record<AccionLog, string> = {
   EDITAR_CLIENTE: "bg-[rgba(148,237,242,0.18)] text-(--hulux-cyan) border border-[rgba(148,237,242,0.35)]",
   SINCRONIZAR_CONTADORES: "bg-[rgba(148,237,242,0.10)] text-(--hulux-text-muted) border border-(--hulux-border)",
   LOGIN: "bg-[rgba(17,41,62,0.08)] text-(--hulux-text-muted) border border-(--hulux-border)",
+  EXPORTAR_BACKUP: "bg-[rgba(148,237,242,0.18)] text-(--hulux-cyan) border border-[rgba(148,237,242,0.35)]",
+  IMPORTAR_BACKUP: "bg-[rgba(205,219,0,0.18)] text-(--hulux-lime) border border-[rgba(205,219,0,0.35)]",
 };
 
 /** Emoticonos ilustrativos por tipo de acción */
@@ -44,6 +48,8 @@ const ACCION_ICONS: Record<AccionLog, string> = {
   EDITAR_CLIENTE: "📝",
   SINCRONIZAR_CONTADORES: "🔃",
   LOGIN: "🔐",
+  EXPORTAR_BACKUP: "📊",
+  IMPORTAR_BACKUP: "📥",
 };
 
 /**

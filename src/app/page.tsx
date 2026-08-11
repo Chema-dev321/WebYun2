@@ -15,13 +15,14 @@ import ClientesTab from "@/components/ClientesTab";
 import BuscarClienteTab from "@/components/BuscarClienteTab";
 import AgregarNapTab from "@/components/AgregarNapTab";
 import UsuariosTab from "@/components/UsuariosTab";
+import AjustesTab from "@/components/AjustesTab";
 import LogsTab from "@/components/LogsTab";
 import dynamic from "next/dynamic";
 const MapaTab = dynamic(() => import("@/components/MapaTab"), { ssr: false });
 import PerfilModal from "@/components/PerfilModal";
 import { registrarLog } from "@/lib/audit";
 
-type Tab = "dashboard" | "registro" | "clientes" | "buscar" | "agregarNap" | "usuarios" | "logs" | "mapa";
+type Tab = "dashboard" | "registro" | "clientes" | "buscar" | "agregarNap" | "usuarios" | "logs" | "mapa" | "ajustes";
 
 const TABS: { key: Tab; label: string; icon: string }[] = [
   { key: "dashboard", label: "Dashboard NAPs", icon: "📊" },
@@ -32,6 +33,7 @@ const TABS: { key: Tab; label: string; icon: string }[] = [
   { key: "usuarios", label: "Usuarios", icon: "👤" },
   { key: "logs", label: "Actividad", icon: "📋" },
   { key: "mapa", label: "Mapa NAPs", icon: "🗺️" },
+  { key: "ajustes", label: "Ajustes", icon: "⚙️" },
 ];
 
 export default function Home() {
@@ -70,7 +72,7 @@ function Dashboard() {
         return ["dashboard", "registro", "clientes", "buscar", "mapa"].includes(t.key);
       }
       if (userRole === "supervisor") {
-        return ["dashboard", "registro", "clientes", "buscar", "mapa", "logs"].includes(t.key);
+        return ["dashboard", "registro", "clientes", "buscar", "mapa", "logs", "ajustes"].includes(t.key);
       }
       if (userRole === "soporte") {
         return ["dashboard", "clientes", "buscar"].includes(t.key);
@@ -79,7 +81,7 @@ function Dashboard() {
         return ["dashboard", "agregarNap", "clientes", "buscar", "mapa"].includes(t.key);
       }
       if (userRole === "administracion") {
-        return ["dashboard", "clientes", "buscar", "mapa"].includes(t.key);
+        return ["dashboard", "clientes", "buscar", "mapa", "ajustes"].includes(t.key);
       }
       // instalador
       return t.key === "mapa";
@@ -385,6 +387,10 @@ function Dashboard() {
 
         {tab === "mapa" && (
           <MapaTab naps={naps} />
+        )}
+
+        {tab === "ajustes" && (
+          <AjustesTab usuarios={usuarios} onRefreshNaps={loadNaps} />
         )}
       </div>
 

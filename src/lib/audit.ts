@@ -22,7 +22,9 @@ export type AccionLog =
   | "REASIGNAR_CLIENTE"
   | "EDITAR_CLIENTE"
   | "SINCRONIZAR_CONTADORES"
-  | "LOGIN";
+  | "LOGIN"
+  | "EXPORTAR_BACKUP"
+  | "IMPORTAR_BACKUP";
 
 /**
  * Representa una entrada de la bitácora de auditoría en Firestore.

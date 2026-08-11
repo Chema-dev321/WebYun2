@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useState, useRef, ChangeEvent } from "react";
 import type { Usuario, Rol } from "@/lib/firestore";
 import { updateUsuarioRol, toggleUsuarioHabilitado } from "@/lib/firestore";
 import { useToast } from "./ToastContext";
 import { useConfirm } from "./ToastContext";
+import { useAuth } from "@/lib/AuthContext";
+import { exportarBaseDatosExcel, importarBaseDatosExcel } from "@/services/backup";
 
 /**
  * Propiedades del componente {@link UsuariosTab}.
@@ -10,6 +12,7 @@ import { useConfirm } from "./ToastContext";
 interface UsuariosTabProps {
   /** Lista completa de usuarios registrados en la plataforma */
   usuarios: Usuario[];
+  onRefreshNaps?: () => void;
 }
 
 /**
@@ -20,11 +23,15 @@ interface UsuariosTabProps {
  * - Habilitar e inhabilitar cuentas de usuario con confirmación previa.
  * - Exportar la lista de usuarios a CSV.
  */
-export default function UsuariosTab({ usuarios }: UsuariosTabProps) {
+export default function UsuariosTab({ usuarios, onRefreshNaps }: UsuariosTabProps) {
+  const { user } = useAuth();
   const { showToast } = useToast();
   const { confirm } = useConfirm();
   /** ID del usuario en proceso de actualización */
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [exporting, setExporting] = useState(false);
+  const [importing, setImporting] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   /**
    * Cambia el rol de un usuario en Firestore.
@@ -105,24 +112,81 @@ export default function UsuariosTab({ usuarios }: UsuariosTabProps) {
     document.body.removeChild(link);
   };
 
+  const handleExportarExcel = async () => {
+    setExporting(true);
+    try {
+      const res = await exportarBaseDatosExcel(user?.email ?? undefined, user?.uid ?? undefined);
+      if (res.success) {
+        showToast(`Base de datos exportada (${res.totalElementos} registros)`, "success");
+      } else {
+        showToast(res.error || "Error al exportar base de datos", "error");
+      }
+    } catch {
+      showToast("Error en exportación", "error");
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const handleImportarExcel = async (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = "";
+
+    const ok = await confirm(
+      `¿Deseas restaurar la base de datos desde "${file.name}"?`
+    );
+    if (!ok) return;
+
+    setImporting(true);
+    try {
+      const buffer = await file.arrayBuffer();
+      const res = await importarBaseDatosExcel(buffer, user?.email ?? undefined, user?.uid ?? undefined);
+      if (res.success) {
+        showToast(`Restaurados ${res.totalRestaurados} elementos con éxito`, "success");
+        if (onRefreshNaps) onRefreshNaps();
+      } else {
+        showToast("Error en la importación", "error");
+      }
+    } catch {
+      showToast("Error inesperado al importar", "error");
+    } finally {
+      setImporting(false);
+    }
+  };
+
   return (
     <div className="max-w-4xl mx-auto">
       <div className="rounded-xl border border-(--hulux-border) bg-(--hulux-surface) shadow-(--hulux-shadow) overflow-hidden">
-        <div className="bg-(--hulux-subtle) px-5 py-3 border-b border-(--hulux-border) flex items-center justify-between">
+        <div className="bg-(--hulux-subtle) px-5 py-3 border-b border-(--hulux-border) flex flex-wrap items-center justify-between gap-3">
           <h3 className="text-sm font-semibold text-(--hulux-text)">
             Usuarios de la plataforma ({usuarios.length})
           </h3>
-          {/* CSV_EXPORT_DISABLED
-          <button
-            onClick={handleDownloadCSV}
-            className="flex items-center gap-2 px-3 py-1.5 text-xs font-semibold bg-(--hulux-surface) hover:bg-[rgba(148,237,242,0.1)] border border-(--hulux-border) rounded-lg text-(--hulux-text) transition-colors"
-          >
-            <svg className="w-4 h-4 text-(--hulux-cyan)" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-            </svg>
-            Descargar CSV
-          </button>
-          CSV_EXPORT_DISABLED */}
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleExportarExcel}
+              disabled={exporting || importing}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-gradient-to-r from-[var(--hulux-blue)] to-[var(--hulux-cyan)] text-white rounded-lg shadow hover:brightness-110 transition-all disabled:opacity-50"
+            >
+              {exporting ? "Exportando..." : "📊 Exportar a Excel (.xlsx)"}
+            </button>
+
+            <input
+              type="file"
+              ref={fileInputRef}
+              accept=".xlsx, .xls"
+              onChange={handleImportarExcel}
+              className="hidden"
+            />
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={exporting || importing}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-(--hulux-surface) hover:bg-[rgba(148,237,242,0.18)] border border-(--hulux-border) rounded-lg text-(--hulux-text) transition-colors disabled:opacity-50"
+            >
+              {importing ? "Importando..." : "📥 Importar Excel"}
+            </button>
+          </div>
         </div>
         {usuarios.length === 0 ? (
           <div className="p-8 text-center text-(--hulux-text-muted) text-sm">
