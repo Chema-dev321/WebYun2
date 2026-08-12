@@ -97,13 +97,40 @@ function Dashboard() {
     }
   }, [availableTabs]);
 
-  const loadNaps = useCallback(async () => {
+  const loadNaps = useCallback(async (forceFetch = false) => {
     setIsFetchingNaps(true);
     try {
+      // 1. Intentar cargar primero desde el caché local en localStorage (0 lecturas de Firestore)
+      if (!forceFetch && typeof window !== "undefined") {
+        const cached = localStorage.getItem("webyun_cached_naps");
+        const cachedTime = localStorage.getItem("webyun_cached_naps_time");
+        if (cached && cachedTime) {
+          const parsed = JSON.parse(cached);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setNaps(parsed);
+            lastFetchTimeRef.current = parseInt(cachedTime, 10) || Date.now();
+            setUpdateAvailable(false);
+            setIsFetchingNaps(false);
+            setLoading(false);
+            return;
+          }
+        }
+      }
+
+      // 2. Si no hay caché o se forzó actualización, consultar Firestore
       const { fetchAllNAPs } = await import("@/lib/firestore");
       const data = await fetchAllNAPs();
       setNaps(data);
-      lastFetchTimeRef.current = Date.now();
+      const now = Date.now();
+      lastFetchTimeRef.current = now;
+      if (typeof window !== "undefined") {
+        try {
+          localStorage.setItem("webyun_cached_naps", JSON.stringify(data));
+          localStorage.setItem("webyun_cached_naps_time", now.toString());
+        } catch (e) {
+          console.warn("No se pudo guardar el caché de NAPs en localStorage:", e);
+        }
+      }
       setUpdateAvailable(false);
     } catch (err) {
       console.error("Error al cargar NAPs:", err);
@@ -117,8 +144,8 @@ function Dashboard() {
     let mounted = true;
     const unsubs: Array<() => void> = [];
     
-    // 1. Initial fetch of NAPs (costs 1 query instead of real-time stream)
-    loadNaps();
+    // 1. Initial fetch of NAPs (usa el caché en localStorage si está disponible)
+    loadNaps(false);
 
     // 2. Subscribe to Users and NAPs Metadata
     import("@/lib/firestore")
@@ -148,7 +175,7 @@ function Dashboard() {
   // Used by child components to trigger a partial or full reload.
   const handleRefresh = useCallback(async (napIds?: string | string[]) => {
     if (!napIds) {
-      loadNaps();
+      loadNaps(true);
       return;
     }
     const ids = Array.isArray(napIds) ? napIds : [napIds];
@@ -167,11 +194,17 @@ function Dashboard() {
             next.push(updated);
           }
         }
-        return next.sort((a, b) => a.nombre.localeCompare(b.nombre));
+        const sorted = next.sort((a, b) => a.nombre.localeCompare(b.nombre));
+        if (typeof window !== "undefined") {
+          try {
+            localStorage.setItem("webyun_cached_naps", JSON.stringify(sorted));
+          } catch {}
+        }
+        return sorted;
       });
     } catch (err) {
       console.error("Error fetching single NAPs:", err);
-      loadNaps(); // fallback
+      loadNaps(true); // fallback
     }
   }, [loadNaps]);
 
@@ -218,7 +251,7 @@ function Dashboard() {
               <span className="sm:hidden">Nuevas NAPs</span>
             </div>
             <button 
-              onClick={loadNaps} 
+              onClick={() => loadNaps(true)} 
               disabled={isFetchingNaps}
               className="bg-white text-(--hulux-blue) px-4 py-1.5 rounded-full hover:bg-gray-100 transition-colors flex items-center gap-2 disabled:opacity-70 font-bold"
             >

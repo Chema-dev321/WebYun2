@@ -254,16 +254,9 @@ export async function getClienteByWisp(id_wisp: string): Promise<Cliente | null>
   return { id: doc.id, ...(doc.data() as Omit<Cliente, "id">) };
 }
 
-/** Caché en memoria para optimizar la búsqueda flexible de clientes por subcadena de nombre */
-let cachedClientes: Cliente[] | null = null;
-/** Marca temporal de la última actualización del caché de clientes */
-let lastCacheTime = 0;
-/** Tiempo de vida (TTL) del caché en memoria (5 minutos) */
-const CACHE_TTL = 1000 * 60 * 5;
-
 /**
- * Búsqueda inteligente de clientes por ID WISP, ID NAP o coincidencia parcial de nombre.
- * Utiliza caché en memoria para evitar consumo masivo de lecturas en Firestore.
+ * Búsqueda inteligente de clientes por ID WISP, ID NAP o coincidencia por nombre acotada.
+ * Evita el consumo masivo de lecturas utilizando consultas con límite de resultados.
  *
  * @param searchText Texto a buscar.
  */
@@ -288,17 +281,42 @@ export async function searchClientes(searchText: string): Promise<Cliente[]> {
   addDocs(qNap);
   if (map.size > 0) return Array.from(map.values());
 
-  // 3. Búsqueda por subcadena en nombre utilizando el caché en memoria
-  if (!cachedClientes || Date.now() - lastCacheTime > CACHE_TTL) {
-    const snap = await getDocs(collection(db, CLIENTES_COL));
-    cachedClientes = snap.docs.map(doc => ({ id: doc.id, ...(doc.data() as Omit<Cliente, "id">) }));
-    lastCacheTime = Date.now();
+  // 3. Coincidencia por prefijo en el nombre con límite de 25 resultados (optimizado para consumo de Firestore)
+  const qNameExact = await getDocs(query(
+    collection(db, CLIENTES_COL),
+    where("nombre", ">=", txt),
+    where("nombre", "<=", txt + "\uf8ff"),
+    limit(25)
+  ));
+  addDocs(qNameExact);
+  if (map.size > 0) return Array.from(map.values());
+
+  // Intenta variante con inicial Mayúscula (ej. "juan" -> "Juan")
+  const txtCap = txt.charAt(0).toUpperCase() + txt.slice(1);
+  if (txtCap !== txt) {
+    const qNameCap = await getDocs(query(
+      collection(db, CLIENTES_COL),
+      where("nombre", ">=", txtCap),
+      where("nombre", "<=", txtCap + "\uf8ff"),
+      limit(25)
+    ));
+    addDocs(qNameCap);
+    if (map.size > 0) return Array.from(map.values());
   }
 
-  const searchLower = txt.toLowerCase();
-  const matchedByName = cachedClientes.filter(c => c.nombre.toLowerCase().includes(searchLower));
-  
-  return matchedByName;
+  // Intenta variante Mayúsculas completas (ej. "juan" -> "JUAN")
+  const txtUpper = txt.toUpperCase();
+  if (txtUpper !== txt && txtUpper !== txtCap) {
+    const qNameUpper = await getDocs(query(
+      collection(db, CLIENTES_COL),
+      where("nombre", ">=", txtUpper),
+      where("nombre", "<=", txtUpper + "\uf8ff"),
+      limit(25)
+    ));
+    addDocs(qNameUpper);
+  }
+
+  return Array.from(map.values());
 }
 
 /**
@@ -608,17 +626,28 @@ export async function deleteCliente(clienteId: string): Promise<{ success: boole
 
 // ── Geografía: filtros en cascada ──
 
+/** Caché en memoria para municipios */
+let cachedMunicipios: string[] | null = null;
+let lastGeoCacheTime = 0;
+const GEO_CACHE_TTL = 1000 * 60 * 15; // 15 minutos
+
 /**
  * Obtiene la lista única de municipios registrados en la colección de configuración geográfica.
+ * Utiliza caché en memoria para reducir lecturas en Firestore.
  */
 export async function getMunicipios(): Promise<string[]> {
+  if (cachedMunicipios && Date.now() - lastGeoCacheTime < GEO_CACHE_TTL) {
+    return cachedMunicipios;
+  }
   const snap = await getDocs(collection(db, GEO_COL));
   const municipios = new Set<string>();
   snap.docs.forEach((d) => {
     const data = d.data() as LocalidadEntry;
-    municipios.add(data.municipio);
+    if (data.municipio) municipios.add(data.municipio);
   });
-  return Array.from(municipios).sort();
+  cachedMunicipios = Array.from(municipios).sort();
+  lastGeoCacheTime = Date.now();
+  return cachedMunicipios;
 }
 
 /**
