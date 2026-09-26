@@ -189,7 +189,8 @@ export default function MapaTab({ naps }: Props) {
         preferCanvas: true,
         zoomControl: true,
       });
-
+//aqui edite 
+      /*
       L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
         attribution: "© OpenStreetMap © CARTO",
         subdomains: "abcd",
@@ -199,7 +200,24 @@ export default function MapaTab({ naps }: Props) {
       mapInstanceRef.current = map;
       setMapReady(true);
       requestAnimationFrame(() => map.invalidateSize());
+*/
+      //nuevo codigo para api key
 
+
+const cartoApiKey = process.env.NEXT_PUBLIC_CARTO_API_KEY;
+
+L.tileLayer(
+  `https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png?key=${cartoApiKey}`,
+  {
+    attribution: "© OpenStreetMap © CARTO",
+    subdomains: "abcd",
+    maxZoom: 19,
+  }
+).addTo(map);
+
+
+
+      //finaliza
       const updateBounds = () => {
         const b = map.getBounds();
         setBounds([
