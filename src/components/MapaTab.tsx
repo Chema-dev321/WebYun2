@@ -214,7 +214,9 @@ L.tileLayer(
     maxZoom: 19,
   }
 ).addTo(map);
-
+mapInstanceRef.current = map;
+      setMapReady(true);
+      requestAnimationFrame(() => map.invalidateSize());
 
 
       //finaliza
