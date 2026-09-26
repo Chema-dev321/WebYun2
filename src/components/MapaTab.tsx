@@ -256,7 +256,15 @@ L.tileLayer(
       const L = (mod as any).default || mod;
       const newLayers: any[] = [];
       const iconCache: Record<string, any> = {};
+//aqui agregue logs
 
+console.log("NAPs recibidas:", naps.length);
+console.log("NAPs con coordenadas:", napsConCoords.length);
+console.log("NAPs filtradas:", napsFiltradas.length);
+console.log("Puntos:", points.length);
+console.log("Clusters:", clusters.length);
+console.log("Bounds:", bounds);
+      //finaliza
       for (const cluster of clusters) {
         const [lng, lat] = cluster.geometry.coordinates;
         const props = cluster.properties as any;
